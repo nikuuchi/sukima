@@ -9,6 +9,7 @@ bool isInt(char c){
 	}
 	return false;
 }
+
 bool isChar(char c){
 	if(c == ' ' || c == '\n'|| c == '\t' ||
 	   c == '\0' || c == '\r'|| c == ')'|| c == '(' ){
@@ -22,7 +23,13 @@ void list_string_init(list_string *p,char *buf,size_t size)
 	p->next = (list_string *)malloc(sizeof(list_string));
 	p->str = (char *)malloc(sizeof(char));
 	p->str = strncpy(p->str,buf,size);
-	p->size = sizeof(char);
+	p->size = sizeof(char) * size;
+}
+
+void freelist_string(list_string *p){
+	if(p->next != NULL)
+		freelist_string(p->next);
+	free(p);
 }
 
 list_string *lex(list_string *list,char * buf,int size)

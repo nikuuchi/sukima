@@ -58,3 +58,4 @@ extern void freeCons_t(cons_t * p);
 
 extern list_string *lex(list_string *list,char * buf,int size);
 
+extern void freelist_string(list_string *p);
