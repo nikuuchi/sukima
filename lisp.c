@@ -1,31 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "lisp.h"
 
-#define BUF_SIZE 1024
-
-#define Nil "Nil"
-#define T 1
-#define If "if"
-#define Setq "setq"
-#define Defun "defun"
-
-typedef enum Type {TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Nil,TY_Name} Type;
-
-typedef struct cons_t{
-	Type type;
-	union {
-		struct cons_t *car;
-		int ivalue;
-		char *svalue;
-	};
-	struct cons_t *cdr;
-} cons_t;
-
-
-void Cons_init(cons_t *Cell){
-
-
-}
 
 int main(int argc, char *argv[])
 {
@@ -40,10 +14,20 @@ int main(int argc, char *argv[])
 			exit(0);
 		}
 
+		cons_t *root = (cons_t *)malloc(sizeof(cons_t));
+		list_string *lex_buf = (list_string *)malloc(sizeof(list_string));
+		list_string *lex_current = lex_buf;
 		while(fgets(buf,BUF_SIZE,fp)){
-			printf("%s",buf);
+			lex_current = lex(lex_current,buf,strlen(buf));
 		}
-
+		lex_current = lex_buf;
+		while(lex_current != NULL){
+			if(lex_current->str != NULL)
+				printf("%s\n",lex_current->str);
+			lex_current = lex_current->next;
+		}
+		freeCons_t(root);
+		free(buf);
 		fclose(fp);
 	}else{
 		printf("Too many arguments.");
@@ -51,6 +35,4 @@ int main(int argc, char *argv[])
   
 	return 0;
 }
-
-
 

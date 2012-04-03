@@ -4,6 +4,9 @@ DEFS = -std=c99
 LIBS = 
 
 SRCS = \
+	lex.c \
+	cons.c \
+	hash.c \
 	lisp.c
 
 OBJS = $(SRCS:.c=.o)
