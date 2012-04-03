@@ -1,5 +1,9 @@
 #include "lisp.h"
 
+
+
+
+
 void lisp_repl()
 {
 	printf("REPL cannot use now.\n");
@@ -26,10 +30,13 @@ void lisp_main(char *file,size_t size)
 	lex_current = lex_buf;
 	while(lex_current != NULL){
 		if(lex_current->str != NULL)
-			printf("%s\n",lex_current->str);
+			printf("%s:type:%d\n",lex_current->str,lex_current->type);
 		lex_current = lex_current->next;
 	}
 	//--
+
+	//I will add HashTable.
+	parse(lex_buf,root);
 
 	freelist_string(lex_buf);
 	freeCons_t(root);

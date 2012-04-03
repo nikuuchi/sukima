@@ -7,13 +7,7 @@
 #define BUF_SIZE 1024
 #define BINS 64
 
-#define Nil "Nil"
-#define T 1
-#define If "if"
-#define Setq "setq"
-#define Defun "defun"
-
-typedef enum Type {TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Nil,TY_Name} Type;
+typedef enum Type {TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Str,TY_Defun,TY_If,TY_Setq} Type;
 
 typedef struct cons_t
 {
@@ -45,6 +39,7 @@ typedef struct list_string
 {
 	char *str;
 	size_t size;
+	Type type;
 	struct list_string *next;
 
 } list_string;
@@ -59,3 +54,5 @@ extern void freeCons_t(cons_t * p);
 extern list_string *lex(list_string *list,char * buf,int size);
 
 extern void freelist_string(list_string *p);
+
+extern void parse(list_string *list, cons_t *node);

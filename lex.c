@@ -18,12 +18,23 @@ bool isChar(char c){
 	return true;
 }
 
-void list_string_init(list_string *p,char *buf,size_t size)
+void list_string_init(list_string *p,char *buf,size_t size,Type t)
 {
 	p->next = (list_string *)malloc(sizeof(list_string));
 	p->str = (char *)malloc(sizeof(char));
 	p->str = strncpy(p->str,buf,size);
 	p->size = sizeof(char) * size;
+	if(t == TY_Str){
+		if(strcmp("defun",p->str) == 0){
+			t = TY_Defun;
+		}else if(strcmp("if",p->str) == 0){
+			t = TY_If;
+		}else if(strcmp("setq",p->str) == 0){
+			t = TY_Setq;
+		}
+	}
+	p->type = t;
+
 }
 
 void freelist_string(list_string *p){
@@ -45,20 +56,28 @@ list_string *lex(list_string *list,char * buf,int size)
 			++index;
 			break;
 		case '(':
+			list_string_init(list,&buf[index],1,TY_Car);
+			++index;
+			list = list->next;
+			break;
 		case ')':
+			list_string_init(list,&buf[index],1,TY_Cdr);
+			++index;
+			list = list->next;
+			break;
 		case '/':
 		case '+':
 		case '*':
 		case '=':
 		case '<':
 		case '>':
-			list_string_init(list,&buf[index],1);
+			list_string_init(list,&buf[index],1,TY_Op);
 			++index;
 			list = list->next;
 			break;
 		case '-':
 			if(buf[index+1] == ' '){
-				list_string_init(list,&buf[index],1);
+				list_string_init(list,&buf[index],1,TY_Op);
 				++index;
 				list = list->next;
 				break;
@@ -75,14 +94,14 @@ list_string *lex(list_string *list,char * buf,int size)
 		case '9':
 			next = 1;
 			while( isInt(buf[index+next]) ){ ++next; }			
-			list_string_init(list,&buf[index],next);
+			list_string_init(list,&buf[index],next,TY_Value);
 			index += next;
 			list = list->next;
 			break;
 		default:
 			next = 1;
-			while( isChar(buf[index+next]) ){ ++next; }			
-			list_string_init(list,&buf[index],next);
+			while( isChar(buf[index+next]) ){ ++next; }
+			list_string_init(list,&buf[index],next,TY_Str);
 			index += next;
 			list = list->next;
 			break;

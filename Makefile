@@ -1,9 +1,11 @@
 
-CXX = gcc
+CC = gcc
 DEFS = -std=c99 
 LIBS = 
+CFLAGS = -g -Wall
 
 SRCS = \
+	parser.c \
 	lex.c \
 	cons.c \
 	hash.c \
@@ -15,10 +17,10 @@ PROG = lisp
 all: $(PROG)
 
 $(PROG): $(OBJS)
-	$(CXX) -g -o $@ $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
 .c.o:
-	$(CXX) $(DEFS) -g -c -o $@ $<
+	$(CC) $(DEFS) $(CFLAGS) -c -o $@ $<
 
 clean:
 	rm -f $(OBJS) $(PROG)
