@@ -7,7 +7,7 @@
 #define BUF_SIZE 1024
 #define BINS 64
 
-typedef enum Type {TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Str,TY_Defun,TY_If,TY_Setq} Type;
+typedef enum Type {TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Str,TY_Defun,TY_If,TY_Setq,TY_EOL} Type;
 
 typedef struct cons_t
 {

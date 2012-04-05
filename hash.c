@@ -8,6 +8,6 @@ void HashTable_init(st_table *table)
 
 unsigned int getHashNumber(char * s)
 {
-return 0;	
+	return 0;	
 }
 
