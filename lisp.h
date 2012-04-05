@@ -45,6 +45,13 @@ typedef struct list_string
 } list_string;
 
 
+
+typedef struct stack{
+	cons_t * cont;
+	struct stack *next;
+} stack;
+
+
 extern void HashTable_init(st_table *table);
 
 extern unsigned int getHashNumber(char * s);
@@ -56,3 +63,8 @@ extern list_string *lex(list_string *list,char * buf,int size);
 extern void freelist_string(list_string *p);
 
 extern void parse(list_string *list, cons_t *node);
+
+extern cons_t *pop(stack *self);
+
+extern void push(stack *self,cons_t * p);
+

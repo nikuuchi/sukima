@@ -148,7 +148,7 @@ void lisp_main(char *file,size_t size)
 	printf("----parse\n");
 	dumpCons_t(root); //debug
 
-	printf("\n%d\n",eval(root)); //AST
+	printf("\n------------answer:%d------------\n",eval(root)); //AST
 
 	freelist_string(lex_buf);
 	freeCons_t(root);

@@ -7,7 +7,7 @@ void freeCons_t(cons_t * p)
 	  if(p->type == TY_Car){
 		  freeCons_t(p->car);
 	  }else if(p->type == TY_Op){
-		  free(p->svalue);
+		  //free(p->svalue);
 	  }
   }
   if(p->cdr != NULL){
