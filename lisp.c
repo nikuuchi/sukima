@@ -132,6 +132,7 @@ void lisp_main(char *file,size_t size)
 	lex_current->type = TY_EOL;
 
 	//--for debug
+	/*
 	lex_current = lex_buf;
 	while(lex_current != NULL){
 		if(lex_current->type != TY_EOL){
@@ -141,11 +142,12 @@ void lisp_main(char *file,size_t size)
 		}
 		lex_current = lex_current->next;
 	}
+	*/
 	//--
 
 	//I will add HashTable.
 	parse(lex_buf,root);
-	printf("----parse\n");
+	//printf("----parse\n");
 	dumpCons_t(root); //debug
 
 	printf("\n------------answer:%d------------\n",eval(root)); //AST
