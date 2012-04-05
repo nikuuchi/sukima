@@ -11,19 +11,105 @@ void dumpCons_t(cons_t * p)
 {
 	if(p != NULL){
 		if(p->type == TY_Car){
-			printf("(\n");
+			printf("( ");
 			dumpCons_t(p->car);
 		}else if(p->type == TY_Op){
-			printf("%s\n",p->svalue);
+			printf("%s ",p->svalue);
 		}else if(p->type == TY_Value){
-			printf("%d\n",p->ivalue);
+			printf("%d ",p->ivalue);
 		}else if(p->type == TY_Cdr){
-			printf(")\n");
+			printf(") ");
 		}
 		if(p->cdr != NULL){
 			dumpCons_t(p->cdr);
 		}
 	}
+}
+
+int eval_plus(cons_t *p);
+int eval_minus(cons_t *p);
+int eval_mul(cons_t *p);
+int eval_div(cons_t *p);
+
+int eval(cons_t *p)
+{
+	if(p != NULL){
+		if(p->type == TY_Car){
+			return eval(p->car);
+		}else if(p->type == TY_Op){
+			if(p->svalue[0] == '+'){
+				return eval_plus(p->cdr);
+			}else if(p->svalue[0] == '-'){
+				return eval_minus(p->cdr);
+			}else if(p->svalue[0] == '*'){
+				return eval_mul(p->cdr);
+			}else if(p->svalue[0] == '/'){
+				return eval_div(p->cdr);
+			}
+		}else if(p->type == TY_Value){
+			return p->ivalue;
+		}else if(p->type == TY_Cdr){
+			return 0;
+		}
+	}	
+	return 0;
+}
+
+int eval_plus(cons_t *p)
+{
+	cons_t *c = p;
+	int a = 0;
+	while(c->type != TY_Cdr){
+		int tmp = eval(c);
+		if(c->type == TY_Cdr)
+			break;
+		a += tmp;
+		c = c->cdr;
+	}
+	return a;
+}
+int eval_minus(cons_t *p)
+{
+	cons_t *c = p;
+	int a = eval(c);
+	c = c->cdr;
+	while(c->type != TY_Cdr){
+		int tmp = eval(c);
+		if(c->type == TY_Cdr)
+			break;
+		a -= tmp;
+		c = c->cdr;
+	}
+	return a;
+
+}
+int eval_mul(cons_t *p)
+{
+	cons_t *c = p;
+	int a = 1;
+	while(c->type != TY_Cdr){
+		int tmp = eval(c);
+		if(c->type == TY_Cdr)
+			break;
+		a *= tmp;
+		c = c->cdr;
+	}
+	return a;
+}
+int eval_div(cons_t *p)
+{
+	cons_t *c = p;
+	int a = eval(c);
+	c = c->cdr;
+	while(c->type != TY_Cdr){
+		int tmp = eval(c);
+		if(c->type == TY_Cdr)
+			break;
+		a /= tmp;
+		c = c->cdr;
+	}
+	return a;
+
 }
 
 
@@ -62,6 +148,7 @@ void lisp_main(char *file,size_t size)
 	printf("----parse\n");
 	dumpCons_t(root); //debug
 
+	printf("\n%d\n",eval(root)); //AST
 
 	freelist_string(lex_buf);
 	freeCons_t(root);
