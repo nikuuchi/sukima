@@ -58,8 +58,6 @@ extern unsigned int getHashNumber(char * s);
 
 extern void freeCons_t(cons_t * p);
 
-extern list_string *lex(list_string *list,char * buf,int size);
-
 extern void freelist_string(list_string *p);
 
 extern void parse(list_string *list, cons_t *node);
@@ -68,3 +66,10 @@ extern cons_t *pop(stack *self);
 
 extern void push(stack *self,cons_t * p);
 
+extern int eval(cons_t *p);
+
+extern void dumpCons_t(cons_t * p);
+
+extern void dumpLexer(list_string *p);
+
+extern void startLex(list_string *p,FILE *fp);

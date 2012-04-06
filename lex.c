@@ -127,3 +127,30 @@ list_string *lex(list_string *list,char * buf,int size)
 	}
 	return list;
 }
+
+void dumpLexer(list_string *p)
+{
+	list_string *lex_current = p;
+	while(lex_current != NULL){
+		if(lex_current->type != TY_EOL){
+			printf("%s:type:%d\n",lex_current->str,lex_current->type);
+		}else{
+			printf("EOL\n");
+		}
+		lex_current = lex_current->next;
+	}
+}
+
+void startLex(list_string *p,FILE *fp)
+{
+	char *buf;
+	buf = (char *)malloc(sizeof(char) * BUF_SIZE);
+
+	list_string *lex_current = p;
+	while(fgets(buf,BUF_SIZE,fp)){
+		lex_current = lex(lex_current,buf,strlen(buf));
+	}
+	lex_current->type = TY_EOL;
+
+	free(buf);
+}

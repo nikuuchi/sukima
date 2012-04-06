@@ -8,7 +8,7 @@ stack *stack_init()
 
 void stack_destruct()
 {
-
+	
 }
 
 cons_t *pop(stack *self)

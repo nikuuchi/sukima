@@ -9,9 +9,10 @@
 #define CASE_CDR(c)								\
 	case TY_Cdr:								\
 	(c)->type = TY_Cdr;							\
-	   (c)->svalue = "Nil";						\
-		  ++n;									\
-		  break;
+	(c)->svalue = "Nil";						\
+	++n;									    \
+	break;
+
 #define CASE_OP(c)								\
 	case TY_Op:									\
 	n = F_Op(list,(c),n);						\
@@ -24,7 +25,6 @@
 #define CASE_EOL()								\
 	case TY_EOL:								\
 	break;
-
 
 #define DEFAULT(c)\
 	default:									\
@@ -40,9 +40,7 @@ int F_Value(list_string *list, cons_t *node,int n);
 
 list_string *at(list_string *list,int n){
 	list_string *p = list;
-	for(int i=0;i<n;++i){
-		p = p->next;
-	}
+	for(int i=0;i<n;++i)p = p->next;
 	return p;
 }
 
@@ -81,7 +79,7 @@ int F_Car(list_string *list, cons_t *node,int n)
 
 //		printf("car2:type:%d:n:%d\n",at(list,n)->type,n);
 	if(at(list,n)->type != TY_EOL){
-		node->cdr = (cons_t *)malloc(sizeof(cons_t));
+		node->cdr = Cons_New();
 	}
 	SWITCH{
 		CASE_CAR(node->cdr);

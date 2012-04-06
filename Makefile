@@ -5,6 +5,7 @@ LIBS =
 CFLAGS = -g -Wall
 
 SRCS = \
+	eval.c \
 	parser.c \
 	lex.c \
 	cons.c \
