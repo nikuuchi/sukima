@@ -44,32 +44,66 @@ typedef struct list_string
 
 } list_string;
 
+typedef enum V_Type{Integer,Pointer,Boolean,POP_NULL}V_Type;
 
+typedef struct value
+{
+	V_Type type;
+	int num;
+	char *svalue; //Hash's key.	    
+} value;
+
+typedef struct stack_cont{
+	value v;
+	struct stack_cont *next;
+} stack_cont;
 
 typedef struct stack{
-	cons_t * cont;
-	struct stack *next;
+	int size;
+	stack_cont *iterator;	
 } stack;
+
+
+typedef enum Command {C_Put,C_OptPlus,C_OptMinus,C_OptMul,C_OptDiv,C_Print,C_End} Command;
+
+typedef struct list_run
+{
+	Command command;
+	value v;
+	struct list_run *next;
+} list_run;
 
 
 extern void HashTable_init(st_table *table);
 
 extern unsigned int getHashNumber(char * s);
 
-extern void freeCons_t(cons_t * p);
-
 extern void freelist_string(list_string *p);
 
 extern void parse(list_string *list, cons_t *node);
 
-extern cons_t *pop(stack *self);
-
-extern void push(stack *self,cons_t * p);
-
+//eval.c
 extern int eval(cons_t *p);
 
+//cons.c
 extern void dumpCons_t(cons_t * p);
 
+extern void freeCons_t(cons_t * p);
+
+//lex.c
 extern void dumpLexer(list_string *p);
 
 extern void startLex(list_string *p,FILE *fp);
+
+//runtime.c
+extern void run(cons_t *ast);
+
+//stack.c
+extern void freeStack(stack *self);
+
+extern value pop(stack *self);
+
+extern void push(stack *self,value v);
+
+extern stack *stack_init();
+

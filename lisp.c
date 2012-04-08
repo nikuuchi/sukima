@@ -18,14 +18,18 @@ void lisp_main(char *file,size_t size)
 
 	//--Lexer
 	startLex(lex_buf,fp);
-	//dumpLexer(cons_t *lex_buf);
+	//dumpLexer(lex_buf);
 
 	//--Parser
 	parse(lex_buf,root);
 	dumpCons_t(root); //debug
 
 	//--eval
-	printf("\n--answer:%d\n",eval(root)); //AST
+	//printf("\n--answer:%d\n",eval(root)); //AST
+
+	//--run
+	printf("\n");
+	run(root);
 
 	freelist_string(lex_buf);
 	freeCons_t(root);

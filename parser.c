@@ -9,7 +9,7 @@
 #define CASE_CDR(c)								\
 	case TY_Cdr:								\
 	(c)->type = TY_Cdr;							\
-	(c)->svalue = "Nil";						\
+	(c)->svalue = ")";						    \
 	++n;									    \
 	break;
 
@@ -55,11 +55,12 @@ void parse(list_string *list, cons_t *node)
 			DEFAULT(node);
 		}
 	}
+	
 }
 
 void F_ERROR(list_string *list, cons_t *node,int n)
 {
-	printf("parse error. %s \n",at(list,n)->str);
+//	printf("parse error. %s \n",at(list,n)->str);
 }
 
 int F_Car(list_string *list, cons_t *node,int n)
@@ -71,16 +72,15 @@ int F_Car(list_string *list, cons_t *node,int n)
 
 	SWITCH{
 		CASE_CAR(node->car);
-		CASE_CDR(node->car);
+		CASE_CDR(node); // Need check
 		CASE_OP(node->car);
 		CASE_EOL();
 		DEFAULT(node->car);
 	}
 
-//		printf("car2:type:%d:n:%d\n",at(list,n)->type,n);
-	if(at(list,n)->type != TY_EOL){
-		node->cdr = Cons_New();
-	}
+//	printf("car2:type:%d:n:%d\n",at(list,n)->type,n);
+
+	node->cdr = Cons_New();
 	SWITCH{
 		CASE_CAR(node->cdr);
 		CASE_CDR(node->cdr);

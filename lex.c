@@ -33,7 +33,6 @@ void list_string_init(list_string *p,char *buf,size_t size,Type t)
 		}
 	}
 	p->type = t;
-
 }
 
 void freelist_string(list_string *p){
