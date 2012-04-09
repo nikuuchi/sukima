@@ -1,6 +1,6 @@
 
 CC = gcc
-DEFS = -std=c99 
+DEFS = 
 LIBS = 
 CFLAGS = -g -Wall 
 

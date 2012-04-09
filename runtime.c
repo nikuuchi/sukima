@@ -184,6 +184,7 @@ void execute(list_run *root)
 		int ans = 0;
 		value a;
 		int flag = 0;
+		int i=0;
 		switch(p->command){
 		case C_Put:
 			printf("put %d\n",p->v.num);
@@ -192,7 +193,7 @@ void execute(list_run *root)
 		case C_OptPlus:
 			printf("OptPlus %d\n",p->v.num);
 			ans = 0;
-			for(int i=0;i < p->v.num;++i){
+			for(i=0;i < p->v.num;++i){
 				value v = pop(st);
 				ans += v.num;
 			}
@@ -202,7 +203,7 @@ void execute(list_run *root)
 			break;
 		case C_OptMinus:
 			printf("OptMinus %d\n",p->v.num);			
-			for(int i=0;i < p->v.num -1 ;++i){
+			for(i=0;i < p->v.num -1 ;++i){
 				value v = pop(st);
 				ans -= v.num;
 			}
@@ -214,7 +215,7 @@ void execute(list_run *root)
 		case C_OptMul:
 			printf("OptMul %d\n",p->v.num);			
 			ans = 1;
-			for(int i=0;i < p->v.num ;++i){
+			for(i=0;i < p->v.num ;++i){
 				value v = pop(st);
 				ans *= v.num;
 			}
@@ -225,7 +226,7 @@ void execute(list_run *root)
 		case C_OptDiv:
 			printf("OptDiv %d\n",p->v.num);
 			ans = 1;
-			for(int i=0;i < p->v.num-1 ;++i){
+			for(i=0;i < p->v.num-1 ;++i){
 				value v = pop(st);
 				ans *= v.num;
 			}
@@ -243,7 +244,7 @@ void execute(list_run *root)
 		case C_OptLt:
 			printf("OptLt %d\n",p->v.num);
 			ans = pop(st).num;
-			for(int i=0;i < p->v.num - 1;++i){
+			for(i=0;i < p->v.num - 1;++i){
 				value v = pop(st);
 				if(ans > v.num){
 					ans = v.num;
@@ -260,7 +261,7 @@ void execute(list_run *root)
 		case C_OptGt:
 			printf("OptGt %d\n",p->v.num);
 			ans = pop(st).num;
-			for(int i=0;i < p->v.num - 1;++i){
+			for(i=0;i < p->v.num - 1;++i){
 				value v = pop(st);
 				if(ans < v.num){
 					ans = v.num;

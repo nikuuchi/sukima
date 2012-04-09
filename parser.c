@@ -46,7 +46,8 @@ int F_Str(list_string *list, cons_t *node,int n);
 
 list_string *at(list_string *list,int n){
 	list_string *p = list;
-	for(int i=0;i<n;++i)p = p->next;
+	int i=0;
+	for(i=0;i<n;++i)p = p->next;
 	return p;
 }
 
