@@ -14,7 +14,7 @@ void lisp_main(char *file,size_t size)
 	}
 
 	cons_t *root = (cons_t *)malloc(sizeof(cons_t));
-	list_string *lex_buf = (list_string *)malloc(sizeof(list_string));
+	list_string_t *lex_buf = (list_string_t *)malloc(sizeof(list_string_t));
 
 	//--Lexer
 	startLex(lex_buf,fp);

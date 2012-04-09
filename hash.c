@@ -2,23 +2,23 @@
 
 #define BINS 64
 
-st_table  *HashTable_init()
-{
-	st_table *table = (st_table *)malloc(sizeof(st_table));
-	table->num_bins = BINS;
-	table->num_entries = 0;	
-	table->bins = (st_table_entry **)malloc(sizeof(st_table) * BINS);
-	table->getHash = getHashNumber;
-	return table;
-}
-
-unsigned int getHashNumber(st_table *self,char * s)
+unsigned int getHashNumber(st_table_t *self,char * s)
 {
 	unsigned int b = (s[0] + 31) % self->num_bins;
 	return  b;
 }
 
-void HashTable_free(st_table *self)
+st_table_t  *HashTable_init()
+{
+	st_table_t *table = (st_table_t *)malloc(sizeof(st_table_t));
+	table->num_bins = BINS;
+	table->num_entries = 0;
+	table->bins = (st_table_entry_t **)malloc(sizeof(st_table_t) * BINS);
+	table->getHash = getHashNumber;
+	return table;
+}
+
+void HashTable_free(st_table_t *self)
 {
 
 }

@@ -1,31 +1,34 @@
 #include "lisp.h"
 
-#define ListRun_New() (list_run *)malloc(sizeof(list_run))
+#define ListRun_New() (list_run_t *)malloc(sizeof(list_run_t))
 
-#define setValue(c,d)							\
-	(c)->command = C_Put;						\
-	(c)->v.type = Integer;						\
-	(c)->v.num = (d);
+#define setValue(c,d) do {						\
+		(c)->command = C_Put;					\
+		(c)->v.type = Integer;					\
+		(c)->v.num = (d);						\
+	} while(0);
 
-#define setBoolean(c,d)							\
-	(c)->command = C_Put;						\
-	(c)->v.type = Boolean;						\
-	(c)->v.svalue = (d);
+#define setBoolean(c,d)	do {					\
+		(c)->command = C_Put;					\
+		(c)->v.type = Boolean;					\
+		(c)->v.svalue = (d);					\
+	} while(0);
 
-#define setOpt(c,d,e)							\
-	(c)->command = (d);							\
-	(c)->v.type = Integer;						\
-	(c)->v.num = (e);
+#define setOpt(c,d,e) do {						\
+		(c)->command = (d);						\
+		(c)->v.type = Integer;					\
+		(c)->v.num = (e);						\
+	}while(0);
 
+list_run_t *asm_Car(list_run_t *cmd,cons_t *cu);
+list_run_t *asm_Op(list_run_t *cmd,cons_t *cu);
+list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu);
+list_run_t *assemble(list_run_t *p,cons_t *cu);
+void execute(list_run_t *root);
 
-list_run *asm_Car(list_run *cmd,cons_t *cu);
-list_run *asm_Op(list_run *cmd,cons_t *cu);
-list_run *asm_UseFunction(list_run *cmd,cons_t *cu);
-list_run *assemble(list_run *p,cons_t *cu);
-void execute(list_run *root);
-
-void freeListRun(list_run *p){
-	if(p != NULL){
+void freeListRun(list_run_t *p)
+{
+	if(p != NULL) {
 		freeListRun(p->next);
 	}
 	free(p);
@@ -34,8 +37,8 @@ void freeListRun(list_run *p){
 void run(cons_t *ast)
 {
 	cons_t *chain = ast;
-	list_run *root = ListRun_New();
-	list_run *p = root;
+	list_run_t *root = ListRun_New();
+	list_run_t *p = root;
 	while(chain->cdr != NULL){
 		switch(chain->type){
 		case TY_Car:
@@ -55,9 +58,9 @@ void run(cons_t *ast)
 	freeListRun(root);
 }
 
-list_run *assemble(list_run *p,cons_t *cu)
+list_run_t *assemble(list_run_t *p,cons_t *cu)
 {
-	switch(cu->type){
+	switch(cu->type) {
 	case TY_Cdr:
 		setBoolean(p,"Nil");
 		break;
@@ -77,19 +80,19 @@ list_run *assemble(list_run *p,cons_t *cu)
 	return p;
 }
 
-list_run *asm_Car(list_run *cmd,cons_t *cu)
+list_run_t *asm_Car(list_run_t *cmd,cons_t *cu)
 {
 	return asm_Op(cmd,cu->car);
 }
 
-list_run *asm_Op(list_run *cmd,cons_t *cu)
+list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 {
 	int count = 0;
 	cons_t *p = cu->cdr;
-	list_run *list = cmd;
+	list_run_t *list = cmd;
 
-	while(p->type != TY_Cdr){
-		switch(p->type){
+	while(p->type != TY_Cdr) {
+		switch(p->type) {
 		case TY_Car:
 			list = asm_Car(list,p);
 			break;
@@ -106,7 +109,7 @@ list_run *asm_Op(list_run *cmd,cons_t *cu)
 		p = p->cdr;
 	}
 	
-    switch(cu->svalue[0]){
+    switch(cu->svalue[0]) {
 	case '+':
 		setOpt(list,C_OptPlus,count);
 		break;
@@ -131,17 +134,17 @@ list_run *asm_Op(list_run *cmd,cons_t *cu)
 	}
 	list->next = ListRun_New();
 	list->next->command = C_End;
-	return list;
+	return list->next;
 }
 
-list_run *asm_UseFunction(list_run *cmd,cons_t *cu)
+list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 {
 	int count = 0;
 	cons_t *p = cu->cdr;
-	list_run *list = cmd;
+	list_run_t *list = cmd;
 
-	while(p->type != TY_Cdr){
-		switch(p->type){
+	while(p->type != TY_Cdr) {
+		switch(p->type) {
 		case TY_Car:
 			list = asm_Car(list,p);
 			break;
@@ -159,7 +162,7 @@ list_run *asm_UseFunction(list_run *cmd,cons_t *cu)
 		p = p->cdr;
 	}
 
-	if(strcmp(cu->svalue,"print") == 0){
+	if(strcmp(cu->svalue,"print") == 0) {
 		list->command = C_Print;
 		list->v.type = CALLFUNCTION;
 		list->v.svalue = "print";
@@ -176,16 +179,16 @@ list_run *asm_UseFunction(list_run *cmd,cons_t *cu)
 	return list;
 }
 
-void execute(list_run *root)
+void execute(list_run_t *root)
 {
-	list_run *p = root;
-	stack *st = stack_init();
-	while(p != NULL){
+	list_run_t *p = root;
+	stack_t *st = stack_init();
+	while(p != NULL) {
 		int ans = 0;
-		value a;
+		value_t a;
 		int flag = 0;
 		int i=0;
-		switch(p->command){
+		switch(p->command) {
 		case C_Put:
 			printf("put %d\n",p->v.num);
 			push(st,p->v);
@@ -193,8 +196,8 @@ void execute(list_run *root)
 		case C_OptPlus:
 			printf("OptPlus %d\n",p->v.num);
 			ans = 0;
-			for(i=0;i < p->v.num;++i){
-				value v = pop(st);
+			for(i=0;i < p->v.num;++i) {
+				value_t v = pop(st);
 				ans += v.num;
 			}
 			a.type = Integer;
@@ -203,8 +206,8 @@ void execute(list_run *root)
 			break;
 		case C_OptMinus:
 			printf("OptMinus %d\n",p->v.num);			
-			for(i=0;i < p->v.num -1 ;++i){
-				value v = pop(st);
+			for(i=0;i < p->v.num -1 ;++i) {
+				value_t v = pop(st);
 				ans -= v.num;
 			}
 			ans += pop(st).num;
@@ -215,8 +218,8 @@ void execute(list_run *root)
 		case C_OptMul:
 			printf("OptMul %d\n",p->v.num);			
 			ans = 1;
-			for(i=0;i < p->v.num ;++i){
-				value v = pop(st);
+			for(i=0;i < p->v.num ;++i) {
+				value_t v = pop(st);
 				ans *= v.num;
 			}
 			a.type = Integer;
@@ -226,8 +229,8 @@ void execute(list_run *root)
 		case C_OptDiv:
 			printf("OptDiv %d\n",p->v.num);
 			ans = 1;
-			for(i=0;i < p->v.num-1 ;++i){
-				value v = pop(st);
+			for(i=0;i < p->v.num-1 ;++i) {
+				value_t v = pop(st);
 				ans *= v.num;
 			}
 			ans = pop(st).num / ans;
@@ -244,9 +247,9 @@ void execute(list_run *root)
 		case C_OptLt:
 			printf("OptLt %d\n",p->v.num);
 			ans = pop(st).num;
-			for(i=0;i < p->v.num - 1;++i){
-				value v = pop(st);
-				if(ans > v.num){
+			for(i=0;i < p->v.num - 1;++i) {
+				value_t v = pop(st);
+				if(ans > v.num) {
 					ans = v.num;
 					flag = 1;
 				}else{
@@ -261,9 +264,9 @@ void execute(list_run *root)
 		case C_OptGt:
 			printf("OptGt %d\n",p->v.num);
 			ans = pop(st).num;
-			for(i=0;i < p->v.num - 1;++i){
-				value v = pop(st);
-				if(ans < v.num){
+			for(i=0;i < p->v.num - 1;++i) {
+				value_t v = pop(st);
+				if(ans < v.num) {
 					ans = v.num;
 					flag = 1;
 				}else{
