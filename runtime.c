@@ -17,8 +17,10 @@
 	(c)->v.type = Integer;						\
 	(c)->v.num = (e);
 
+
 list_run *asm_Car(list_run *cmd,cons_t *cu);
 list_run *asm_Op(list_run *cmd,cons_t *cu);
+list_run *asm_UseFunction(list_run *cmd,cons_t *cu);
 list_run *assemble(list_run *p,cons_t *cu);
 void execute(list_run *root);
 
@@ -64,6 +66,9 @@ list_run *assemble(list_run *p,cons_t *cu)
 		break;
 	case TY_EOL:
 		p->command = C_End;
+		break;
+	case TY_Str:
+		p = asm_UseFunction(p,cu);
 		break;
 	default:
 		printf("some error occured in assemble().\n");
@@ -114,13 +119,61 @@ list_run *asm_Op(list_run *cmd,cons_t *cu)
 	case '/':
 		setOpt(list,C_OptDiv,count);
 		break;
+	case '<':
+		setOpt(list,C_OptLt,count);
+		break;
+	case '>':
+		setOpt(list,C_OptGt,count);
+		break;
 	default:
 		printf("some error occured in asm_Op().\n");
 		break;
 	}
 	list->next = ListRun_New();
 	list->next->command = C_End;
-	return list->next;
+	return list;
+}
+
+list_run *asm_UseFunction(list_run *cmd,cons_t *cu)
+{
+	int count = 0;
+	cons_t *p = cu->cdr;
+	list_run *list = cmd;
+
+	while(p->type != TY_Cdr){
+		switch(p->type){
+		case TY_Car:
+			list = asm_Car(list,p);
+			break;
+		case TY_Value:
+			setValue(list,p->ivalue);
+			break;
+		default:
+			printf("some error occured in asm_UseFunction().\n");
+			break;
+		}
+
+		list->next = ListRun_New();
+		list = list->next;
+		++count;
+		p = p->cdr;
+	}
+
+	if(strcmp(cu->svalue,"print") == 0){
+		list->command = C_Print;
+		list->v.type = CALLFUNCTION;
+		list->v.svalue = "print";
+	}else{
+		list->command = C_Call;
+		list->v.type = CALLFUNCTION;
+		list->v.num = count;
+		list->v.svalue = cu->svalue;
+	}
+
+	
+	list->next = ListRun_New();
+	list->next->command = C_End;
+	return list;
 }
 
 void execute(list_run *root)
@@ -130,6 +183,7 @@ void execute(list_run *root)
 	while(p != NULL){
 		int ans = 0;
 		value a;
+		int flag = 0;
 		switch(p->command){
 		case C_Put:
 			printf("put %d\n",p->v.num);
@@ -145,7 +199,6 @@ void execute(list_run *root)
 			a.type = Integer;
 			a.num = ans;
 			push(st,a);
-			printf("answer:%d\n",ans);
 			break;
 		case C_OptMinus:
 			printf("OptMinus %d\n",p->v.num);			
@@ -157,7 +210,6 @@ void execute(list_run *root)
 			a.type = Integer;
 			a.num = ans;
 			push(st,a);
-			printf("answer:%d\n",ans);
 			break;
 		case C_OptMul:
 			printf("OptMul %d\n",p->v.num);			
@@ -169,7 +221,6 @@ void execute(list_run *root)
 			a.type = Integer;
 			a.num = ans;
 			push(st,a);
-			printf("answer:%d\n",ans);
 			break;
 		case C_OptDiv:
 			printf("OptDiv %d\n",p->v.num);
@@ -182,10 +233,46 @@ void execute(list_run *root)
 			a.type = Integer;
 			a.num = ans;
 			push(st,a);
-			printf("answer:%d\n",ans);
+			break;
+		case C_Print:
+			printf("print value = %d\n",pop(st).num);
 			break;
 		case C_End:
 			printf("End\n");			
+			break;
+		case C_OptLt:
+			printf("OptLt %d\n",p->v.num);
+			ans = pop(st).num;
+			for(int i=0;i < p->v.num - 1;++i){
+				value v = pop(st);
+				if(ans > v.num){
+					ans = v.num;
+					flag = 1;
+				}else{
+					flag = 0;
+					break;
+				}
+			}
+			a.type = Boolean;
+			a.num = flag;
+			push(st,a);
+			break;
+		case C_OptGt:
+			printf("OptGt %d\n",p->v.num);
+			ans = pop(st).num;
+			for(int i=0;i < p->v.num - 1;++i){
+				value v = pop(st);
+				if(ans < v.num){
+					ans = v.num;
+					flag = 1;
+				}else{
+					flag = 0;
+					break;
+				}
+			}
+			a.type = Boolean;
+			a.num = flag;
+			push(st,a);
 			break;
 		default:
 			printf("command:%d \n",p->command);

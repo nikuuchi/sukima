@@ -18,7 +18,7 @@ void lisp_main(char *file,size_t size)
 
 	//--Lexer
 	startLex(lex_buf,fp);
-	//dumpLexer(lex_buf);
+	dumpLexer(lex_buf);
 
 	//--Parser
 	parse(lex_buf,root);

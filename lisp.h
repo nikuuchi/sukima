@@ -5,7 +5,7 @@
 
 
 #define BUF_SIZE 1024
-#define BINS 64
+
 
 typedef enum Type {TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Str,TY_Defun,TY_If,TY_Setq,TY_EOL} Type;
 
@@ -20,20 +20,6 @@ typedef struct cons_t
 	struct cons_t *cdr;
 } cons_t;
 
-typedef struct st_table
-{
-	int num_bins;
-	int num_entries;
-	struct st_table_entry **bins;
-} st_table;
-
-typedef struct st_table_entry
-{
-	unsigned int hash;
-	char *key;
-	cons_t *value;
-	struct st_table_entry *next;
-} st_table_entry;
 
 typedef struct list_string
 {
@@ -44,7 +30,7 @@ typedef struct list_string
 
 } list_string;
 
-typedef enum V_Type{Integer,Pointer,Boolean,POP_NULL}V_Type;
+typedef enum V_Type{Integer,Pointer,Boolean,POP_NULL,CALLFUNCTION }V_Type;
 
 typedef struct value
 {
@@ -64,7 +50,7 @@ typedef struct stack{
 } stack;
 
 
-typedef enum Command {C_Put,C_OptPlus,C_OptMinus,C_OptMul,C_OptDiv,C_Print,C_End} Command;
+typedef enum Command {C_Put,C_OptPlus,C_OptMinus,C_OptMul,C_OptDiv,C_OptLt,C_OptGt,C_Print,C_Call,C_End} Command;
 
 typedef struct list_run
 {
@@ -73,10 +59,29 @@ typedef struct list_run
 	struct list_run *next;
 } list_run;
 
+typedef struct st_table
+{
+	int num_bins;
+	int num_entries;
+	unsigned int (*getHash)(struct st_table *,char *);
+	struct st_table_entry **bins;
+} st_table;
 
-extern void HashTable_init(st_table *table);
+typedef struct st_table_entry
+{
+	unsigned int hash;
+	char *key;
+	union {
+		list_run *list;
+		value *v;
+	};
+	struct st_table_entry *next;
+} st_table_entry;
 
-extern unsigned int getHashNumber(char * s);
+
+extern st_table *HashTable_init();
+
+extern unsigned int getHashNumber(st_table *self,char * s);
 
 extern void freelist_string(list_string *p);
 

@@ -21,6 +21,8 @@ void dumpCons_t(cons_t * p)
 			printf("%d ",p->ivalue);
 		}else if(p->type == TY_Cdr){
 			printf(") ");
+		}else if(p->type == TY_Str){
+			printf("%s ",p->svalue);
 		}
 		if(p->cdr != NULL){
 			dumpCons_t(p->cdr);
