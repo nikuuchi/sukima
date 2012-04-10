@@ -5,6 +5,7 @@ LIBS =
 CFLAGS = -g -Wall 
 
 SRCS = \
+	vm.c \
 	runtime.c \
 	stack.c \
 	eval.c \

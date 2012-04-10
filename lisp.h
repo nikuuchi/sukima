@@ -86,6 +86,8 @@ extern void freelist_string(list_string_t *p);
 
 extern void parse(list_string_t *list, cons_t *node);
 
+extern void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash);
+
 //eval.c
 extern int eval(cons_t *p);
 
