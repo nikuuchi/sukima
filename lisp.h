@@ -43,13 +43,13 @@ typedef struct value_t {
 } value_t;
 
 typedef struct stack_cont_t {
-	value_t v;
+	value_t *v;
 	struct stack_cont_t *next;
 } stack_cont_t;
 
 typedef struct stack_t {
 	int size;
-	stack_cont_t *iterator;	
+	stack_cont_t *iterator;
 } stack_t;
 
 
@@ -59,7 +59,7 @@ typedef enum Command {
 
 typedef struct list_run_t {
 	Command command;
-	value_t v;
+	value_t *v;
 	struct list_run_t *next;
 } list_run_t;
 
@@ -67,6 +67,7 @@ typedef struct st_table_t {
 	int num_bins;
 	int num_entries;
 	struct st_table_entry_t **bins;
+	struct st_table_t *next;
 } st_table_t;
 
 typedef struct st_table_entry_t {
@@ -79,8 +80,7 @@ typedef struct st_table_entry_t {
 	struct st_table_entry_t *next;
 } st_table_entry_t;
 
-#define ListRun_New() (list_run_t *)malloc(sizeof(list_run_t))
-
+extern list_run_t *ListRun_New();
 
 extern void freelist_string(list_string_t *p);
 
@@ -109,9 +109,9 @@ extern void freeListRun(list_run_t *p);
 //stack.c
 extern void freeStack(stack_t *self);
 
-extern value_t pop(stack_t *self);
+extern value_t *pop(stack_t *self);
 
-extern void push(stack_t *self,value_t v);
+extern void push(stack_t *self,value_t *v);
 
 extern stack_t *stack_init();
 

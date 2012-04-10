@@ -3,30 +3,30 @@
 #define setValue(c,d) \
 	do { \
 		(c)->command = C_Put; \
-		(c)->v.type = Integer; \
-		(c)->v.num = (d); \
+		(c)->v->type = Integer; \
+		(c)->v->num = (d); \
 	} while(0);
 
 #define setStr(c,d,e)							\
 	do { \
 		(c)->command = C_LoadValue; \
-		(c)->v.type = Pointer; \
-		(c)->v.svalue = (d); \
-		(c)->v.len = (e); \
+		(c)->v->type = Pointer; \
+		(c)->v->svalue = (d); \
+		(c)->v->len = (e); \
 	} while(0);
 
 #define setBoolean(c,d) \
 	do { \
 		(c)->command = C_Put; \
-		(c)->v.type = Boolean; \
-		(c)->v.svalue = (d); \
+		(c)->v->type = Boolean; \
+		(c)->v->svalue = (d); \
 	} while(0);
 
 #define setOpt(c,d,e) \
 	do { \
 		(c)->command = (d); \
-		(c)->v.type = Integer; \
-		(c)->v.num = (e); \
+		(c)->v->type = Integer; \
+		(c)->v->num = (e); \
 	} while(0);
 
 list_run_t *asm_Car(list_run_t *cmd,cons_t *cu);
@@ -36,9 +36,18 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu);
 list_run_t *assemble(list_run_t *p,cons_t *cu);
 void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash);
 
+list_run_t *ListRun_New()
+{
+	list_run_t *list_run_t_ptr = (list_run_t *)malloc(sizeof(list_run_t));
+	list_run_t_ptr->v = (value_t *)malloc(sizeof(value_t));
+	return list_run_t_ptr;
+}
+
+
 void freeListRun(list_run_t *p)
 {
 	if(p != NULL) {
+		free(p->v);
 		freeListRun(p->next);
 	}
 	free(p);
@@ -57,7 +66,7 @@ void compile(cons_t *ast,list_run_t *root,st_table_t *hash)
 			setValue(p,chain->ivalue);
 			break;
 		default:
-			printf("some error occured in run().\n");
+			printf("some error occured in run()->\n");
 			break;			
 		}
 		chain = chain->cdr;
@@ -84,7 +93,7 @@ list_run_t *assemble(list_run_t *p,cons_t *cu)
 		p = asm_Setq(p,cu);
 		break;
 	default:
-		printf("some error occured in assemble().\n");
+		printf("some error occured in assemble()->\n");
 		break;
 	}
 	return p;
@@ -110,16 +119,16 @@ list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu)
 		list = list->next;
 		break;
 	default:
-		printf("some error occured in asm_Setq().\n");
+		printf("some error occured in asm_Setq()->\n");
 		break;
 	}
 	
 
 
 	list->command = C_PutObject;
-	list->v.type = Pointer;
-	list->v.svalue = cu->car->svalue;
-	list->v.len = cu->car->len;
+	list->v->type = Pointer;
+	list->v->svalue = cu->car->svalue;
+	list->v->len = cu->car->len;
 
 	list->next = ListRun_New();
 	list = list->next;
@@ -148,7 +157,7 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 			list = list->next;
 			break;
 		default:
-			printf("some error occured in asm_Op().\n");
+			printf("some error occured in asm_Op()->\n");
 			break;
 		}
 		++count;
@@ -175,7 +184,7 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 		setOpt(list,C_OptGt,count);
 		break;
 	default:
-		printf("some error occured in asm_Op().\n");
+		printf("some error occured in asm_Op()->\n");
 		break;
 	}
 	list->next = ListRun_New();
@@ -205,7 +214,7 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 			list = list->next;
 			break;
 		default:
-			printf("some error occured in asm_UseFunction().\n");
+			printf("some error occured in asm_UseFunction()->\n");
 			break;
 		}
 		++count;
@@ -214,15 +223,15 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 
 	if(strcmp(cu->svalue,"print") == 0) {
 		list->command = C_Print;
-		list->v.type = CALLFUNCTION;
-		list->v.svalue = "print";
-		list->v.len = strlen("print");
+		list->v->type = CALLFUNCTION;
+		list->v->svalue = "print";
+		list->v->len = strlen("print");
 	}else{
 		list->command = C_Call;
-		list->v.type = CALLFUNCTION;
-		list->v.num = count;
-		list->v.svalue = cu->svalue;
-		list->v.len = cu->len;
+		list->v->type = CALLFUNCTION;
+		list->v->num = count;
+		list->v->svalue = cu->svalue;
+		list->v->len = cu->len;
 	}
 
 	list->next = ListRun_New();
@@ -235,111 +244,126 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 	list_run_t *p = root;
 	while(p != NULL) {
 		int ans = 0;
-		value_t a;
 		int flag = 0;
 		int i=0;
 		switch(p->command) {
 		case C_Put:
-			printf("put %d\n",p->v.num);
+			printf("put %d\n",p->v->num);
 			push(st,p->v);
 			break;
-		case C_OptPlus:
-			printf("OptPlus %d\n",p->v.num);
+		case C_OptPlus:{
+			printf("OptPlus %d\n",p->v->num);
 			ans = 0;
-			for(i=0;i < p->v.num;++i) {
-				value_t v = pop(st);
-				ans += v.num;
+			for(i=0;i < p->v->num;++i) {
+				value_t *v = pop(st);
+				ans += v->num;
 			}
-			a.type = Integer;
-			a.num = ans;
+			value_t *a = (value_t *)malloc(sizeof(value_t));
+			a->type = Integer;
+			a->num = ans;
 			push(st,a);
 			break;
-		case C_OptMinus:
-			printf("OptMinus %d\n",p->v.num);
-			for(i=0;i < p->v.num -1 ;++i) {
-				value_t v = pop(st);
-				ans -= v.num;
+		}
+		case C_OptMinus:{
+			printf("OptMinus %d\n",p->v->num);
+			for(i=0;i < p->v->num -1 ;++i) {
+				value_t *v = pop(st);
+				ans -= v->num;
 			}
-			ans += pop(st).num;
-			a.type = Integer;
-			a.num = ans;
+			value_t *v = pop(st);
+			ans += v->num;
+			value_t *a = (value_t *)malloc(sizeof(value_t));
+			a->type = Integer;
+			a->num = ans;
 			push(st,a);
 			break;
-		case C_OptMul:
-			printf("OptMul %d\n",p->v.num);
+		}
+		case C_OptMul:{
+			printf("OptMul %d\n",p->v->num);
 			ans = 1;
-			for(i=0;i < p->v.num ;++i) {
-				value_t v = pop(st);
-				ans *= v.num;
+			for(i=0;i < p->v->num ;++i) {
+				value_t *v = pop(st);
+				ans *= v->num;
 			}
-			a.type = Integer;
-			a.num = ans;
+			value_t *a = (value_t *)malloc(sizeof(value_t));
+			a->type = Integer;
+			a->num = ans;
 			push(st,a);
 			break;
-		case C_OptDiv:
-			printf("OptDiv %d\n",p->v.num);
+		}
+		case C_OptDiv: {
+			printf("OptDiv %d\n",p->v->num);
 			ans = 1;
-			for(i=0;i < p->v.num-1 ;++i) {
-				value_t v = pop(st);
-				ans *= v.num;
+			for(i=0;i < p->v->num-1 ;++i) {
+				value_t *v = pop(st);
+				ans *= v->num;
 			}
-			ans = pop(st).num / ans;
-			a.type = Integer;
-			a.num = ans;
+			value_t *v = pop(st);
+			ans = v->num / ans;
+			value_t *a = (value_t *)malloc(sizeof(value_t));
+			a->type = Integer;
+			a->num = ans;
 			push(st,a);
 			break;
+		}
 		case C_Print: {
-			value_t v = pop(st);
-			printf("print value = %d\n",v.num);
+			value_t *v = pop(st);
+			printf("print value = %d\n",v->num);
+			free(v);
 //			push(st,v);
 			break;
 		}
 		case C_End:
 			printf("End\n");
 			break;
-		case C_OptLt:
-			printf("OptLt %d\n",p->v.num);
-			ans = pop(st).num;
-			for(i=0;i < p->v.num - 1;++i) {
-				value_t v = pop(st);
-				if(ans > v.num) {
-					ans = v.num;
+		case C_OptLt: {
+			printf("OptLt %d\n",p->v->num);
+			ans = pop(st)->num;
+			for(i=0;i < p->v->num - 1;++i) {
+				value_t *v = pop(st);
+				if(ans > v->num) {
+					ans = v->num;
 					flag = 1;
 				}else{
 					flag = 0;
 					break;
 				}
 			}
-			a.type = Boolean;
-			a.num = flag;
+			value_t *a = (value_t *)malloc(sizeof(value_t));
+			a->type = Boolean;
+			a->num = flag;
 			push(st,a);
 			break;
-		case C_OptGt:
-			printf("OptGt %d\n",p->v.num);
-			ans = pop(st).num;
-			for(i=0;i < p->v.num - 1;++i) {
-				value_t v = pop(st);
-				if(ans < v.num) {
-					ans = v.num;
+		}
+		case C_OptGt: {
+			printf("OptGt %d\n",p->v->num);
+			ans = pop(st)->num;
+			for(i=0;i < p->v->num - 1;++i) {
+				value_t *v = pop(st);
+				if(ans < v->num) {
+					ans = v->num;
 					flag = 1;
 				}else{
 					flag = 0;
 					break;
 				}
 			}
-			a.type = Boolean;
-			a.num = flag;
+			value_t *a = (value_t *)malloc(sizeof(value_t));
+			a->type = Boolean;
+			a->num = flag;
 			push(st,a);
 			break;
-		case C_PutObject:
-			a = pop(st);
-			printf("PutObject %s,%d\n",p->v.svalue,a.num);
-			HashTable_insert_Value(hash,p->v.svalue,p->v.len, &a);
+		}
+		case C_PutObject: {
+			value_t *a = pop(st);
+			printf("PutObject %s,%d\n",p->v->svalue,a->num);
+			HashTable_insert_Value(hash,p->v->svalue,p->v->len, a);
 			break;
+		}
 		case C_LoadValue: {
-			printf("LoadValue %s\n",p->v.svalue);
-			value_t *b = HashTable_lookup_Value(hash,p->v.svalue,p->v.len);
-			push(st,*b);
+			value_t *b = HashTable_lookup_Value(hash,p->v->svalue,p->v->len);
+			printf("LoadValue %s,%d\n",p->v->svalue,b->num);
+			push(st,b);
 			break;
 		}
 		default:

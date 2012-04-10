@@ -100,6 +100,9 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 		break;
 	case TY_Setq:
 		CASE_SETQ(node->car);
+		break;
+	case TY_Defun:
+		break;
 	case TY_EOL:
 		break;
 	default:
