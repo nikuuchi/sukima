@@ -1,30 +1,40 @@
 #include "lisp.h"
 
-#define ListRun_New() (list_run_t *)malloc(sizeof(list_run_t))
-
-#define setValue(c,d) do {						\
-		(c)->command = C_Put;					\
-		(c)->v.type = Integer;					\
-		(c)->v.num = (d);						\
+#define setValue(c,d) \
+	do { \
+		(c)->command = C_Put; \
+		(c)->v.type = Integer; \
+		(c)->v.num = (d); \
 	} while(0);
 
-#define setBoolean(c,d)	do {					\
-		(c)->command = C_Put;					\
-		(c)->v.type = Boolean;					\
-		(c)->v.svalue = (d);					\
+#define setStr(c,d,e)							\
+	do { \
+		(c)->command = C_LoadValue; \
+		(c)->v.type = Pointer; \
+		(c)->v.svalue = (d); \
+		(c)->v.len = (e); \
 	} while(0);
 
-#define setOpt(c,d,e) do {						\
-		(c)->command = (d);						\
-		(c)->v.type = Integer;					\
-		(c)->v.num = (e);						\
-	}while(0);
+#define setBoolean(c,d) \
+	do { \
+		(c)->command = C_Put; \
+		(c)->v.type = Boolean; \
+		(c)->v.svalue = (d); \
+	} while(0);
+
+#define setOpt(c,d,e) \
+	do { \
+		(c)->command = (d); \
+		(c)->v.type = Integer; \
+		(c)->v.num = (e); \
+	} while(0);
 
 list_run_t *asm_Car(list_run_t *cmd,cons_t *cu);
+list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu);
 list_run_t *asm_Op(list_run_t *cmd,cons_t *cu);
 list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu);
 list_run_t *assemble(list_run_t *p,cons_t *cu);
-void execute(list_run_t *root);
+void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash);
 
 void freeListRun(list_run_t *p)
 {
@@ -34,10 +44,9 @@ void freeListRun(list_run_t *p)
 	free(p);
 }
 
-void run(cons_t *ast)
+void compile(cons_t *ast,list_run_t *root,st_table_t *hash)
 {
 	cons_t *chain = ast;
-	list_run_t *root = ListRun_New();
 	list_run_t *p = root;
 	while(chain->cdr != NULL){
 		switch(chain->type){
@@ -51,11 +60,9 @@ void run(cons_t *ast)
 			printf("some error occured in run().\n");
 			break;			
 		}
-		chain = chain->cdr;	
+		chain = chain->cdr;
 	}
-
-	execute(root);
-	freeListRun(root);
+	p->command = C_End;
 }
 
 list_run_t *assemble(list_run_t *p,cons_t *cu)
@@ -73,6 +80,9 @@ list_run_t *assemble(list_run_t *p,cons_t *cu)
 	case TY_Str:
 		p = asm_UseFunction(p,cu);
 		break;
+	case TY_Setq:
+		p = asm_Setq(p,cu);
+		break;
 	default:
 		printf("some error occured in assemble().\n");
 		break;
@@ -83,6 +93,37 @@ list_run_t *assemble(list_run_t *p,cons_t *cu)
 list_run_t *asm_Car(list_run_t *cmd,cons_t *cu)
 {
 	return asm_Op(cmd,cu->car);
+}
+
+list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu)
+{
+	cons_t *p = cu->cdr;
+	list_run_t *list = cmd;
+
+	switch(p->type) {
+	case TY_Car:
+		list = asm_Car(list,p);
+		break;
+	case TY_Value:
+		setValue(list,p->ivalue);
+		list->next = ListRun_New();
+		list = list->next;
+		break;
+	default:
+		printf("some error occured in asm_Setq().\n");
+		break;
+	}
+	
+
+
+	list->command = C_PutObject;
+	list->v.type = Pointer;
+	list->v.svalue = cu->car->svalue;
+	list->v.len = cu->car->len;
+
+	list->next = ListRun_New();
+	list = list->next;
+	return list;
 }
 
 list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
@@ -98,18 +139,23 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 			break;
 		case TY_Value:
 			setValue(list,p->ivalue);
+			list->next = ListRun_New();
+			list = list->next;
+			break;
+		case TY_Str:
+			setStr(list,p->svalue,p->len);
+			list->next = ListRun_New();
+			list = list->next;
 			break;
 		default:
 			printf("some error occured in asm_Op().\n");
 			break;
 		}
-		list->next = ListRun_New();
-		list = list->next;
 		++count;
 		p = p->cdr;
 	}
-	
-    switch(cu->svalue[0]) {
+
+	switch(cu->svalue[0]) {
 	case '+':
 		setOpt(list,C_OptPlus,count);
 		break;
@@ -133,8 +179,8 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 		break;
 	}
 	list->next = ListRun_New();
-	list->next->command = C_End;
-	return list->next;
+	list = list->next;
+	return list;
 }
 
 list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
@@ -150,14 +196,18 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 			break;
 		case TY_Value:
 			setValue(list,p->ivalue);
+			list->next = ListRun_New();
+			list = list->next;
+			break;
+		case TY_Str:
+			setStr(list,p->svalue,p->len);
+			list->next = ListRun_New();
+			list = list->next;
 			break;
 		default:
 			printf("some error occured in asm_UseFunction().\n");
 			break;
 		}
-
-		list->next = ListRun_New();
-		list = list->next;
 		++count;
 		p = p->cdr;
 	}
@@ -166,23 +216,23 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 		list->command = C_Print;
 		list->v.type = CALLFUNCTION;
 		list->v.svalue = "print";
+		list->v.len = strlen("print");
 	}else{
 		list->command = C_Call;
 		list->v.type = CALLFUNCTION;
 		list->v.num = count;
 		list->v.svalue = cu->svalue;
+		list->v.len = cu->len;
 	}
 
-	
 	list->next = ListRun_New();
-	list->next->command = C_End;
+	list = list->next;
 	return list;
 }
 
-void execute(list_run_t *root)
+void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 {
 	list_run_t *p = root;
-	stack_t *st = stack_init();
 	while(p != NULL) {
 		int ans = 0;
 		value_t a;
@@ -205,7 +255,7 @@ void execute(list_run_t *root)
 			push(st,a);
 			break;
 		case C_OptMinus:
-			printf("OptMinus %d\n",p->v.num);			
+			printf("OptMinus %d\n",p->v.num);
 			for(i=0;i < p->v.num -1 ;++i) {
 				value_t v = pop(st);
 				ans -= v.num;
@@ -216,7 +266,7 @@ void execute(list_run_t *root)
 			push(st,a);
 			break;
 		case C_OptMul:
-			printf("OptMul %d\n",p->v.num);			
+			printf("OptMul %d\n",p->v.num);
 			ans = 1;
 			for(i=0;i < p->v.num ;++i) {
 				value_t v = pop(st);
@@ -238,11 +288,14 @@ void execute(list_run_t *root)
 			a.num = ans;
 			push(st,a);
 			break;
-		case C_Print:
-			printf("print value = %d\n",pop(st).num);
+		case C_Print: {
+			value_t v = pop(st);
+			printf("print value = %d\n",v.num);
+//			push(st,v);
 			break;
+		}
 		case C_End:
-			printf("End\n");			
+			printf("End\n");
 			break;
 		case C_OptLt:
 			printf("OptLt %d\n",p->v.num);
@@ -278,11 +331,21 @@ void execute(list_run_t *root)
 			a.num = flag;
 			push(st,a);
 			break;
+		case C_PutObject:
+			a = pop(st);
+			printf("PutObject %s,%d\n",p->v.svalue,a.num);
+			HashTable_insert_Value(hash,p->v.svalue,p->v.len, &a);
+			break;
+		case C_LoadValue: {
+			printf("LoadValue %s\n",p->v.svalue);
+			value_t *b = HashTable_lookup_Value(hash,p->v.svalue,p->v.len);
+			push(st,*b);
+			break;
+		}
 		default:
 			printf("command:%d \n",p->command);
 			break;
 		}
 		p = p->next;
 	}
-	freeStack(st);
 }

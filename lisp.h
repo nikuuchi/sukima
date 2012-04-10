@@ -7,7 +7,6 @@
 
 #define BUF_SIZE 1024
 
-
 typedef enum Type {
 	TY_Car, TY_Cdr, TY_Op, TY_Value, TY_Str, TY_Defun, TY_If, TY_Setq, TY_EOL
 } Type;
@@ -19,6 +18,7 @@ typedef struct cons_t {
 		int ivalue;
 		char *svalue;
 	};
+	size_t len;
 	struct cons_t *cdr;
 } cons_t;
 
@@ -38,7 +38,8 @@ typedef enum V_Type{
 typedef struct value_t {
 	V_Type type;
 	int num;
-	char *svalue; //Hash's key.	    
+	char *svalue; //Hash's key.
+	size_t len;
 } value_t;
 
 typedef struct stack_cont_t {
@@ -53,7 +54,7 @@ typedef struct stack_t {
 
 
 typedef enum Command {
-	C_Put, C_OptPlus, C_OptMinus, C_OptMul, C_OptDiv, C_OptLt, C_OptGt, C_Print, C_Call, C_End
+	C_Put, C_PutObject, C_LoadValue, C_OptPlus, C_OptMinus, C_OptMul, C_OptDiv, C_OptLt, C_OptGt, C_Print, C_Call, C_End
 } Command;
 
 typedef struct list_run_t {
@@ -65,7 +66,6 @@ typedef struct list_run_t {
 typedef struct st_table_t {
 	int num_bins;
 	int num_entries;
-	unsigned int (*getHash)(struct st_table_t *,char *);
 	struct st_table_entry_t **bins;
 } st_table_t;
 
@@ -79,8 +79,8 @@ typedef struct st_table_entry_t {
 	struct st_table_entry_t *next;
 } st_table_entry_t;
 
+#define ListRun_New() (list_run_t *)malloc(sizeof(list_run_t))
 
-extern st_table_t *HashTable_init();
 
 extern void freelist_string(list_string_t *p);
 
@@ -100,7 +100,11 @@ extern void dumpLexer(list_string_t *p);
 extern void startLex(list_string_t *p,FILE *fp);
 
 //runtime.c
-extern void run(cons_t *ast);
+extern void compile(cons_t *ast,list_run_t *root,st_table_t *hash);
+
+extern void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash);
+
+extern void freeListRun(list_run_t *p);
 
 //stack.c
 extern void freeStack(stack_t *self);
@@ -110,4 +114,17 @@ extern value_t pop(stack_t *self);
 extern void push(stack_t *self,value_t v);
 
 extern stack_t *stack_init();
+
+//hash.c
+extern st_table_t *HashTable_init();
+
+extern list_run_t *HashTable_lookup_Function(st_table_t *self,char *key, size_t len);
+
+extern value_t *HashTable_lookup_Value(st_table_t *self,char *key, size_t len);
+
+extern void HashTable_insert_Function(st_table_t *self,char *key, size_t len, list_run_t *list);
+
+extern void HashTable_insert_Value(st_table_t *self,char *key, size_t len, value_t *v);
+
+extern void HashTable_free(st_table_t *self);
 

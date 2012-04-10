@@ -29,8 +29,16 @@ void lisp_main(char *file,size_t size)
 
 	//--run
 	printf("\n");
-	run(root);
+	list_run_t *bytecode = ListRun_New();
+	st_table_t *hash = HashTable_init();
+	stack_t *st = stack_init();
 
+	compile(root,bytecode,hash);
+	vm_exec(bytecode,st,hash);
+
+	HashTable_free(hash);
+	freeStack(st);
+	freeListRun(bytecode);
 	freelist_string(lex_buf);
 	freeCons_t(root);
 	fclose(fp);
@@ -39,9 +47,9 @@ void lisp_main(char *file,size_t size)
 
 int main(int argc, char *argv[])
 {
-	if(argc == 1){
+	if(argc == 1) {
 		lisp_repl();
-	}else if(argc == 2){
+	}else if(argc == 2) {
 		lisp_main(argv[1],strlen(argv[1]));
 	}else{
 		printf("Too many arguments.");

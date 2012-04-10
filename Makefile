@@ -2,7 +2,7 @@
 CC = gcc
 DEFS = 
 LIBS = 
-CFLAGS = -g -Wall -O2 
+CFLAGS = -g -Wall 
 
 SRCS = \
 	runtime.c \

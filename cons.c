@@ -2,7 +2,7 @@
 
 void freeCons_t(cons_t * p)
 {
-	if(p->car != NULL && p->type == TY_Car)
+	if(p->car != NULL &&( p->type == TY_Car || p->type == TY_Setq))
 		freeCons_t(p->car);
 	if(p->cdr != NULL)
 		freeCons_t(p->cdr);
@@ -23,6 +23,9 @@ void dumpCons_t(cons_t * p)
 			printf(") ");
 		}else if(p->type == TY_Str){
 			printf("%s ",p->svalue);
+		}else if(p->type == TY_Setq){
+			printf("setq ");
+			dumpCons_t(p->car);
 		}
 		if(p->cdr != NULL){
 			dumpCons_t(p->cdr);
