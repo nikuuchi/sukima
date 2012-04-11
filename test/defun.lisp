@@ -1,2 +1,2 @@
-(defun a (x) (+ x 1))
-(print (a 1))
+(defun a (x y) (* x y))
+(print (a 2 3))

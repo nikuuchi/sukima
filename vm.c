@@ -128,6 +128,12 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 			push(st,b);
 			break;
 		}
+		case C_Call: {
+			list_run_t *func = HashTable_lookup_Function(hash,p->v->svalue,p->v->len);
+			vm_exec(func,st,hash);
+			printf("Call %s\n",p->v->svalue);
+			break;
+		}
 		default:
 			printf("command:%d \n",p->command);
 			break;

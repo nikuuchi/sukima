@@ -31,9 +31,10 @@
 
 list_run_t *asm_Car(list_run_t *cmd,cons_t *cu);
 list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu);
+list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash);
 list_run_t *asm_Op(list_run_t *cmd,cons_t *cu);
 list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu);
-list_run_t *assemble(list_run_t *p,cons_t *cu);
+list_run_t *assemble(list_run_t *p,cons_t *cu,st_table_t *hash);
 
 list_run_t *ListRun_New()
 {
@@ -59,21 +60,21 @@ void compile(cons_t *ast,list_run_t *root,st_table_t *hash)
 	while(chain->cdr != NULL){
 		switch(chain->type){
 		case TY_Car:
-			p = assemble(p,chain->car);
+			p = assemble(p,chain->car,hash);
 			break;
 		case TY_Value:
 			setValue(p,chain->ivalue);
 			break;
 		default:
-			printf("some error occured in run()->\n");
-			break;			
+			printf("some error occured in run().\n");
+			break;
 		}
 		chain = chain->cdr;
 	}
 	p->command = C_End;
 }
 
-list_run_t *assemble(list_run_t *p,cons_t *cu)
+list_run_t *assemble(list_run_t *p,cons_t *cu,st_table_t *hash)
 {
 	switch(cu->type) {
 	case TY_Cdr:
@@ -91,8 +92,11 @@ list_run_t *assemble(list_run_t *p,cons_t *cu)
 	case TY_Setq:
 		p = asm_Setq(p,cu);
 		break;
+	case TY_Defun:
+		p = asm_Defun(p,cu,hash);
+		break;
 	default:
-		printf("some error occured in assemble()->\n");
+		printf("some error occured in assemble().\n");
 		break;
 	}
 	return p;
@@ -100,7 +104,33 @@ list_run_t *assemble(list_run_t *p,cons_t *cu)
 
 list_run_t *asm_Car(list_run_t *cmd,cons_t *cu)
 {
+	if(cu->car->type == TY_Str) {
+		return asm_UseFunction(cmd,cu->car);
+	}
 	return asm_Op(cmd,cu->car);
+}
+
+list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
+{
+	list_run_t *func = ListRun_New();
+	list_run_t *list = func;
+
+	cons_t *tmp = cu->car->cdr->car;
+	while(tmp->type != TY_Cdr) {
+		list->command = C_PutObject;
+		list->v->type = Pointer;
+		list->v->svalue = tmp->svalue;
+		list->v->len = tmp->len;
+
+		list->next = ListRun_New();
+		list = list->next;
+		tmp = tmp->cdr;
+	}
+	list = asm_Car(list,cu->cdr);
+	list->command = C_End;
+	HashTable_insert_Function(hash,cu->car->svalue,cu->car->len,func);
+
+	return cmd;
 }
 
 list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu)
@@ -118,7 +148,7 @@ list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu)
 		list = list->next;
 		break;
 	default:
-		printf("some error occured in asm_Setq()->\n");
+		printf("some error occured in asm_Setq().\n");
 		break;
 	}
 	
@@ -156,7 +186,7 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 			list = list->next;
 			break;
 		default:
-			printf("some error occured in asm_Op()->\n");
+			printf("some error occured in asm_Op() 1.\n");
 			break;
 		}
 		++count;
@@ -183,7 +213,7 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 		setOpt(list,C_OptGt,count);
 		break;
 	default:
-		printf("some error occured in asm_Op()->\n");
+		printf("some error occured in asm_Op() 2. %s\n",cu->svalue);
 		break;
 	}
 	list->next = ListRun_New();
@@ -213,7 +243,7 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 			list = list->next;
 			break;
 		default:
-			printf("some error occured in asm_UseFunction()->\n");
+			printf("some error occured in asm_UseFunction().\n");
 			break;
 		}
 		++count;
