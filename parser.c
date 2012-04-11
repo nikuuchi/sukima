@@ -28,6 +28,11 @@
 		n = F_Value(list,(c),n); \
 	} while(0);
 
+#define CASE_DEFUN(c) \
+	do { \
+		n = F_Defun(list,(c),n); \
+	} while(0);
+
 #define CASE_SETQ(c) \
 	do { \
 		n = F_Setq(list,(c),n); \
@@ -47,8 +52,10 @@ int F_Cdr(list_string_t *list, cons_t *node,int n);
 int F_Value(list_string_t *list, cons_t *node,int n);
 int F_Str(list_string_t *list, cons_t *node,int n);
 int F_Setq(list_string_t *list, cons_t *node,int n);
+int F_Defun(list_string_t *list, cons_t *node,int n);
 
-list_string_t *at(list_string_t *list,int n){
+list_string_t *at(list_string_t *list,int n)
+{
 	list_string_t *p = list;
 	int i=0;
 	for(i=0;i<n;++i)p = p->next;
@@ -102,6 +109,7 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 		CASE_SETQ(node->car);
 		break;
 	case TY_Defun:
+		CASE_DEFUN(node->car);
 		break;
 	case TY_EOL:
 		break;
@@ -257,5 +265,51 @@ int F_Setq(list_string_t *list, cons_t *node,int n)
 	default:
 		DEFAULT(node);
 	}
+	return n;
+}
+
+int F_Defun(list_string_t *list, cons_t *node,int n)
+{
+	node->type = TY_Defun;
+	node->car = Cons_New();
+	node->cdr = Cons_New();
+	++n;
+	printf("Defun:type:%d:n:%d\n",at(list,n)->type,n);
+	node->car->type = TY_Str;
+	node->car->svalue = at(list,n)->str;
+	node->car->len = at(list,n)->size;
+	node->car->cdr = Cons_New();
+	++n;
+	node->car->cdr->type = TY_Car;
+	node->car->cdr->car = Cons_New();
+	++n;
+	cons_t *tmp = node->car->cdr->car;
+	while(at(list,n)->type != TY_Cdr) {
+		tmp->type = TY_Str;
+		tmp->svalue = at(list,n)->str;
+		tmp->len = at(list,n)->size;
+		tmp->cdr = Cons_New();
+		tmp = tmp->cdr;
+		++n;
+	}
+	tmp->type = TY_Cdr;
+	tmp->svalue = ")";
+	tmp->len = 1;
+	++n;
+
+	switch(at(list,n)->type){
+	case TY_Car:
+		CASE_CAR(node->cdr);
+		break;
+	case TY_Value:
+		CASE_VALUE(node->cdr);
+		break;
+	case TY_Str:
+		CASE_STR(node->cdr);
+		break;
+	default:
+		DEFAULT(node);
+	}
+
 	return n;
 }
