@@ -134,6 +134,43 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 			printf("Call %s\n",p->v->svalue);
 			break;
 		}
+		case C_TJump: {
+			value_t *b = pop(st);
+			if(b->num == 1) {
+				printf("TJump %s,T\n",p->v->svalue);
+			}else {
+				printf("TJump %s,Nil\n",p->v->svalue);
+				char *str = p->v->svalue;
+				while(p != NULL){
+					if(p->command == C_Tag){
+						if(strcmp(p->v->svalue,str) == 0){
+							printf("Tag %s\n",p->v->svalue);
+							goto jump;
+						}
+					}
+					p = p->next;
+				}
+			}
+			  jump:
+			break;
+		}
+		case C_Jump:
+			printf("Jump %s\n",p->v->svalue);
+			char *str = p->v->svalue;
+			while(p != NULL){
+				if(p->command == C_Tag){
+					if(strcmp(p->v->svalue,str) == 0){
+						printf("Tag %s\n",p->v->svalue);
+						goto jump2;
+					}
+				}
+				p = p->next;
+			}
+		jump2:
+			break;
+		case C_Tag:
+			printf("Tag %s\n",p->v->svalue);
+			break;
 		default:
 			printf("command:%d \n",p->command);
 			break;

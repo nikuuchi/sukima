@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <time.h>
 
 
 #define BUF_SIZE 1024
@@ -54,7 +55,7 @@ typedef struct stack_t {
 
 
 typedef enum Command {
-	C_Put, C_PutObject, C_LoadValue, C_OptPlus, C_OptMinus, C_OptMul, C_OptDiv, C_OptLt, C_OptGt, C_Print, C_Call, C_End
+	C_Put, C_PutObject, C_LoadValue, C_OptPlus, C_OptMinus, C_OptMul, C_OptDiv, C_OptLt, C_OptGt, C_Print, C_Call, C_TJump, C_Jump,C_Tag, C_End
 } Command;
 
 typedef struct list_run_t {

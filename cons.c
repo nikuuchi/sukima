@@ -27,6 +27,10 @@ void dumpCons_t(cons_t * p)
 		case TY_Cdr:
 			printf(") ");
 			break;
+		case TY_If:
+			printf("if ");
+			dumpCons_t(p->car);
+			break;
 		case TY_Setq:
 			printf("setq ");
 			dumpCons_t(p->car);

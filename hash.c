@@ -47,17 +47,25 @@ void HashTable_insert(st_table_t *self, char *key, size_t len,lookupType flag,vo
 	if(self->bins[hash_number] != NULL) {
 		st_table_entry_t *point = self->bins[hash_number];
 		while(point->next != NULL) {
+			if(strcmp(point->key,key) == 0) {
+				point->v = (value_t *)p;
+				goto end;
+			}
 			point = point->next;
 		}
-		point->next = (st_table_entry_t *)malloc(sizeof(st_table_entry_t));
-		if(flag == lookupValue) {
-			point->next->hash = hash_number;
-			point->next->key  = key;
-			point->next->v = (value_t *)p;
+		if(strcmp(point->key,key) == 0) {
+			point->v = (value_t *)p;
 		}else{
-			point->next->hash = hash_number;
-			point->next->key  = key;
-			point->next->list = (list_run_t *)p;
+			point->next = (st_table_entry_t *)malloc(sizeof(st_table_entry_t));
+			if(flag == lookupValue) {
+				point->next->hash = hash_number;
+				point->next->key  = key;
+				point->next->v = (value_t *)p;
+			}else{
+				point->next->hash = hash_number;
+				point->next->key  = key;
+				point->next->list = (list_run_t *)p;
+			}
 		}
 	}else{
 		self->bins[hash_number] = (st_table_entry_t *)malloc(sizeof(st_table_entry_t));
@@ -71,6 +79,8 @@ void HashTable_insert(st_table_t *self, char *key, size_t len,lookupType flag,vo
 			self->bins[hash_number]->list = (list_run_t *)p;
 		}
 	}
+  end:
+	return;
 }
 
 void HashTable_insert_Function(st_table_t *self,char *key, size_t len, list_run_t *list)

@@ -31,6 +31,7 @@
 
 list_run_t *asm_Car(list_run_t *cmd,cons_t *cu);
 list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu);
+list_run_t *asm_If(list_run_t *cmd,cons_t *cu);
 list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash);
 list_run_t *asm_Op(list_run_t *cmd,cons_t *cu);
 list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu);
@@ -95,6 +96,9 @@ list_run_t *assemble(list_run_t *p,cons_t *cu,st_table_t *hash)
 	case TY_Defun:
 		p = asm_Defun(p,cu,hash);
 		break;
+	case TY_If:
+		p = asm_If(p,cu);
+		break;
 	default:
 		printf("some error occured in assemble().\n");
 		break;
@@ -131,6 +135,72 @@ list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 	HashTable_insert_Function(hash,cu->car->svalue,cu->car->len,func);
 
 	return cmd;
+}
+
+char *createTag()
+{
+	static char *createTagCharacters[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z","0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
+	int b = 60;
+	char *str = (char *)malloc(sizeof(char) * 8);
+	int i=0;
+	static int createTagFlag;
+	if(createTagFlag == 0){
+		srand( (unsigned)time(NULL));
+		createTagFlag = 1;
+	}
+	for(i =0;i<8;++i) {
+		strcat(str,createTagCharacters[rand() % b]);
+	}
+	return str;
+}
+
+list_run_t *asm_If(list_run_t *cmd,cons_t *cu)
+{
+	list_run_t *list = cmd;
+	
+	//condition
+	list = asm_Car(list,cu->car);
+
+	//tag jump
+	char *tag = createTag();
+	list->command = C_TJump;
+	list->v->type = Pointer;
+	list->v->svalue = tag;
+	list->v->len = 8;
+	list->next = ListRun_New();
+	list = list->next;
+
+	//if true
+	list = asm_Car(list,cu->cdr);
+
+	//end jump
+	char *end_tag = createTag();
+	list->command = C_Jump;
+	list->v->type = Pointer;
+	list->v->svalue = end_tag;
+	list->v->len = 8;
+	list->next = ListRun_New();
+	list = list->next;
+
+	//tag
+	list->command = C_Tag;
+	list->v->type = Pointer;
+	list->v->svalue = tag;
+	list->v->len = 8;
+	list->next = ListRun_New();
+	list = list->next;
+
+	//if false
+	list = asm_Car(list,cu->cdr->cdr);
+
+	//end_tag
+	list->command = C_Tag;
+	list->v->type = Pointer;
+	list->v->svalue = end_tag;
+	list->v->len = 8;
+	list->next = ListRun_New();
+	list = list->next;
+	return list;
 }
 
 list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu)
