@@ -19,9 +19,12 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 			for(i=0;i < p->v->num;++i) {
 				value_t *v = pop(st);
 				ans += v->num;
+				if(v->type == Int_push){
+					free(v);
+				}
 			}
 			value_t *a = (value_t *)malloc(sizeof(value_t));
-			a->type = Integer;
+			a->type = Int_push;
 			a->num = ans;
 			push(st,a);
 			break;
@@ -35,7 +38,7 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 			value_t *v = pop(st);
 			ans += v->num;
 			value_t *a = (value_t *)malloc(sizeof(value_t));
-			a->type = Integer;
+			a->type = Int_push;
 			a->num = ans;
 			push(st,a);
 			break;
@@ -46,6 +49,9 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 			for(i=0;i < p->v->num ;++i) {
 				value_t *v = pop(st);
 				ans *= v->num;
+				if(v->type == Int_push) {
+					free(v);
+				}
 			}
 			value_t *a = (value_t *)malloc(sizeof(value_t));
 			a->type = Integer;
@@ -59,10 +65,16 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 			for(i=0;i < p->v->num-1 ;++i) {
 				value_t *v = pop(st);
 				ans *= v->num;
+				if(v->type == Int_push) {
+					free(v);
+				}
 			}
 			value_t *v = pop(st);
 			ans = v->num / ans;
 			value_t *a = (value_t *)malloc(sizeof(value_t));
+			if(v->type == Int_push) {
+				free(v);
+			}
 			a->type = Integer;
 			a->num = ans;
 			push(st,a);
@@ -71,7 +83,7 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 		case C_Print: {
 			value_t *v = pop(st);
 			printf("%d\n",v->num);
-//			push(st,v);
+			push(st,v);
 			break;
 		}
 		case C_End:
@@ -88,6 +100,9 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 				}else{
 					flag = 0;
 					break;
+				}
+				if(v->type == Int_push) {
+					free(v);
 				}
 			}
 			value_t *a = (value_t *)malloc(sizeof(value_t));
@@ -137,7 +152,9 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 		}
 		case C_TJump: {
 			value_t *b = pop(st);
-			if(b->num == 1) {
+			int booleanflag = b->num;
+			free(b);
+			if(booleanflag == 1) {
 //				printf("TJump %s,T\n",p->v->svalue);
 			}else {
 //				printf("TJump %s,Nil\n",p->v->svalue);
@@ -146,6 +163,7 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 					if(p->command == C_Tag){
 						if(strcmp(p->v->svalue,str) == 0){
 //							printf("Tag %s\n",p->v->svalue);
+							//free(str);
 							goto jump;
 						}
 					}
@@ -153,6 +171,7 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 				}
 			}
 			  jump:
+			//free(b);
 			break;
 		}
 		case C_Jump: {

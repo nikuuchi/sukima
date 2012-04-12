@@ -33,7 +33,7 @@ typedef struct list_string_t {
 } list_string_t;
 
 typedef enum V_Type{ 
-	Integer, Pointer, Boolean, POP_NULL, CALLFUNCTION 
+	Integer, Pointer, Boolean, POP_NULL, CALLFUNCTION, Int_push 
 } V_Type;
 
 typedef struct value_t {
@@ -71,9 +71,14 @@ typedef struct st_table_t {
 	struct st_table_t *next;
 } st_table_t;
 
+typedef enum lookupType {
+	lookupFunction, lookupValue
+} lookupType;
+
 typedef struct st_table_entry_t {
 	unsigned int hash;
 	char *key;
+	lookupType type;
 	union {
 		list_run_t *list;
 		value_t *v;

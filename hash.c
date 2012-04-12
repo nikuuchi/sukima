@@ -1,10 +1,7 @@
 #include "lisp.h"
 
-#define BINS 64
+#define BINS 16
 
-typedef enum lookupType {
-	lookupFunction, lookupValue
-} lookupType;
 
 unsigned int getHashNumber(char * s, size_t len)
 {
@@ -27,14 +24,17 @@ st_table_t  *HashTable_init()
 
 void HashTable_free(st_table_t *self)
 {
-/*
+
 	int i = 0;
 	for(i=0;i<BINS;++i) {
 		if(self->bins[i] != NULL){
+			if(self->bins[i]->type == lookupValue){
+			}else{
+				freeListRun(self->bins[i]->list);
+			}
 			free(self->bins[i]);
 		}
 	}
-*/
 	free(self->bins);
 	free(self);
 }
@@ -59,10 +59,12 @@ void HashTable_insert(st_table_t *self, char *key, size_t len,lookupType flag,vo
 				point->next->hash = hash_number;
 				point->next->key  = key;
 				point->next->v = (value_t *)p;
+				point->next->type = lookupValue;
 			}else{
 				point->next->hash = hash_number;
 				point->next->key  = key;
 				point->next->list = (list_run_t *)p;
+				point->next->type = lookupFunction;
 			}
 		}
 	}else{
@@ -71,10 +73,12 @@ void HashTable_insert(st_table_t *self, char *key, size_t len,lookupType flag,vo
 			self->bins[hash_number]->hash = hash_number;
 			self->bins[hash_number]->key  = key;
 			self->bins[hash_number]->v = (value_t *)p;
+			self->bins[hash_number]->type = lookupValue;
 		}else{
 			self->bins[hash_number]->hash = hash_number;
 			self->bins[hash_number]->key  = key;
 			self->bins[hash_number]->list = (list_run_t *)p;
+			self->bins[hash_number]->type = lookupFunction;
 		}
 	}
   end:

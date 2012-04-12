@@ -48,6 +48,9 @@ list_run_t *ListRun_New()
 void freeListRun(list_run_t *p)
 {
 	if(p != NULL) {
+		if(p->v->type == Pointer){
+			free(p->v->svalue);
+		}
 		free(p->v);
 		freeListRun(p->next);
 	}

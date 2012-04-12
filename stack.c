@@ -24,7 +24,8 @@ stack_t *stack_init()
 void freeStack(stack_t *self)
 {
 	while(self->size > 0){
-		pop(self);
+		value_t *v =  pop(self);
+		free(v);
 	}
 	free(self);
 }
