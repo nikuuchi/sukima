@@ -70,8 +70,7 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 		}
 		case C_Print: {
 			value_t *v = pop(st);
-			printf("print value = %d\n",v->num);
-			free(v);
+			printf("%d\n",v->num);
 //			push(st,v);
 			break;
 		}
@@ -130,8 +129,10 @@ void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash)
 		}
 		case C_Call: {
 			list_run_t *func = HashTable_lookup_Function(hash,p->v->svalue,p->v->len);
-			vm_exec(func,st,hash);
 //			printf("Call %s\n",p->v->svalue);
+			hash = HashTable_createLocal(hash);
+			vm_exec(func,st,hash);
+			hash = HashTable_freeLocal(hash);
 			break;
 		}
 		case C_TJump: {

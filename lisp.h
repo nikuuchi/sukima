@@ -131,3 +131,7 @@ extern void HashTable_insert_Value(st_table_t *self,char *key, size_t len, value
 
 extern void HashTable_free(st_table_t *self);
 
+extern st_table_t *HashTable_createLocal(st_table_t *self);
+
+extern st_table_t *HashTable_freeLocal(st_table_t *self);
+

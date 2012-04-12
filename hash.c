@@ -21,22 +21,20 @@ st_table_t  *HashTable_init()
 	st_table_t *table = (st_table_t *)malloc(sizeof(st_table_t));
 	table->num_bins = BINS;
 	table->num_entries = 0;
-	table->bins = (st_table_entry_t **)malloc(sizeof(st_table_entry_t) * BINS);
-//	int i = 0;
-//	for(i=0;i<BINS;++i) {
-//		table->bins[i] = (st_table_entry_t *)malloc(sizeof(st_table_entry_t));
-//	}
+	table->bins = (st_table_entry_t **)calloc(BINS,sizeof(st_table_entry_t));
 	return table;
 }
 
 void HashTable_free(st_table_t *self)
 {
+/*
 	int i = 0;
 	for(i=0;i<BINS;++i) {
 		if(self->bins[i] != NULL){
 			free(self->bins[i]);
 		}
 	}
+*/
 	free(self->bins);
 	free(self);
 }
@@ -103,10 +101,14 @@ void *HashTable_lookup(st_table_t *self, char *key, size_t len,lookupType flag)
 		}
 			stet = stet->next;
 	}
-	if(flag == lookupFunction){
-		return stet->list;
+	if(stet == NULL){
+		return HashTable_lookup(self->next,key,len,flag);
+	}else{
+		if(flag == lookupFunction){
+			return stet->list;
+		}
+		return stet->v;
 	}
-	return stet->v;
 }
 
 list_run_t *HashTable_lookup_Function(st_table_t *self,char *key, size_t len)
@@ -117,4 +119,23 @@ list_run_t *HashTable_lookup_Function(st_table_t *self,char *key, size_t len)
 value_t *HashTable_lookup_Value(st_table_t *self,char *key, size_t len)
 {
 	return (value_t *)HashTable_lookup(self,key,len,lookupValue);
+}
+
+
+st_table_t *HashTable_createLocal(st_table_t *self)
+{
+	st_table_t *st = HashTable_init();
+	st->next = self;
+	return st;
+}
+
+st_table_t *HashTable_freeLocal(st_table_t *self)
+{
+	if(self->next != NULL){
+		st_table_t *st = self->next;
+		HashTable_free(self);
+		return st;
+	}else{
+		return self;
+	}
 }
