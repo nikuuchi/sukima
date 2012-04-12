@@ -70,9 +70,9 @@ list_string_t *at(list_string_t *list,int n)
 
 void parse(list_string_t *list, cons_t *node)
 {
-	printf("car:%d:cdr:%d:op:%d:value:%d:str:%d:setq:%d\n",TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Str,TY_Setq);
+//	printf("car:%d:cdr:%d:op:%d:value:%d:str:%d:setq:%d\n",TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Str,TY_Setq);
 	int n = 0;
-	printf("type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("type:%d:n:%d\n",at(list,n)->type,n);
 	while(at(list,n)->type != TY_EOL){
 		
 		switch(at(list,n)->type) {
@@ -96,7 +96,7 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 	node->type = TY_Car;
 	node->car = Cons_New();
 	++n;
-	printf("car1:type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("car1:type:%d:n:%d\n",at(list,n)->type,n);
 
 	switch(at(list,n)->type) {
 	case TY_Car:
@@ -126,7 +126,7 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 		DEFAULT(node->car);
 	}
 
-	printf("car2:type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("car2:type:%d:n:%d\n",at(list,n)->type,n);
 
 	node->cdr = Cons_New();
 
@@ -163,7 +163,7 @@ int F_Op(list_string_t *list, cons_t *node,int n)
 	node->cdr = Cons_New();
 	node = node->cdr;
 	++n;
-	printf("op:type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("op:type:%d:n:%d\n",at(list,n)->type,n);
 
 	switch(at(list,n)->type) {
 	case TY_Car:
@@ -195,7 +195,7 @@ int F_Value(list_string_t *list, cons_t *node,int n)
 	node->cdr = Cons_New();
 	++n;
 	node = node->cdr;
-	printf("value:type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("value:type:%d:n:%d\n",at(list,n)->type,n);
 
 	switch(at(list,n)->type) {
 	case TY_Car:
@@ -226,7 +226,7 @@ int F_Str(list_string_t *list, cons_t *node,int n)
 	node->cdr = Cons_New();
 	node = node->cdr;
 	++n;
-	printf("str:type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("str:type:%d:n:%d\n",at(list,n)->type,n);
 
 	switch(at(list,n)->type) {
 	case TY_Car:
@@ -257,7 +257,7 @@ int F_Setq(list_string_t *list, cons_t *node,int n)
 	node->cdr = Cons_New();
 	node = node->cdr;
 	++n;
-	printf("setq:type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("setq:type:%d:n:%d\n",at(list,n)->type,n);
 
 	switch(at(list,n)->type) {
 	case TY_Car:
@@ -288,7 +288,7 @@ int F_If(list_string_t *list, cons_t *node,int n)
 	node->cdr = Cons_New();
 	node = node->cdr;
 	++n;
-	printf("if:type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("if:type:%d:n:%d\n",at(list,n)->type,n);
 
 	switch(at(list,n)->type) {
 	case TY_Car:
@@ -319,7 +319,7 @@ int F_Defun(list_string_t *list, cons_t *node,int n)
 	node->cdr = Cons_New();
 	node = node->cdr;
 	++n;
-	printf("defun:type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("defun:type:%d:n:%d\n",at(list,n)->type,n);
 
 	switch(at(list,n)->type) {
 	case TY_Car:

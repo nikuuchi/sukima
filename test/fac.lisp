@@ -1,2 +1,4 @@
-(defun f (n) if (< n 2) (+ 1 0) (* (f (- n 1))))
-(print (f 3))
+(defun f (n) 
+	(if (< n 2) (+ 0 1) (* n  (f (- n 1))))
+)
+(print (f 5))

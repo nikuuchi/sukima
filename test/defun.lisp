@@ -1,4 +1,5 @@
 (defun a (x y) (* x y))
 (print (a 2 3))
-(print (a 2 3))
-(print (a 2 3))
+(print (a 1 5))
+(print (a 4 5))
+(print (a 6 6))

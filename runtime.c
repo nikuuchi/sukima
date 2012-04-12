@@ -110,6 +110,8 @@ list_run_t *asm_Car(list_run_t *cmd,cons_t *cu)
 {
 	if(cu->car->type == TY_Str) {
 		return asm_UseFunction(cmd,cu->car);
+	}else if(cu->car->type == TY_If) {
+		return asm_If(cmd,cu->car);
 	}
 	return asm_Op(cmd,cu->car);
 }
@@ -119,7 +121,7 @@ list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 	list_run_t *func = ListRun_New();
 	list_run_t *list = func;
 
-	cons_t *tmp = cu->car->cdr->car;
+	cons_t *tmp = cu->cdr->cdr->car;
 	while(tmp->type != TY_Cdr) {
 		list->command = C_PutObject;
 		list->v->type = Pointer;
@@ -130,9 +132,9 @@ list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 		list = list->next;
 		tmp = tmp->cdr;
 	}
-	list = asm_Car(list,cu->cdr);
+	list = asm_Car(list,cu->cdr->cdr->cdr);
 	list->command = C_End;
-	HashTable_insert_Function(hash,cu->car->svalue,cu->car->len,func);
+	HashTable_insert_Function(hash,cu->cdr->svalue,cu->cdr->len,func);
 
 	return cmd;
 }
@@ -159,7 +161,7 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu)
 	list_run_t *list = cmd;
 	
 	//condition
-	list = asm_Car(list,cu->car);
+	list = asm_Car(list,cu->cdr);
 
 	//tag jump
 	char *tag = createTag();
@@ -171,7 +173,7 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu)
 	list = list->next;
 
 	//if true
-	list = asm_Car(list,cu->cdr);
+	list = asm_Car(list,cu->cdr->cdr);
 
 	//end jump
 	char *end_tag = createTag();
@@ -191,7 +193,7 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu)
 	list = list->next;
 
 	//if false
-	list = asm_Car(list,cu->cdr->cdr);
+	list = asm_Car(list,cu->cdr->cdr->cdr);
 
 	//end_tag
 	list->command = C_Tag;
