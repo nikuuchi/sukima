@@ -1,53 +1,53 @@
+
 #include "lisp.h"
 
-#define stack_New() (stack_t *)malloc(sizeof(stack_t))
+#define STACK_SIZE 16384
 
-stack_cont_t *stack_cont_New()
+
+
+stackp_t *stack_init()
 {
-	stack_cont_t *st = (stack_cont_t *)malloc(sizeof(stack_cont_t));
-	return st;
+	stackp_t *p = (stackp_t *)malloc(sizeof(stackp_t));
+	p->st = (value_t **)calloc(STACK_SIZE, sizeof(value_t));
+	p->esp = p->st[0];
+	return p;
 }
 
-stack_cont_t *stack_cont_init(value_t *vp){
-	stack_cont_t *c = stack_cont_New();
-	c->v = vp;
-	return c;
+
+void push(stackp_t *self,value_t *p,value_t *esp)
+{
+	printf("push %d\n",p->num);
+	self->esp = p;
+	++(self->esp);
 }
 
-stack_t *stack_init()
+value_t *pop(stackp_t *self,value_t *esp)
 {
-	stack_t *st = stack_New();
-	st->size = 0;
-	return st;
+	value_t *p = --esp;
+	printf("-----pop %d\n",p->num);
+	return p;
 }
 
-void freeStack(stack_t *self)
+value_t *bsp(stackp_t *self,int n)
 {
-	while(self->size > 0){
-		value_t *v =  pop(self);
-		free(v);
+	int i = 0;
+	value_t *b = self->esp;
+	for(i = 0;i<n;++i)
+		--b;
+	return b;
+}
+
+void freeStack(stackp_t *self)
+{
+	int i = 0;
+	value_t *p = self->st[0];
+	for(i = 0;i<STACK_SIZE;++i){
+		if(p != NULL){
+			value_t *tmp = p;
+			free(tmp);
+			++p;
+		}
 	}
+	free(self->st);
 	free(self);
-}
-
-value_t *pop(stack_t *self)
-{
-	if(self->size > 0){
-		stack_cont_t *tmp = self->iterator;
-		self->iterator = tmp->next;
-		self->size -= 1;
-		value_t *v = tmp->v;
-		free(tmp);
-		return v;
-	}
-	return NULL;
-}
-
-void push(stack_t *self,value_t *v)
-{
-	stack_cont_t *c = stack_cont_init(v);
-	stack_cont_t *ptr = self->iterator;
-	c->next = ptr;
-	self->iterator = c;
-	self->size += 1;
 }

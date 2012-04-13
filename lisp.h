@@ -42,7 +42,7 @@ typedef struct value_t {
 	char *svalue; //Hash's key.
 	size_t len;
 } value_t;
-
+/*
 typedef struct stack_cont_t {
 	value_t *v;
 	struct stack_cont_t *next;
@@ -52,10 +52,15 @@ typedef struct stack_t {
 	int size;
 	stack_cont_t *iterator;
 } stack_t;
-
-
+*/
+/*
+typedef struct stackp_t {
+	value_t **st;
+	value_t *esp;
+} stackp_t;
+*/
 typedef enum Command {
-	C_Put, C_PutObject, C_LoadValue, C_OptPlus, C_OptMinus, C_OptMul, C_OptDiv, C_OptLt, C_OptGt, C_Print, C_Call, C_TJump, C_Jump,C_Tag, C_End
+	C_Put, C_PutObject, C_LoadValue, C_OptPlus, C_OptMinus, C_OptMul, C_OptDiv, C_OptLt, C_OptGt, C_Print, C_Call, C_TJump, C_Jump,C_Tag, C_Args ,C_End
 } Command;
 
 typedef struct list_run_t {
@@ -92,7 +97,7 @@ extern void freelist_string(list_string_t *p);
 
 extern void parse(list_string_t *list, cons_t *node);
 
-extern void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash);
+extern void vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash);
 
 //eval.c
 extern int eval(cons_t *p);
@@ -110,19 +115,21 @@ extern void startLex(list_string_t *p,FILE *fp);
 //runtime.c
 extern void compile(cons_t *ast,list_run_t *root,st_table_t *hash);
 
-extern void vm_exec(list_run_t *root,stack_t *st,st_table_t *hash);
+//extern void vm_exec(list_run_t *root,stackp_t *st,st_table_t *hash);
 
 extern void freeListRun(list_run_t *p);
-
+/*
 //stack.c
-extern void freeStack(stack_t *self);
+extern void freeStack(stackp_t *self);
 
-extern value_t *pop(stack_t *self);
+extern value_t *pop(stackp_t *self);
 
-extern void push(stack_t *self,value_t *v);
+extern void push(stackp_t *self,value_t *p);
 
-extern stack_t *stack_init();
+extern stackp_t *stack_init();
 
+extern value_t *bsp(stackp_t *self,int n);
+*/
 //hash.c
 extern st_table_t *HashTable_init();
 

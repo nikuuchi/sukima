@@ -31,13 +31,14 @@ void lisp_main(char *file,size_t size)
 	printf("\n");
 	list_run_t *bytecode = ListRun_New();
 	st_table_t *hash = HashTable_init();
-	stack_t *st = stack_init();
+	int esp = 0;
+	value_t **st = (value_t **)calloc(16384,sizeof(value_t));
 
 	compile(root,bytecode,hash);
-	vm_exec(bytecode,st,hash);
+	vm_exec(bytecode,st,esp,hash);
 
 	HashTable_free(hash);
-	freeStack(st);
+	//freeStack(st);
 	freeListRun(bytecode);
 	freelist_string(lex_buf);
 	freeCons_t(root);

@@ -36,6 +36,10 @@ list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash);
 list_run_t *asm_Op(list_run_t *cmd,cons_t *cu);
 list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu);
 list_run_t *assemble(list_run_t *p,cons_t *cu,st_table_t *hash);
+list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu, st_table_t *argument);
+list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument);
+list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument);
+
 
 list_run_t *ListRun_New()
 {
@@ -119,26 +123,37 @@ list_run_t *asm_Car(list_run_t *cmd,cons_t *cu)
 	return asm_Op(cmd,cu->car);
 }
 
+list_run_t *asm_DefunCar(list_run_t *cmd,cons_t *cu,st_table_t *argument)
+{
+	if(cu->car->type == TY_Str) {
+		return asm_DefunUseFunction(cmd,cu->car,argument);
+	}else if(cu->car->type == TY_If) {
+		return asm_DefunIf(cmd,cu->car,argument);
+	}
+	return asm_DefunOp(cmd,cu->car,argument);
+}
+
 list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 {
 	list_run_t *func = ListRun_New();
 	list_run_t *list = func;
 
-	cons_t *tmp = cu->cdr->cdr->car;
-	while(tmp->type != TY_Cdr) {
-		list->command = C_PutObject;
-		list->v->type = Pointer;
-		list->v->svalue = tmp->svalue;
-		list->v->len = tmp->len;
+	st_table_t *argument = HashTable_init();
 
-		list->next = ListRun_New();
-		list = list->next;
+	cons_t *tmp = cu->cdr->cdr->car;
+	int i = 1;
+	while(tmp->type != TY_Cdr) {
+		value_t *v = (value_t *)malloc(sizeof(value_t));
+		v->num = i;
+		HashTable_insert_Value(argument,tmp->svalue,tmp->len,v);
 		tmp = tmp->cdr;
+		++i;
 	}
-	list = asm_Car(list,cu->cdr->cdr->cdr);
+	list = asm_DefunCar(list,cu->cdr->cdr->cdr,argument);
 	list->command = C_End;
 	HashTable_insert_Function(hash,cu->cdr->svalue,cu->cdr->len,func);
 
+	HashTable_free(argument);
 	return cmd;
 }
 
@@ -338,6 +353,166 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 		list->v->len = cu->len;
 	}
 
+	list->next = ListRun_New();
+	list = list->next;
+	return list;
+}
+
+
+list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu,st_table_t *argument)
+{
+	int count = 0;
+	cons_t *p = cu->cdr;
+	list_run_t *list = cmd;
+
+	while(p->type != TY_Cdr) {
+		switch(p->type) {
+		case TY_Car:
+			list = asm_DefunCar(list,p,argument);
+			break;
+		case TY_Value:
+			setValue(list,p->ivalue);
+			list->next = ListRun_New();
+			list = list->next;
+			break;
+		case TY_Str: {
+			value_t *v = HashTable_lookup_Value(argument,p->svalue,p->len);
+			list->command = C_Args;
+			list->v->type = Integer;
+			list->v->num = v->num;
+			list->next = ListRun_New();
+			list = list->next;
+			break;
+		}
+		default:
+			printf("some error occured in asm_UseFunction().\n");
+			break;
+		}
+		++count;
+		p = p->cdr;
+	}
+
+	if(strcmp(cu->svalue,"print") == 0) {
+		list->command = C_Print;
+		list->v->type = CALLFUNCTION;
+		list->v->svalue = "print";
+		list->v->len = strlen("print");
+	}else{
+		list->command = C_Call;
+		list->v->type = CALLFUNCTION;
+		list->v->num = count;
+		list->v->svalue = cu->svalue;
+		list->v->len = cu->len;
+	}
+
+	list->next = ListRun_New();
+	list = list->next;
+	return list;
+}
+list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument)
+{
+	int count = 0;
+	cons_t *p = cu->cdr;
+	list_run_t *list = cmd;
+
+	while(p->type != TY_Cdr) {
+		switch(p->type) {
+		case TY_Car:
+			list = asm_DefunCar(list,p,argument);
+			break;
+		case TY_Value:
+			setValue(list,p->ivalue);
+			list->next = ListRun_New();
+			list = list->next;
+			break;
+		case TY_Str:{
+			value_t *v = HashTable_lookup_Value(argument,p->svalue,p->len);
+			list->command = C_Args;
+			list->v->type = Integer;
+			list->v->num = v->num;
+			list->next = ListRun_New();
+			list = list->next;
+			break;
+		}
+		default:
+			printf("some error occured in asm_Op() 1.\n");
+			break;
+		}
+		++count;
+		p = p->cdr;
+	}
+
+	switch(cu->svalue[0]) {
+	case '+':
+		setOpt(list,C_OptPlus,count);
+		break;
+	case '-':
+		setOpt(list,C_OptMinus,count);
+		break;
+	case '*':
+		setOpt(list,C_OptMul,count);
+		break;
+	case '/':
+		setOpt(list,C_OptDiv,count);
+		break;
+	case '<':
+		setOpt(list,C_OptLt,count);
+		break;
+	case '>':
+		setOpt(list,C_OptGt,count);
+		break;
+	default:
+		printf("some error occured in asm_Op() 2. %s\n",cu->svalue);
+		break;
+	}
+	list->next = ListRun_New();
+	list = list->next;
+	return list;
+}
+list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument)
+{
+	list_run_t *list = cmd;
+	
+	//condition
+	list = asm_DefunCar(list,cu->cdr,argument);
+
+	//tag jump
+	char *tag = createTag();
+	list->command = C_TJump;
+	list->v->type = Pointer;
+	list->v->svalue = tag;
+	list->v->len = 8;
+	list->next = ListRun_New();
+	list = list->next;
+
+	//if true
+	list = asm_DefunCar(list,cu->cdr->cdr,argument);
+
+	//end jump
+	char *end_tag = createTag();
+	list->command = C_Jump;
+	list->v->type = Pointer;
+	list->v->svalue = end_tag;
+	list->v->len = 8;
+	list->next = ListRun_New();
+	list = list->next;
+
+	//tag
+	list->command = C_Tag;
+	list->v->type = Pointer;
+	list->v->svalue = tag;
+	list->v->len = 8;
+	list->next = ListRun_New();
+	list = list->next;
+
+	//if false
+	list = asm_DefunCar(list,cu->cdr->cdr->cdr,argument);
+
+	//end_tag
+	list->command = C_Tag;
+	list->v->type = Pointer;
+	list->v->svalue = end_tag;
+	list->v->len = 8;
 	list->next = ListRun_New();
 	list = list->next;
 	return list;
