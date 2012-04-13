@@ -42,6 +42,15 @@ typedef struct value_t {
 	char *svalue; //Hash's key.
 	size_t len;
 } value_t;
+
+/*
+union {
+	struct { uint32_t tag:1, value:31;} taged_value;
+	int32_t ivalue;
+	float   fvalue;
+	void   *ptr;
+} boxed_value;
+*/
 /*
 typedef struct stack_cont_t {
 	value_t *v;

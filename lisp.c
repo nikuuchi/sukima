@@ -39,6 +39,7 @@ void lisp_main(char *file,size_t size)
 
 	HashTable_free(hash);
 	//freeStack(st);
+	//free(st);
 	freeListRun(bytecode);
 	freelist_string(lex_buf);
 	freeCons_t(root);
