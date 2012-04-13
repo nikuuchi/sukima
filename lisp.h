@@ -51,23 +51,6 @@ union {
 	void   *ptr;
 } boxed_value;
 */
-/*
-typedef struct stack_cont_t {
-	value_t *v;
-	struct stack_cont_t *next;
-} stack_cont_t;
-
-typedef struct stack_t {
-	int size;
-	stack_cont_t *iterator;
-} stack_t;
-*/
-/*
-typedef struct stackp_t {
-	value_t **st;
-	value_t *esp;
-} stackp_t;
-*/
 typedef enum Command {
 	C_Put, C_PutObject, C_LoadValue, C_OptPlus, C_OptMinus, C_OptMul, C_OptDiv, C_OptLt, C_OptGt, C_Print, C_Call, C_TJump, C_Jump,C_Tag, C_Args ,C_End
 } Command;
@@ -127,18 +110,7 @@ extern void compile(cons_t *ast,list_run_t *root,st_table_t *hash);
 //extern void vm_exec(list_run_t *root,stackp_t *st,st_table_t *hash);
 
 extern void freeListRun(list_run_t *p);
-/*
-//stack.c
-extern void freeStack(stackp_t *self);
 
-extern value_t *pop(stackp_t *self);
-
-extern void push(stackp_t *self,value_t *p);
-
-extern stackp_t *stack_init();
-
-extern value_t *bsp(stackp_t *self,int n);
-*/
 //hash.c
 extern st_table_t *HashTable_init();
 
