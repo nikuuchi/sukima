@@ -7,7 +7,7 @@
 		(c)->v->num = (d); \
 	} while(0);
 
-#define setStr(c,d,e)							\
+#define setStr(c,d,e) \
 	do { \
 		(c)->command = C_LoadValue; \
 		(c)->v->type = Pointer; \
@@ -225,7 +225,7 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu)
 
 list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu)
 {
-	cons_t *p = cu->cdr;
+	cons_t *p = cu->cdr->cdr;
 	list_run_t *list = cmd;
 
 	switch(p->type) {
@@ -246,8 +246,8 @@ list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu)
 
 	list->command = C_PutObject;
 	list->v->type = Pointer;
-	list->v->svalue = cu->car->svalue;
-	list->v->len = cu->car->len;
+	list->v->svalue = cu->cdr->svalue;
+	list->v->len = cu->cdr->len;
 
 	list->next = ListRun_New();
 	list = list->next;
@@ -486,7 +486,13 @@ list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 	list = list->next;
 
 	//if true
-	list = asm_DefunCar(list,cu->cdr->cdr,argument);
+	if(cu->cdr->cdr->type == TY_Car) {
+		list = asm_DefunCar(list,cu->cdr->cdr,argument);
+	}else if(cu->cdr->cdr->type == TY_Value) {
+		setValue(list,cu->cdr->cdr->ivalue);
+		list->next = ListRun_New();
+		list = list->next;
+	}
 
 	//end jump
 	char *end_tag = createTag();
@@ -506,8 +512,13 @@ list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 	list = list->next;
 
 	//if false
-	list = asm_DefunCar(list,cu->cdr->cdr->cdr,argument);
-
+	if(cu->cdr->cdr->cdr->type == TY_Car) {
+		list = asm_DefunCar(list,cu->cdr->cdr->cdr,argument);
+	}else if(cu->cdr->cdr->cdr->type == TY_Value) {
+		setValue(list,cu->cdr->cdr->cdr->ivalue);
+		list->next = ListRun_New();
+		list = list->next;
+	}
 	//end_tag
 	list->command = C_Tag;
 	list->v->type = Pointer;

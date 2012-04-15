@@ -1,10 +1,5 @@
 #include "lisp.h"
 
-#define CASE_CAR(c) \
-	do { \
-		n = F_Car(list,(c),n); \
-	} while(0);
-
 #define CASE_CDR(c) \
 	do { \
 		(c)->type = TY_Cdr; \
@@ -20,27 +15,12 @@
 
 #define CASE_STR(c) \
 	do { \
-		n = F_Str(list,(c),n); \
+		n = F_Op(list,(c),n); \
 	} while(0);
 
 #define CASE_VALUE(c) \
 	do { \
 		n = F_Value(list,(c),n); \
-	} while(0);
-
-#define CASE_IF(c) \
-	do { \
-		n = F_If(list,(c),n); \
-	} while(0);
-
-#define CASE_DEFUN(c) \
-	do { \
-		n = F_Defun(list,(c),n); \
-	} while(0);
-
-#define CASE_SETQ(c) \
-	do { \
-		n = F_Setq(list,(c),n); \
 	} while(0);
 
 #define DEFAULT(c) \
@@ -56,9 +36,6 @@ int F_Op(list_string_t *list, cons_t *node, int n);
 int F_Cdr(list_string_t *list, cons_t *node,int n);
 int F_Value(list_string_t *list, cons_t *node,int n);
 int F_Str(list_string_t *list, cons_t *node,int n);
-int F_Setq(list_string_t *list, cons_t *node,int n);
-int F_Defun(list_string_t *list, cons_t *node,int n);
-int F_If(list_string_t *list, cons_t *node,int n);
 
 list_string_t *at(list_string_t *list,int n)
 {
@@ -77,7 +54,7 @@ void parse(list_string_t *list, cons_t *node)
 		
 		switch(at(list,n)->type) {
 		case TY_Car:
-			CASE_CAR(node);
+			n = F_Car(list,node,n);
 			break;
 		default:
 			DEFAULT(node);
@@ -100,25 +77,17 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 
 	switch(at(list,n)->type) {
 	case TY_Car:
-		CASE_CAR(node->car);
+		n = F_Car(list,node->car,n);
 		break;
 	case TY_Cdr:
 		CASE_CDR(node); //Need check
 		break;
 	case TY_Op:
-		CASE_OP(node->car);
-		break;
 	case TY_Str:
-		CASE_STR(node->car);
-		break;
 	case TY_Setq:
-		CASE_SETQ(node->car);
-		break;
 	case TY_Defun:
-		CASE_DEFUN(node->car);
-		break;
 	case TY_If:
-		CASE_IF(node->car);
+		CASE_OP(node->car);
 		break;
 	case TY_EOL:
 		break;
@@ -132,16 +101,14 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 
 	switch(at(list,n)->type) {
 	case TY_Car:
-		CASE_CAR(node->cdr);
+		n = F_Car(list,node->cdr,n);
 		break;
 	case TY_Cdr:
 		CASE_CDR(node->cdr);
 		break;
 	case TY_Op:
-		CASE_OP(node->cdr);
-		break;
 	case TY_Str:
-		CASE_STR(node->cdr);
+		CASE_OP(node->cdr);
 		break;
 	case TY_Value:
 		CASE_VALUE(node->cdr);
@@ -154,10 +121,9 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 	return n;
 }
 
-
 int F_Op(list_string_t *list, cons_t *node,int n)
 {
-	node->type = TY_Op;
+	node->type = at(list,n)->type;
 	node->svalue = at(list,n)->str;
 	node->len = at(list,n)->size;
 	node->cdr = Cons_New();
@@ -167,7 +133,7 @@ int F_Op(list_string_t *list, cons_t *node,int n)
 
 	switch(at(list,n)->type) {
 	case TY_Car:
-		CASE_CAR(node);
+		n = F_Car(list,node,n);
 		break;
 	case TY_Cdr:
 		CASE_CDR(node);
@@ -185,8 +151,6 @@ int F_Op(list_string_t *list, cons_t *node,int n)
 	}
 	return n;
 }
-
-
 
 int F_Value(list_string_t *list, cons_t *node,int n)
 {
@@ -199,7 +163,7 @@ int F_Value(list_string_t *list, cons_t *node,int n)
 
 	switch(at(list,n)->type) {
 	case TY_Car:
-		CASE_CAR(node);
+		n = F_Car(list,node,n);
 		break;
 	case TY_Cdr:
 		CASE_CDR(node);
@@ -218,126 +182,3 @@ int F_Value(list_string_t *list, cons_t *node,int n)
 	return n;
 }
 
-int F_Str(list_string_t *list, cons_t *node,int n)
-{
-	node->type = TY_Str;
-	node->svalue = at(list,n)->str;
-	node->len = at(list,n)->size;
-	node->cdr = Cons_New();
-	node = node->cdr;
-	++n;
-//	printf("str:type:%d:n:%d\n",at(list,n)->type,n);
-
-	switch(at(list,n)->type) {
-	case TY_Car:
-		CASE_CAR(node);
-		break;
-	case TY_Cdr:
-		CASE_CDR(node);
-		break;
-	case TY_Value:
-		CASE_VALUE(node);
-		break;
-	case TY_Str:
-		CASE_STR(node);
-		break;
-	case TY_EOL:
-		break;
-	default:
-		DEFAULT(node);
-	}
-	return n;
-}
-
-int F_Setq(list_string_t *list, cons_t *node,int n)
-{
-	node->type = TY_Setq;
-	node->svalue = at(list,n)->str;
-	node->len = at(list,n)->size;
-	node->cdr = Cons_New();
-	node = node->cdr;
-	++n;
-//	printf("setq:type:%d:n:%d\n",at(list,n)->type,n);
-
-	switch(at(list,n)->type) {
-	case TY_Car:
-		CASE_CAR(node);
-		break;
-	case TY_Cdr:
-		CASE_CDR(node);
-		break;
-	case TY_Value:
-		CASE_VALUE(node);
-		break;
-	case TY_Str:
-		CASE_STR(node);
-		break;
-	case TY_EOL:
-		break;
-	default:
-		DEFAULT(node);
-	}
-	return n;
-}
-
-int F_If(list_string_t *list, cons_t *node,int n)
-{
-	node->type = TY_If;
-	node->svalue = at(list,n)->str;
-	node->len = at(list,n)->size;
-	node->cdr = Cons_New();
-	node = node->cdr;
-	++n;
-//	printf("if:type:%d:n:%d\n",at(list,n)->type,n);
-
-	switch(at(list,n)->type) {
-	case TY_Car:
-		CASE_CAR(node);
-		break;
-	case TY_Cdr:
-		CASE_CDR(node);
-		break;
-	case TY_Value:
-		CASE_VALUE(node);
-		break;
-	case TY_Str:
-		CASE_STR(node);
-		break;
-	case TY_EOL:
-		break;
-	default:
-		DEFAULT(node);
-	}
-	return n;
-}
-
-int F_Defun(list_string_t *list, cons_t *node,int n)
-{
-	node->type = TY_Defun;
-	node->svalue = at(list,n)->str;
-	node->len = at(list,n)->size;
-	node->cdr = Cons_New();
-	node = node->cdr;
-	++n;
-//	printf("defun:type:%d:n:%d\n",at(list,n)->type,n);
-
-	switch(at(list,n)->type) {
-	case TY_Car:
-		CASE_CAR(node);
-		break;
-	case TY_Cdr:
-		CASE_CDR(node);
-		break;
-	case TY_Value:
-		CASE_VALUE(node);
-		break;
-	case TY_Str:
-		CASE_STR(node);
-		break;
-	case TY_EOL:
-		break;
-	default:
-		DEFAULT(node);
-	}
-	return n;
-}

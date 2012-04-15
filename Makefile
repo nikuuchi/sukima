@@ -2,12 +2,11 @@
 CC = gcc
 DEFS = 
 LIBS = 
-CFLAGS = -Wall -O2 
+CFLAGS = -Wall -g 
 
 SRCS = \
 	vm.c \
 	runtime.c \
-	eval.c \
 	parser.c \
 	lex.c \
 	cons.c \

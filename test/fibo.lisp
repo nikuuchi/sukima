@@ -1,6 +1,6 @@
 (defun fib (n)
     (if (< n 3)
-    (+ 0 1)
+    1
     (+ (fib (- n 1)) (fib (- n 2))))
 )
 (print (fib 36))

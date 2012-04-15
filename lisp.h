@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <time.h>
+#include <stdint.h>
 
 
 #define BUF_SIZE 1024
@@ -43,14 +44,13 @@ typedef struct value_t {
 	size_t len;
 } value_t;
 
-/*
-union {
+typedef union boxed_value {
 	struct { uint32_t tag:1, value:31;} taged_value;
 	int32_t ivalue;
 	float   fvalue;
 	void   *ptr;
 } boxed_value;
-*/
+
 typedef enum Command {
 	C_Put, C_PutObject, C_LoadValue, C_OptPlus, C_OptMinus, C_OptMul, C_OptDiv, C_OptLt, C_OptGt, C_Print, C_Call, C_TJump, C_Jump,C_Tag, C_Args ,C_End
 } Command;
@@ -106,8 +106,6 @@ extern void startLex(list_string_t *p,FILE *fp);
 
 //runtime.c
 extern void compile(cons_t *ast,list_run_t *root,st_table_t *hash);
-
-//extern void vm_exec(list_run_t *root,stackp_t *st,st_table_t *hash);
 
 extern void freeListRun(list_run_t *p);
 

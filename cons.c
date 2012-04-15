@@ -2,7 +2,7 @@
 
 void freeCons_t(cons_t * p)
 {
-	if(p->car != NULL &&( p->type == TY_Car || p->type == TY_Setq))
+	if(p->car != NULL && p->type == TY_Car)
 		freeCons_t(p->car);
 	if(p->cdr != NULL)
 		freeCons_t(p->cdr);
