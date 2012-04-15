@@ -40,14 +40,12 @@ list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu, st_table_t *argumen
 list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument);
 list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument);
 
-
 list_run_t *ListRun_New()
 {
 	list_run_t *list_run_t_ptr = (list_run_t *)malloc(sizeof(list_run_t));
 	list_run_t_ptr->v = (value_t *)malloc(sizeof(value_t));
 	return list_run_t_ptr;
 }
-
 
 void freeListRun(list_run_t *p)
 {
@@ -358,7 +356,6 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 	return list;
 }
 
-
 list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu,st_table_t *argument)
 {
 	int count = 0;
@@ -469,6 +466,7 @@ list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 	list = list->next;
 	return list;
 }
+
 list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 {
 	list_run_t *list = cmd;

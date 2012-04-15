@@ -32,7 +32,7 @@ void lisp_main(char *file,size_t size)
 	list_run_t *bytecode = ListRun_New();
 	st_table_t *hash = HashTable_init();
 	int esp = 0;
-	value_t **st = (value_t **)calloc(16384,sizeof(value_t));
+	value_t **st = (value_t **)calloc(8192,sizeof(value_t));
 
 	compile(root,bytecode,hash);
 	vm_exec(bytecode,st,esp,hash);
