@@ -8,34 +8,16 @@
 		++n; \
 	} while(0);
 
-#define CASE_OP(c) \
-	do { \
-		n = F_Op(list,(c),n); \
-	} while(0);
-
-#define CASE_STR(c) \
-	do { \
-		n = F_Op(list,(c),n); \
-	} while(0);
-
-#define CASE_VALUE(c) \
-	do { \
-		n = F_Value(list,(c),n); \
-	} while(0);
-
 #define DEFAULT(c) \
 	do { \
-		F_ERROR(list,(c),n); \
-		++n; \
+		printf("parse error. %s \n",at(list,n)->str); \
+		exit(1); \
 	} while(0);
 #define Cons_New() (cons_t *)malloc(sizeof(cons_t))
 
-void F_ERROR(list_string_t *list, cons_t *node,int n);
 int F_Car(list_string_t *list, cons_t *node,int n);
 int F_Op(list_string_t *list, cons_t *node, int n);
-int F_Cdr(list_string_t *list, cons_t *node,int n);
 int F_Value(list_string_t *list, cons_t *node,int n);
-int F_Str(list_string_t *list, cons_t *node,int n);
 
 list_string_t *at(list_string_t *list,int n)
 {
@@ -50,9 +32,9 @@ void parse(list_string_t *list, cons_t *node)
 //	printf("car:%d:cdr:%d:op:%d:value:%d:str:%d:setq:%d\n",TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Str,TY_Setq);
 	int n = 0;
 //	printf("type:%d:n:%d\n",at(list,n)->type,n);
-	while(at(list,n)->type != TY_EOL){
-		
-		switch(at(list,n)->type) {
+	Type t = TY_Car;
+	while((t = at(list,n)->type) != TY_EOL) {
+		switch(t) {
 		case TY_Car:
 			n = F_Car(list,node,n);
 			break;
@@ -61,11 +43,6 @@ void parse(list_string_t *list, cons_t *node)
 		}
 	}
 	
-}
-
-void F_ERROR(list_string_t *list, cons_t *node,int n)
-{
-	printf("parse error. %s \n",at(list,n)->str);
 }
 
 int F_Car(list_string_t *list, cons_t *node,int n)
@@ -87,7 +64,7 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 	case TY_Setq:
 	case TY_Defun:
 	case TY_If:
-		CASE_OP(node->car);
+		n = F_Op(list,node->car,n);
 		break;
 	case TY_EOL:
 		break;
@@ -108,10 +85,10 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 		break;
 	case TY_Op:
 	case TY_Str:
-		CASE_OP(node->cdr);
+		n = F_Op(list,node->cdr,n);
 		break;
 	case TY_Value:
-		CASE_VALUE(node->cdr);
+		n = F_Value(list,node->cdr,n);
 		break;
 	case TY_EOL:
 		break;
@@ -123,9 +100,10 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 
 int F_Op(list_string_t *list, cons_t *node,int n)
 {
-	node->type = at(list,n)->type;
-	node->svalue = at(list,n)->str;
-	node->len = at(list,n)->size;
+	list_string_t *c = at(list,n);
+	node->type = c->type;
+	node->svalue = c->str;
+	node->len = c->size;
 	node->cdr = Cons_New();
 	node = node->cdr;
 	++n;
@@ -139,10 +117,10 @@ int F_Op(list_string_t *list, cons_t *node,int n)
 		CASE_CDR(node);
 		break;
 	case TY_Value:
-		CASE_VALUE(node);
+		n = F_Value(list,node,n);
 		break;
 	case TY_Str:
-		CASE_STR(node);
+		n = F_Op(list,node,n);
 		break;
 	case TY_EOL:
 		break;
@@ -169,10 +147,10 @@ int F_Value(list_string_t *list, cons_t *node,int n)
 		CASE_CDR(node);
 		break;
 	case TY_Value:
-		CASE_VALUE(node);
+		n = F_Value(list,node,n);
 		break;
 	case TY_Str:
-		CASE_STR(node);
+		n = F_Op(list,node,n);
 		break;
 	case TY_EOL:
 		break;
