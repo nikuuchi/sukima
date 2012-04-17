@@ -33,14 +33,15 @@ void parse(list_string_t *list, cons_t *node)
 	int n = 0;
 //	printf("type:%d:n:%d\n",at(list,n)->type,n);
 	Type t = TY_Car;
-	while((t = at(list,n)->type) != TY_EOL) {
-		switch(t) {
-		case TY_Car:
-			n = F_Car(list,node,n);
-			break;
-		default:
-			DEFAULT(node);
-		}
+	switch(t) {
+	case TY_Car:
+		n = F_Car(list,node,n);
+		break;
+	case TY_Value:
+		n = F_Value(list,node,n);
+		break;
+	default:
+		DEFAULT(node);
 	}
 	
 }
@@ -137,8 +138,7 @@ int F_Value(list_string_t *list, cons_t *node,int n)
 	node->cdr = Cons_New();
 	++n;
 	node = node->cdr;
-//	printf("value:type:%d:n:%d\n",at(list,n)->type,n);
-
+	printf("value:type:%d:n:%d\n",at(list,n)->type,n);
 	switch(at(list,n)->type) {
 	case TY_Car:
 		n = F_Car(list,node,n);

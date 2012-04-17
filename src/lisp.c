@@ -1,8 +1,41 @@
 #include "lisp.h"
 
+#define list_string_t_new() (list_string_t *)calloc(1,sizeof(list_string_t));
+
 void lisp_repl()
 {
-	printf("REPL cannot use now.\n");
+	char *line;
+	using_history();
+
+	st_table_t *hash = HashTable_init();
+	int esp = 0;
+	value_t **st = (value_t **)calloc(8192,sizeof(value_t));
+
+	while((line = readline("Lisp> ")) != NULL) {
+		add_history(line);
+		list_string_t *lex_buf =  (list_string_t *)malloc(sizeof(list_string_t));
+		list_string_t *lex_current = lex_buf;
+
+		lex_current = lex(lex_current,line,strlen(line));
+		lex_current->type = TY_EOL;
+		dumpLexer(lex_buf);
+
+		cons_t *root = (cons_t *)malloc(sizeof(cons_t));
+		parse(lex_buf,root);
+		dumpCons_t(root); //debug
+		printf("\n");
+
+		list_run_t *bytecode = ListRun_New();
+		compile(root,bytecode,hash);
+		vm_exec(bytecode,st,esp,hash,0);
+
+		freeListRun(bytecode);
+		freelist_string(lex_buf);
+		freeCons_t(root);
+		free(line);
+	}
+
+	HashTable_free(hash);
 }
 
 void lisp_main(char *file,size_t size)
@@ -18,7 +51,7 @@ void lisp_main(char *file,size_t size)
 
 	//--Lexer
 	startLex(lex_buf,fp);
-	//dumpLexer(lex_buf);
+	dumpLexer(lex_buf);
 
 	//--Parser
 	parse(lex_buf,root);
@@ -35,7 +68,7 @@ void lisp_main(char *file,size_t size)
 	value_t **st = (value_t **)calloc(8192,sizeof(value_t));
 
 	compile(root,bytecode,hash);
-	vm_exec(bytecode,st,esp,hash);
+	vm_exec(bytecode,st,esp,hash,0);
 
 	HashTable_free(hash);
 	//freeStack(st);

@@ -1,11 +1,17 @@
 #include "lisp.h"
 
-#define list_string_New() (list_string_t *)malloc(sizeof(list_string_t))
-
+list_string_t *list_string_New()
+{
+	list_string_t *p = (list_string_t *)calloc(1,sizeof(list_string_t));
+	p->str = NULL;
+	p->next = NULL;
+	return p;
+}
 void list_string_init(list_string_t *p,char *buf,size_t size,Type t)
 {
-	p->str = (char *)malloc(sizeof(char));
+	p->str = (char *)malloc(sizeof(char) * (size + 1));
 	p->str = strncpy(p->str,buf,size);
+	p->str[size] = '\0';
 	p->size = sizeof(char) * size;
 	if(t == TY_Str) {
 		if(strcmp("defun",p->str) == 0) {
@@ -23,8 +29,12 @@ void freelist_string(list_string_t *p)
 {
 	if(p->next != NULL)
 		freelist_string(p->next);
-	free(p->str);
+	if(p->type != TY_EOL) {
+		free(p->str);
+		p->str = NULL;
+	}
 	free(p);
+	p = NULL;
 }
 
 list_string_t *lex(list_string_t *list,char * buf,int size)
@@ -50,10 +60,10 @@ list_string_t *lex(list_string_t *list,char * buf,int size)
 		case ')':
 			list_string_init(list,&buf[index],1,TY_Cdr);
 			++index;
+//			if(index < size){
 			list->next = list_string_New();
-			if(index < size){
-				list = list->next;
-			}
+			list = list->next;
+//			}
 			break;
 		case '/':
 		case '+':
@@ -92,20 +102,20 @@ list_string_t *lex(list_string_t *list,char * buf,int size)
 			while( isdigit(buf[index+next]) ) { ++next; }
 			list_string_init(list,&buf[index],next,TY_Value);
 			index += next;
-			if(index < size) {
+//			if(index < size) {
 				list->next = list_string_New();
 				list = list->next;
-			}
+//			}
 			break;
 		default:
 			next = 1;
 			while( isalpha(buf[index+next]) ) { ++next; }
 			list_string_init(list,&buf[index],next,TY_Str);
 			index += next;
-			if(index < size) {
+//			if(index < size) {
 				list->next = list_string_New();
 				list = list->next;
-			}
+//			}
 			break;
 		}
 	}
@@ -116,11 +126,7 @@ void dumpLexer(list_string_t *p)
 {
 	list_string_t *lex_current = p;
 	while(lex_current != NULL){
-		if(lex_current->type != TY_EOL) {
-			printf("%s:type:%d\n",lex_current->str,lex_current->type);
-		}else{
-			printf("EOL\n");
-		}
+		printf("%s:type:%d\n",lex_current->str,lex_current->type);
 		lex_current = lex_current->next;
 	}
 }

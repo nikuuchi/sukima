@@ -7,6 +7,7 @@ void freeCons_t(cons_t * p)
 	if(p->cdr != NULL)
 		freeCons_t(p->cdr);
 	free(p);
+	p = NULL;
 }
 
 void dumpCons_t(cons_t * p)
@@ -40,8 +41,7 @@ void dumpCons_t(cons_t * p)
 			printf("EOL ");
 			break;
 		default:
-//			printf("Not implemented yet.");
-			printf(" ");
+			printf("Not implemented yet.");
 		}
 
 		if(p->cdr != NULL){

@@ -6,6 +6,10 @@
 #include <time.h>
 #include <stdint.h>
 
+#include <readline/readline.h>
+#include <readline/history.h>
+
+extern void **tables;
 
 #define BUF_SIZE 1024
 
@@ -58,6 +62,7 @@ typedef enum Command {
 typedef struct list_run_t {
 	Command command;
 	value_t *v;
+	const void *iseq;
 	struct list_run_t *next;
 } list_run_t;
 
@@ -89,7 +94,7 @@ extern void freelist_string(list_string_t *p);
 
 extern void parse(list_string_t *list, cons_t *node);
 
-extern void vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash);
+extern void **vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash, int table_flag);
 
 //eval.c
 extern int eval(cons_t *p);
@@ -104,10 +109,13 @@ extern void dumpLexer(list_string_t *p);
 
 extern void startLex(list_string_t *p,FILE *fp);
 
+extern list_string_t *lex(list_string_t *list,char * buf,int size);
+
 //runtime.c
 extern void compile(cons_t *ast,list_run_t *root,st_table_t *hash);
 
 extern void freeListRun(list_run_t *p);
+
 
 //hash.c
 extern st_table_t *HashTable_init();
