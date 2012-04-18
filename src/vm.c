@@ -75,6 +75,9 @@ void **vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash,int table_
 	for(;i < max;++i){
 		value_t *v = pop();
 		ans -= v->num;
+		if(v->type == Int_push){
+			free(v);
+		}
 	}
 	value_t *v = pop();
 
@@ -132,12 +135,17 @@ void **vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash,int table_
   Ia_Print: {
 	value_t *v = pop();
 	printf("print %d\n",v->num);
-	push(v);
+	if(v->type == Int_push)
+		free(v);
 	p = p->next;
 	goto *p->iseq;
 	}
   Ia_End: {
 	value_t *v = pop();
+	value_t *f = st[bsp != 0?bsp-1:0];
+	if(f != NULL)
+		if(f->type == Int_push)
+			free(f);
 	st[bsp-1] = v;
 	//printf("End\n");
 	return NULL;
@@ -193,21 +201,21 @@ void **vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash,int table_
 	}
   Ia_PutObject: {
 	value_t *a = pop();
-//	printf("PutObject %s,%d\n",p->v->svalue,a->num);
-	HashTable_insert_Value(hash, p->v->svalue, p->v->len, a);
+//	printf("PutObject %s,%d\n",p->v->string.s,a->num);
+	HashTable_insert_Value(hash, p->v->string.s, p->v->string.len, a);
 	p = p->next;
 	goto *p->iseq;
 	}
   Ia_LoadValue: {
-	value_t *b = HashTable_lookup_Value(hash, p->v->svalue, p->v->len);
-//	printf("LoadValue %s,%d\n",p->v->svalue,b->num);
+	value_t *b = HashTable_lookup_Value(hash, p->v->string.s, p->v->string.len);
+//	printf("LoadValue %s,%d\n",p->v->string.s,b->num);
 	push(b);
 	p = p->next;
 	goto *p->iseq;
 	}
   Ia_Call: {
-	list_run_t *func = HashTable_lookup_Function(hash, p->v->svalue, p->v->len);
-//	printf("Call %s\n",p->v->svalue);
+	list_run_t *func = HashTable_lookup_Function(hash, p->v->string.s, p->v->string.len);
+//	printf("Call %s\n",p->v->string.s);
 	vm_exec( func, st, esp, hash, 0);
 	p = p->next;
 	goto *p->iseq;
@@ -217,14 +225,14 @@ void **vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash,int table_
 	int booleanflag = b->num;
 	free(b);
 	if(booleanflag == 1) {
-//		printf("TJump %s,T\n",p->v->svalue);
+//		printf("TJump %s,T\n",p->v->string.s);
 	}else {
-//		printf("TJump %s,Nil\n",p->v->svalue);
-		char *str = p->v->svalue;
+//		printf("TJump %s,Nil\n",p->v->string.s);
+		char *str = p->v->string.s;
 		while(p != NULL) {
 			if(p->command == C_Tag) {
-				if(strcmp(p->v->svalue, str)==0) {
-//					printf("Tag %s\n",p->v->svalue);
+				if(strcmp(p->v->string.s, str)==0) {
+//					printf("Tag %s\n",p->v->string.s);
 					goto jump;
 				}
 			}
@@ -236,12 +244,12 @@ void **vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash,int table_
 	goto *p->iseq;
 	}
   Ia_Jump: {
-//	printf("Jump %s\n",p->v->svalue);
-	char *str = p->v->svalue;
+//	printf("Jump %s\n",p->v->string.s);
+	char *str = p->v->string.s;
 	while(p != NULL){
 		if(p->command == C_Tag){
-			if(strcmp(p->v->svalue, str) == 0) {
-//				printf("Tag %s\n",p->v->svalue);
+			if(strcmp(p->v->string.s, str) == 0) {
+//				printf("Tag %s\n",p->v->string.s);
 				goto jump2;
 			}
 		}

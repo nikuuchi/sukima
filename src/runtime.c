@@ -12,8 +12,8 @@
 	do { \
 		(c)->command = C_LoadValue; \
 		(c)->v->type = Pointer; \
-		(c)->v->svalue = (d); \
-		(c)->v->len = (e); \
+		(c)->v->string.s = (d); \
+		(c)->v->string.len = (e); \
 		(c)->iseq = tables[C_LoadValue]; \
 	} while(0);
 
@@ -21,7 +21,7 @@
 	do { \
 		(c)->command = C_Put; \
 		(c)->v->type = Boolean; \
-		(c)->v->svalue = (d); \
+		(c)->v->string.s = (d); \
 		(c)->iseq = tables[C_Put]; \
 	} while(0);
 
@@ -57,7 +57,7 @@ void freeListRun(list_run_t *p)
 {
 	if(p != NULL) {
 		if(p->v->type == Pointer){
-			free(p->v->svalue);
+			free(p->v->string.s);
 		}
 		free(p->v);
 		freeListRun(p->next);
@@ -154,14 +154,14 @@ list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 	while(tmp->type != TY_Cdr) {
 		value_t *v = (value_t *)malloc(sizeof(value_t));
 		v->num = i;
-		HashTable_insert_Value(argument,tmp->svalue,tmp->len,v);
+		HashTable_insert_Value(argument,tmp->string.s,tmp->string.len,v);
 		tmp = tmp->cdr;
 		++i;
 	}
 	list = asm_DefunCar(list,cu->cdr->cdr->cdr,argument);
 	list->command = C_End;
 	list->iseq = tables[C_End];
-	HashTable_insert_Function(hash,cu->cdr->svalue,cu->cdr->len,func);
+	HashTable_insert_Function(hash,cu->cdr->string.s,cu->cdr->string.len,func);
 
 	HashTable_free(argument);
 	return cmd;
@@ -194,8 +194,8 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu)
 	char *tag = createTag();
 	list->command = C_TJump;
 	list->v->type = Pointer;
-	list->v->svalue = tag;
-	list->v->len = 8;
+	list->v->string.s = tag;
+	list->v->string.len = 8;
 	list->iseq = tables[C_TJump];
 	list = ListRun_New();
 	list = list->next;
@@ -207,8 +207,8 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu)
 	char *end_tag = createTag();
 	list->command = C_Jump;
 	list->v->type = Pointer;
-	list->v->svalue = end_tag;
-	list->v->len = 8;
+	list->v->string.s = end_tag;
+	list->v->string.len = 8;
 	list->iseq = tables[C_Jump];
 	list->next = ListRun_New();
 	list = list->next;
@@ -216,8 +216,8 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu)
 	//tag
 	list->command = C_Tag;
 	list->v->type = Pointer;
-	list->v->svalue = tag;
-	list->v->len = 8;
+	list->v->string.s = tag;
+	list->v->string.len = 8;
 	list->iseq = tables[C_Tag];
 	list->next = ListRun_New();
 	list = list->next;
@@ -228,8 +228,8 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu)
 	//end_tag
 	list->command = C_Tag;
     list->v->type = Pointer;
-	list->v->svalue = end_tag;
-	list->v->len = 8;
+	list->v->string.s = end_tag;
+	list->v->string.len = 8;
 	list->iseq = tables[C_Tag];
 	list->next = ListRun_New();
 	list = list->next;
@@ -260,8 +260,8 @@ list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu)
 
 	list->command = C_PutObject;
 	list->v->type = Pointer;
-	list->v->svalue = cu->cdr->svalue;
-	list->v->len = cu->cdr->len;
+	list->v->string.s = cu->cdr->string.s;
+	list->v->string.len = cu->cdr->string.len;
 	list->iseq = tables[C_PutObject];
 
 	list->next = ListRun_New();
@@ -286,7 +286,7 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 			list = list->next;
 			break;
 		case TY_Str:
-			setStr(list,p->svalue,p->len);
+			setStr(list,p->string.s,p->string.len);
 			list->next = ListRun_New();
 			list = list->next;
 			break;
@@ -298,7 +298,7 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 		p = p->cdr;
 	}
 
-	switch(cu->svalue[0]) {
+	switch(cu->string.s[0]) {
 	case '+':
 		setOpt(list,C_OptPlus,count);
 		break;
@@ -318,7 +318,7 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu)
 		setOpt(list,C_OptGt,count);
 		break;
 	default:
-		printf("some error occured in asm_Op() 2. %s\n",cu->svalue);
+		printf("some error occured in asm_Op() 2. %s\n",cu->string.s);
 		break;
 	}
 	list->next = ListRun_New();
@@ -343,7 +343,7 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 			list = list->next;
 			break;
 		case TY_Str:
-			setStr(list,p->svalue,p->len);
+			setStr(list,p->string.s,p->string.len);
 			list->next = ListRun_New();
 			list = list->next;
 			break;
@@ -355,18 +355,18 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu)
 		p = p->cdr;
 	}
 
-	if(strcmp(cu->svalue,"print") == 0) {
+	if(strcmp(cu->string.s,"print") == 0) {
 		list->command = C_Print;
 		list->v->type = CALLFUNCTION;
-		list->v->svalue = "print";
-		list->v->len = strlen("print");
+		list->v->string.s = "print";
+		list->v->string.len = strlen("print");
 		list->iseq = tables[C_Print];
 	}else{
 		list->command = C_Call;
 		list->v->type = CALLFUNCTION;
 		list->v->num = count;
-		list->v->svalue = cu->svalue;
-		list->v->len = cu->len;
+		list->v->string.s = cu->string.s;
+		list->v->string.len = cu->string.len;
 		list->iseq = tables[C_Call];
 	}
 
@@ -392,7 +392,7 @@ list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu,st_table_t *argument
 			list = list->next;
 			break;
 		case TY_Str: {
-			value_t *v = HashTable_lookup_Value(argument,p->svalue,p->len);
+			value_t *v = HashTable_lookup_Value(argument,p->string.s,p->string.len);
 			list->command = C_Args;
 			list->v->type = Integer;
 			list->v->num = v->num;
@@ -409,18 +409,18 @@ list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu,st_table_t *argument
 		p = p->cdr;
 	}
 
-	if(strcmp(cu->svalue,"print") == 0) {
+	if(strcmp(cu->string.s,"print") == 0) {
 		list->command = C_Print;
 		list->v->type = CALLFUNCTION;
-		list->v->svalue = "print";
-		list->v->len = strlen("print");
+		list->v->string.s = "print";
+		list->v->string.len = strlen("print");
 		list->iseq = tables[C_Print];
 	}else{
 		list->command = C_Call;
 		list->v->type = CALLFUNCTION;
 		list->v->num = count;
-		list->v->svalue = cu->svalue;
-		list->v->len = cu->len;
+		list->v->string.s = cu->string.s;
+		list->v->string.len = cu->string.len;
 		list->iseq = tables[C_Call];
 	}
 
@@ -446,7 +446,7 @@ list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 			list = list->next;
 			break;
 		case TY_Str:{
-			value_t *v = HashTable_lookup_Value(argument,p->svalue,p->len);
+			value_t *v = HashTable_lookup_Value(argument,p->string.s,p->string.len);
 			list->command = C_Args;
 			list->v->type = Integer;
 			list->v->num = v->num;
@@ -463,7 +463,7 @@ list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 		p = p->cdr;
 	}
 
-	switch(cu->svalue[0]) {
+	switch(cu->string.s[0]) {
 	case '+':
 		setOpt(list,C_OptPlus,count);
 		break;
@@ -483,7 +483,7 @@ list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 		setOpt(list,C_OptGt,count);
 		break;
 	default:
-		printf("some error occured in asm_Op() 2. %s\n",cu->svalue);
+		printf("some error occured in asm_Op() 2. %s\n",cu->string.s);
 		break;
 	}
 	list->next = ListRun_New();
@@ -502,8 +502,8 @@ list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 	char *tag = createTag();
 	list->command = C_TJump;
 	list->v->type = Pointer;
-	list->v->svalue = tag;
-	list->v->len = 8;
+	list->v->string.s = tag;
+	list->v->string.len = 8;
 	list->iseq = tables[C_TJump];
 	list->next = ListRun_New();
 	list = list->next;
@@ -521,8 +521,8 @@ list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 	char *end_tag = createTag();
 	list->command = C_Jump;
 	list->v->type = Pointer;
-	list->v->svalue = end_tag;
-	list->v->len = 8;
+	list->v->string.s = end_tag;
+	list->v->string.len = 8;
 	list->iseq = tables[C_Jump];
 	list->next = ListRun_New();
 	list = list->next;
@@ -530,8 +530,8 @@ list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 	//tag
 	list->command = C_Tag;
 	list->v->type = Pointer;
-	list->v->svalue = tag;
-	list->v->len = 8;
+	list->v->string.s = tag;
+	list->v->string.len = 8;
 	list->iseq = tables[C_Tag];
 	list->next = ListRun_New();
 	list = list->next;
@@ -547,8 +547,8 @@ list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument)
 	//end_tag
 	list->command = C_Tag;
 	list->v->type = Pointer;
-	list->v->svalue = end_tag;
-	list->v->len = 8;
+	list->v->string.s = end_tag;
+	list->v->string.len = 8;
 	list->iseq = tables[C_Tag];
 	list->next = ListRun_New();
 	list = list->next;

@@ -1,6 +1,6 @@
 #include "lisp.h"
 
-#define list_string_t_new() (list_string_t *)calloc(1,sizeof(list_string_t));
+#define token_t_new() (token_t *)calloc(1,sizeof(token_t));
 
 void lisp_repl()
 {
@@ -13,8 +13,8 @@ void lisp_repl()
 
 	while((line = readline("Lisp> ")) != NULL) {
 		add_history(line);
-		list_string_t *lex_buf =  (list_string_t *)malloc(sizeof(list_string_t));
-		list_string_t *lex_current = lex_buf;
+		token_t *lex_buf =  (token_t *)malloc(sizeof(token_t));
+		token_t *lex_current = lex_buf;
 
 		lex_current = lex(lex_current,line,strlen(line));
 		lex_current->type = TY_EOL;
@@ -47,7 +47,7 @@ void lisp_main(char *file,size_t size)
 	}
 
 	cons_t *root = (cons_t *)malloc(sizeof(cons_t));
-	list_string_t *lex_buf = (list_string_t *)malloc(sizeof(list_string_t));
+	token_t *lex_buf = (token_t *)malloc(sizeof(token_t));
 
 	//--Lexer
 	startLex(lex_buf,fp);
@@ -65,7 +65,7 @@ void lisp_main(char *file,size_t size)
 	list_run_t *bytecode = ListRun_New();
 	st_table_t *hash = HashTable_init();
 	int esp = 0;
-	value_t **st = (value_t **)calloc(8192,sizeof(value_t));
+	value_t **st = (value_t **)calloc(8192, sizeof(value_t));
 
 	compile(root,bytecode,hash);
 	vm_exec(bytecode,st,esp,hash,0);

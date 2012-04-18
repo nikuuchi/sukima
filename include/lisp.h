@@ -22,30 +22,32 @@ typedef struct cons_t {
 	union {
 		struct cons_t *car;
 		int ivalue;
-		char *svalue;
+		struct string {
+			char *s;
+			size_t len;
+		}string;
 	};
-	size_t len;
 	struct cons_t *cdr;
 } cons_t;
 
-
-typedef struct list_string_t {
+//deprecated. It will merge cons_t soon.
+typedef struct token_t {
 	char *str;
 	size_t size;
 	Type type;
-	struct list_string_t *next;
+	struct token_t *next;
 
-} list_string_t;
+} token_t;
 
-typedef enum V_Type{ 
+typedef enum V_Type { 
 	Integer, Pointer, Boolean, POP_NULL, CALLFUNCTION, Int_push 
 } V_Type;
 
+//deprecated. It will change NaN Boxing struct.
 typedef struct value_t {
 	V_Type type;
 	int num;
-	char *svalue; //Hash's key.
-	size_t len;
+	struct string string;
 } value_t;
 
 typedef union boxed_value {
@@ -90,9 +92,9 @@ typedef struct st_table_entry_t {
 
 extern list_run_t *ListRun_New();
 
-extern void freelist_string(list_string_t *p);
+extern void freelist_string(token_t *p);
 
-extern void parse(list_string_t *list, cons_t *node);
+extern void parse(token_t *list, cons_t *node);
 
 extern void **vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash, int table_flag);
 
@@ -105,11 +107,11 @@ extern void dumpCons_t(cons_t * p);
 extern void freeCons_t(cons_t * p);
 
 //lex.c
-extern void dumpLexer(list_string_t *p);
+extern void dumpLexer(token_t *p);
 
-extern void startLex(list_string_t *p,FILE *fp);
+extern void startLex(token_t *p,FILE *fp);
 
-extern list_string_t *lex(list_string_t *list,char * buf,int size);
+extern token_t *lex(token_t *list,char * buf,int size);
 
 //runtime.c
 extern void compile(cons_t *ast,list_run_t *root,st_table_t *hash);

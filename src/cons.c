@@ -20,7 +20,7 @@ void dumpCons_t(cons_t * p)
 			break;
 		case TY_Op:
 		case TY_Str:
-			printf("%s ",p->svalue);
+			printf("%s ",p->string.s);
 			break;
 		case TY_Value:
 			printf("%d ",p->ivalue);

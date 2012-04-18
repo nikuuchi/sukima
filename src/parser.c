@@ -3,8 +3,8 @@
 #define CASE_CDR(c) \
 	do { \
 		(c)->type = TY_Cdr; \
-		(c)->svalue = ")"; \
-		(c)->len = 1; \
+		(c)->string.s = ")"; \
+		(c)->string.len = 1; \
 		++n; \
 	} while(0);
 
@@ -15,19 +15,19 @@
 	} while(0);
 #define Cons_New() (cons_t *)malloc(sizeof(cons_t))
 
-int F_Car(list_string_t *list, cons_t *node,int n);
-int F_Op(list_string_t *list, cons_t *node, int n);
-int F_Value(list_string_t *list, cons_t *node,int n);
+int F_Car(token_t *list, cons_t *node,int n);
+int F_Op(token_t *list, cons_t *node, int n);
+int F_Value(token_t *list, cons_t *node,int n);
 
-list_string_t *at(list_string_t *list,int n)
+token_t *at(token_t *list,int n)
 {
-	list_string_t *p = list;
+	token_t *p = list;
 	int i=0;
 	for(i=0;i<n;++i)p = p->next;
 	return p;
 }
 
-void parse(list_string_t *list, cons_t *node)
+void parse(token_t *list, cons_t *node)
 {
 //	printf("car:%d:cdr:%d:op:%d:value:%d:str:%d:setq:%d\n",TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Str,TY_Setq);
 	int n = 0;
@@ -46,7 +46,7 @@ void parse(list_string_t *list, cons_t *node)
 	
 }
 
-int F_Car(list_string_t *list, cons_t *node,int n)
+int F_Car(token_t *list, cons_t *node,int n)
 {
 	node->type = TY_Car;
 	node->car = Cons_New();
@@ -99,12 +99,12 @@ int F_Car(list_string_t *list, cons_t *node,int n)
 	return n;
 }
 
-int F_Op(list_string_t *list, cons_t *node,int n)
+int F_Op(token_t *list, cons_t *node,int n)
 {
-	list_string_t *c = at(list,n);
+	token_t *c = at(list,n);
 	node->type = c->type;
-	node->svalue = c->str;
-	node->len = c->size;
+	node->string.s = c->str;
+	node->string.len = c->size;
 	node->cdr = Cons_New();
 	node = node->cdr;
 	++n;
@@ -131,7 +131,7 @@ int F_Op(list_string_t *list, cons_t *node,int n)
 	return n;
 }
 
-int F_Value(list_string_t *list, cons_t *node,int n)
+int F_Value(token_t *list, cons_t *node,int n)
 {
 	node->type = TY_Value;
 	node->ivalue = atoi(at(list,n)->str);

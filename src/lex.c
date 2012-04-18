@@ -1,13 +1,13 @@
 #include "lisp.h"
 
-list_string_t *list_string_New()
+token_t *list_string_New()
 {
-	list_string_t *p = (list_string_t *)calloc(1,sizeof(list_string_t));
+	token_t *p = (token_t *)calloc(1,sizeof(token_t));
 	p->str = NULL;
 	p->next = NULL;
 	return p;
 }
-void list_string_init(list_string_t *p,char *buf,size_t size,Type t)
+void list_string_init(token_t *p,char *buf,size_t size,Type t)
 {
 	p->str = (char *)malloc(sizeof(char) * (size + 1));
 	p->str = strncpy(p->str,buf,size);
@@ -25,7 +25,7 @@ void list_string_init(list_string_t *p,char *buf,size_t size,Type t)
 	p->type = t;
 }
 
-void freelist_string(list_string_t *p)
+void freelist_string(token_t *p)
 {
 	if(p->next != NULL)
 		freelist_string(p->next);
@@ -37,7 +37,7 @@ void freelist_string(list_string_t *p)
 	p = NULL;
 }
 
-list_string_t *lex(list_string_t *list,char * buf,int size)
+token_t *lex(token_t *list,char * buf,int size)
 {
 	int index = 0;
 	int next = 0;
@@ -122,21 +122,21 @@ list_string_t *lex(list_string_t *list,char * buf,int size)
 	return list;
 }
 
-void dumpLexer(list_string_t *p)
+void dumpLexer(token_t *p)
 {
-	list_string_t *lex_current = p;
+	token_t *lex_current = p;
 	while(lex_current != NULL){
 		printf("%s:type:%d\n",lex_current->str,lex_current->type);
 		lex_current = lex_current->next;
 	}
 }
 
-void startLex(list_string_t *p,FILE *fp)
+void startLex(token_t *p,FILE *fp)
 {
 	char *buf;
 	buf = (char *)malloc(sizeof(char) * BUF_SIZE);
 
-	list_string_t *lex_current = p;
+	token_t *lex_current = p;
 	while(fgets(buf,BUF_SIZE,fp)) {
 		lex_current = lex(lex_current,buf,strlen(buf));
 	}
