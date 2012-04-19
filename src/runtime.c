@@ -168,23 +168,6 @@ list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 	return cmd;
 }
 
-char *createTag()
-{
-	static char *createTagCharacters[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z","0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-	int b = 60;
-	char *str = (char *)malloc(sizeof(char) * 8);
-	int i=0;
-	static int createTagFlag;
-	if(createTagFlag == 0){
-		srand( (unsigned)time(NULL));
-		createTagFlag = 1;
-	}
-	for(i =0;i<8;++i) {
-		strcat(str,createTagCharacters[rand() % b]);
-	}
-	return str;
-}
-
 list_run_t *asm_If(list_run_t *cmd,cons_t *cu, st_table_t *hash)
 {
 	list_run_t *list = cmd;
@@ -192,48 +175,22 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu, st_table_t *hash)
 	list = asm_Car(list,cu->cdr,hash);
 
 	//tag jump
-	char *tag = createTag();
 	list->command = C_TJump;
-	list->v->type = Pointer;
-	list->v->string.s = tag;
-	list->v->string.len = 8;
 	list->iseq = tables[C_TJump];
+	list_run_t *t_jump = ListRun_New();
+	list->v->func = t_jump;
 	list = ListRun_New();
 	list = list->next;
 
 	//if true
-	list = asm_Car(list,cu->cdr->cdr,hash);
-
-	//end jump
-	char *end_tag = createTag();
-	list->command = C_Jump;
-	list->v->type = Pointer;
-	list->v->string.s = end_tag;
-	list->v->string.len = 8;
-	list->iseq = tables[C_Jump];
-	list->next = ListRun_New();
-	list = list->next;
-
-	//tag
-	list->command = C_Tag;
-	list->v->type = Pointer;
-	list->v->string.s = tag;
-	list->v->string.len = 8;
-	list->iseq = tables[C_Tag];
-	list->next = ListRun_New();
-	list = list->next;
+	t_jump = asm_Car(t_jump,cu->cdr->cdr,hash);
 
 	//if false
 	list = asm_Car(list,cu->cdr->cdr->cdr,hash);
 
-	//end_tag
-	list->command = C_Tag;
-    list->v->type = Pointer;
-	list->v->string.s = end_tag;
-	list->v->string.len = 8;
-	list->iseq = tables[C_Tag];
-	list->next = ListRun_New();
-	list = list->next;
+	t_jump->command = C_Tag;
+	t_jump->iseq = tables[C_Tag];
+	t_jump->next = list;
 
 	return list;
 }
@@ -502,42 +459,22 @@ list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument,st_tabl
 	list = asm_DefunCar(list,cu->cdr,argument,hash);
 
 	//tag jump
-	char *tag = createTag();
 	list->command = C_TJump;
-	list->v->type = Pointer;
-	list->v->string.s = tag;
-	list->v->string.len = 8;
 	list->iseq = tables[C_TJump];
+	list_run_t *t_jump = ListRun_New();
+	list->v->func = t_jump;
+	
 	list->next = ListRun_New();
 	list = list->next;
 
 	//if true
 	if(cu->cdr->cdr->type == TY_Car) {
-		list = asm_DefunCar(list,cu->cdr->cdr,argument,hash);
+		t_jump = asm_DefunCar(t_jump,cu->cdr->cdr,argument,hash);
 	}else if(cu->cdr->cdr->type == TY_Value) {
-		setValue(list,cu->cdr->cdr->ivalue);
-		list->next = ListRun_New();
-		list = list->next;
+		setValue(t_jump,cu->cdr->cdr->ivalue);
+		t_jump->next = ListRun_New();
+		t_jump = t_jump->next;
 	}
-
-	//end jump
-	char *end_tag = createTag();
-	list->command = C_Jump;
-	list->v->type = Pointer;
-	list->v->string.s = end_tag;
-	list->v->string.len = 8;
-	list->iseq = tables[C_Jump];
-	list->next = ListRun_New();
-	list = list->next;
-
-	//tag
-	list->command = C_Tag;
-	list->v->type = Pointer;
-	list->v->string.s = tag;
-	list->v->string.len = 8;
-	list->iseq = tables[C_Tag];
-	list->next = ListRun_New();
-	list = list->next;
 
 	//if false
 	if(cu->cdr->cdr->cdr->type == TY_Car) {
@@ -548,12 +485,10 @@ list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument,st_tabl
 		list = list->next;
 	}
 	//end_tag
-	list->command = C_Tag;
-	list->v->type = Pointer;
-	list->v->string.s = end_tag;
-	list->v->string.len = 8;
-	list->iseq = tables[C_Tag];
-	list->next = ListRun_New();
-	list = list->next;
+
+	t_jump->command = C_Tag;
+	t_jump->iseq = tables[C_Tag];
+	t_jump->next = list;
+
 	return list;
 }

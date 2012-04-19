@@ -219,27 +219,16 @@ void **vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash,int table_
 		goto *p->iseq;
 	}
   Ia_TJump: {
-	value_t *b = pop();
-	int booleanflag = b->num;
-	free(b);
-	if(booleanflag == 1) {
-//		printf("TJump %s,T\n",p->v->string.s);
-	}else {
-//		printf("TJump %s,Nil\n",p->v->string.s);
-		char *str = p->v->string.s;
-		while(p != NULL) {
-			if(p->command == C_Tag) {
-				if(strcmp(p->v->string.s, str)==0) {
-//					printf("Tag %s\n",p->v->string.s);
-					goto jump;
-				}
-			}
+		value_t *b = pop();
+		int booleanflag = b->num;
+		free(b);
+		if(booleanflag == 1) {
+			p = p->v->func;
+			goto *p->iseq;
+		}else {
 			p = p->next;
+			goto *p->iseq;
 		}
-	}
-  jump:
-	p = p->next;
-	goto *p->iseq;
 	}
   Ia_Jump: {
 //	printf("Jump %s\n",p->v->string.s);
