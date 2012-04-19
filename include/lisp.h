@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <time.h>
-#include <stdint.h>
+#include "nanbox.h"
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -43,15 +37,25 @@ typedef enum V_Type {
 	Integer, Pointer, Boolean, POP_NULL, CALLFUNCTION, Int_push 
 } V_Type;
 
+struct list_run_t;
 //deprecated. It will change NaN Boxing struct.
 typedef struct value_t {
 	V_Type type;
 	int num;
 	struct string string;
+	struct list_run_t *func;
 } value_t;
 
+typedef struct stack_frame_t {
+	int returnAddr;
+	int argc;
+	int locals;
+	value_t **fields; //type will change
+
+} stack_frame_t;
+
 typedef union boxed_value {
-	struct { uint32_t tag:1, value:31;} taged_value;
+	struct { uint64_t tag:4, value:60;} taged_value;
 	int32_t ivalue;
 	float   fvalue;
 	void   *ptr;
@@ -75,14 +79,14 @@ typedef struct st_table_t {
 	struct st_table_t *next;
 } st_table_t;
 
-typedef enum lookupType {
-	lookupFunction, lookupValue
-} lookupType;
+typedef enum entryType {
+	entryFunction, entryValue
+} entryType;
 
 typedef struct st_table_entry_t {
 	unsigned int hash;
 	char *key;
-	lookupType type;
+	entryType type;
 	union {
 		list_run_t *list;
 		value_t *v;

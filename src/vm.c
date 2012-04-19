@@ -214,11 +214,9 @@ void **vm_exec(list_run_t *root,value_t **st,int esp,st_table_t *hash,int table_
 	goto *p->iseq;
 	}
   Ia_Call: {
-	list_run_t *func = HashTable_lookup_Function(hash, p->v->string.s, p->v->string.len);
-//	printf("Call %s\n",p->v->string.s);
-	vm_exec( func, st, esp, hash, 0);
-	p = p->next;
-	goto *p->iseq;
+		vm_exec( p->v->func, st, esp, hash, 0);
+		p = p->next;
+		goto *p->iseq;
 	}
   Ia_TJump: {
 	value_t *b = pop();
