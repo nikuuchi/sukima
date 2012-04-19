@@ -25,7 +25,7 @@
 		(c)->iseq = tables[C_Put]; \
 	} while(0);
 
-#define setOpt(c,d,e) \
+#define setOp(c,d,e) \
 	do { \
 		(c)->command = (d); \
 		(c)->v->type = Integer; \
@@ -34,26 +34,26 @@
 	} while(0);
 
 void **tables;
-list_run_t *asm_Car(list_run_t *cmd,cons_t *cu,st_table_t *hash);
-list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu,st_table_t *hash);
-list_run_t *asm_If(list_run_t *cmd,cons_t *cu,st_table_t *hash);
-list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash);
-list_run_t *asm_Op(list_run_t *cmd,cons_t *cu,st_table_t *hash);
-list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu,st_table_t *hash);
-list_run_t *assemble(list_run_t *p,cons_t *cu,st_table_t *hash);
-list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu, st_table_t *argument,st_table_t *hash);
-list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument,st_table_t *hash);
-list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument,st_table_t *hash);
+command_t *asm_Car(command_t *cmd,cons_t *cons,hash_table_t *hash);
+command_t *asm_Setq(command_t *cmd,cons_t *cons,hash_table_t *hash);
+command_t *asm_If(command_t *cmd,cons_t *cons,hash_table_t *hash);
+command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash);
+command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash);
+command_t *asm_UseFunction(command_t *cmd,cons_t *cons,hash_table_t *hash);
+command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash);
+command_t *asm_DefunUseFunction(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
+command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
+command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
 
-list_run_t *ListRun_New()
+command_t *ListRun_New()
 {
-	list_run_t *list_run_t_ptr = (list_run_t *)malloc(sizeof(list_run_t));
-	memset(list_run_t_ptr,0x00,sizeof(list_run_t));
-	list_run_t_ptr->v = (value_t *)malloc(sizeof(value_t));
-	return list_run_t_ptr;
+	command_t *command_t_ptr = (command_t *)malloc(sizeof(command_t));
+	memset(command_t_ptr,0x00,sizeof(command_t));
+	command_t_ptr->v = (value_t *)malloc(sizeof(value_t));
+	return command_t_ptr;
 }
 
-void freeListRun(list_run_t *p)
+void freeListRun(command_t *p)
 {
 	if(p != NULL) {
 		if(p->v->type == Pointer){
@@ -66,10 +66,10 @@ void freeListRun(list_run_t *p)
 	p = NULL;
 }
 
-void compile(cons_t *ast,list_run_t *root,st_table_t *hash)
+void compile(cons_t *ast,command_t *root,hash_table_t *hash)
 {
 	cons_t *chain = ast;
-	list_run_t *p = root;
+	command_t *p = root;
 	value_t **st = (value_t **)malloc(sizeof(value_t));
 	tables = vm_exec(root,st,0,hash,1);
 	free(st);
@@ -91,29 +91,29 @@ void compile(cons_t *ast,list_run_t *root,st_table_t *hash)
 	p->iseq = tables[C_End];
 }
 
-list_run_t *assemble(list_run_t *p,cons_t *cu,st_table_t *hash)
+command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash)
 {
-	switch(cu->type) {
+	switch(cons->type) {
 	case TY_Cdr:
 		setBoolean(p,"Nil");
 		break;
 	case TY_Op:
-		p = asm_Op(p,cu,hash);
+		p = asm_Op(p,cons,hash);
 		break;
 	case TY_EOL:
 		p->command = C_End;
 		break;
 	case TY_Str:
-		p = asm_UseFunction(p,cu,hash);
+		p = asm_UseFunction(p,cons,hash);
 		break;
 	case TY_Setq:
-		p = asm_Setq(p,cu,hash);
+		p = asm_Setq(p,cons,hash);
 		break;
 	case TY_Defun:
-		p = asm_Defun(p,cu,hash);
+		p = asm_Defun(p,cons,hash);
 		break;
 	case TY_If:
-		p = asm_If(p,cu,hash);
+		p = asm_If(p,cons,hash);
 		break;
 	default:
 		printf("some error occured in assemble().\n");
@@ -122,35 +122,35 @@ list_run_t *assemble(list_run_t *p,cons_t *cu,st_table_t *hash)
 	return p;
 }
 
-list_run_t *asm_Car(list_run_t *cmd,cons_t *cu,st_table_t *hash)
+command_t *asm_Car(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
-	if(cu->car->type == TY_Str) {
-		return asm_UseFunction(cmd,cu->car,hash);
-	}else if(cu->car->type == TY_If) {
-		return asm_If(cmd,cu->car,hash);
+	if(cons->car->type == TY_Str) {
+		return asm_UseFunction(cmd,cons->car,hash);
+	}else if(cons->car->type == TY_If) {
+		return asm_If(cmd,cons->car,hash);
 	}
-	return asm_Op(cmd,cu->car,hash);
+	return asm_Op(cmd,cons->car,hash);
 }
 
-list_run_t *asm_DefunCar(list_run_t *cmd,cons_t *cu,st_table_t *argument,st_table_t *hash)
+command_t *asm_DefunCar(command_t *cmd,cons_t *cons,hash_table_t *argument,hash_table_t *hash)
 {
-	if(cu->car->type == TY_Str) {
-		return asm_DefunUseFunction(cmd,cu->car,argument,hash);
-	}else if(cu->car->type == TY_If) {
-		return asm_DefunIf(cmd,cu->car,argument,hash);
+	if(cons->car->type == TY_Str) {
+		return asm_DefunUseFunction(cmd,cons->car,argument,hash);
+	}else if(cons->car->type == TY_If) {
+		return asm_DefunIf(cmd,cons->car,argument,hash);
 	}
-	return asm_DefunOp(cmd,cu->car,argument,hash);
+	return asm_DefunOp(cmd,cons->car,argument,hash);
 }
 
-list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
+command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
-	list_run_t *func = ListRun_New();
-	HashTable_insert_Function(hash,cu->cdr->string.s,cu->cdr->string.len,func);
-	list_run_t *list = func;
+	command_t *func = ListRun_New();
+	HashTable_insert_Function(hash,cons->cdr->string.s,cons->cdr->string.len,func);
+	command_t *list = func;
 
-	st_table_t *argument = HashTable_init();
+	hash_table_t *argument = HashTable_init();
 
-	cons_t *tmp = cu->cdr->cdr->car;
+	cons_t *tmp = cons->cdr->cdr->car;
 	int i = 1;
 	while(tmp->type != TY_Cdr) {
 		value_t *v = (value_t *)malloc(sizeof(value_t));
@@ -159,7 +159,7 @@ list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 		tmp = tmp->cdr;
 		++i;
 	}
-	list = asm_DefunCar(list,cu->cdr->cdr->cdr,argument,hash);
+	list = asm_DefunCar(list,cons->cdr->cdr->cdr,argument,hash);
 	list->command = C_End;
 	list->iseq = tables[C_End];
 	
@@ -168,25 +168,25 @@ list_run_t *asm_Defun(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 	return cmd;
 }
 
-list_run_t *asm_If(list_run_t *cmd,cons_t *cu, st_table_t *hash)
+command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 {
-	list_run_t *list = cmd;
+	command_t *list = cmd;
 	//condition
-	list = asm_Car(list,cu->cdr,hash);
+	list = asm_Car(list,cons->cdr,hash);
 
 	//tag jump
 	list->command = C_TJump;
 	list->iseq = tables[C_TJump];
-	list_run_t *t_jump = ListRun_New();
+	command_t *t_jump = ListRun_New();
 	list->v->func = t_jump;
 	list = ListRun_New();
 	list = list->next;
 
 	//if true
-	t_jump = asm_Car(t_jump,cu->cdr->cdr,hash);
+	t_jump = asm_Car(t_jump,cons->cdr->cdr,hash);
 
 	//if false
-	list = asm_Car(list,cu->cdr->cdr->cdr,hash);
+	list = asm_Car(list,cons->cdr->cdr->cdr,hash);
 
 	t_jump->command = C_Tag;
 	t_jump->iseq = tables[C_Tag];
@@ -195,10 +195,10 @@ list_run_t *asm_If(list_run_t *cmd,cons_t *cu, st_table_t *hash)
 	return list;
 }
 
-list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu, st_table_t *hash)
+command_t *asm_Setq(command_t *cmd,cons_t *cons, hash_table_t *hash)
 {
-	cons_t *p = cu->cdr->cdr;
-	list_run_t *list = cmd;
+	cons_t *p = cons->cdr->cdr;
+	command_t *list = cmd;
 
 	switch(p->type) {
 	case TY_Car:
@@ -210,28 +210,28 @@ list_run_t *asm_Setq(list_run_t *cmd,cons_t *cu, st_table_t *hash)
 		list = list->next;
 		break;
 	default:
-		printf("some error occured in asm_Setq().\n");
+		printf("some error occonsred in asm_Setq().\n");
 		break;
 	}
 	
 
 
-	list->command = C_PutObject;
+	list->command = C_SetHash;
 	list->v->type = Pointer;
-	list->v->string.s = cu->cdr->string.s;
-	list->v->string.len = cu->cdr->string.len;
-	list->iseq = tables[C_PutObject];
+	list->v->string.s = cons->cdr->string.s;
+	list->v->string.len = cons->cdr->string.len;
+	list->iseq = tables[C_SetHash];
 
 	list->next = ListRun_New();
 	list = list->next;
 	return list;
 }
 
-list_run_t *asm_Op(list_run_t *cmd,cons_t *cu,st_table_t *hash)
+command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
 	int count = 0;
-	cons_t *p = cu->cdr;
-	list_run_t *list = cmd;
+	cons_t *p = cons->cdr;
+	command_t *list = cmd;
 
 	while(p->type != TY_Cdr) {
 		switch(p->type) {
@@ -256,27 +256,27 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 		p = p->cdr;
 	}
 
-	switch(cu->string.s[0]) {
+	switch(cons->string.s[0]) {
 	case '+':
-		setOpt(list,C_OptPlus,count);
+		setOp(list,C_OpPlus,count);
 		break;
 	case '-':
-		setOpt(list,C_OptMinus,count);
+		setOp(list,C_OpMinus,count);
 		break;
 	case '*':
-		setOpt(list,C_OptMul,count);
+		setOp(list,C_OpMul,count);
 		break;
 	case '/':
-		setOpt(list,C_OptDiv,count);
+		setOp(list,C_OpDiv,count);
 		break;
 	case '<':
-		setOpt(list,C_OptLt,count);
+		setOp(list,C_OpLt,count);
 		break;
 	case '>':
-		setOpt(list,C_OptGt,count);
+		setOp(list,C_OpGt,count);
 		break;
 	default:
-		printf("some error occured in asm_Op() 2. %s\n",cu->string.s);
+		printf("some error occonsred in asm_Op() 2. %s\n",cons->string.s);
 		break;
 	}
 	list->next = ListRun_New();
@@ -284,11 +284,11 @@ list_run_t *asm_Op(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 	return list;
 }
 
-list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu,st_table_t *hash)
+command_t *asm_UseFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
 	int count = 0;
-	cons_t *p = cu->cdr;
-	list_run_t *list = cmd;
+	cons_t *p = cons->cdr;
+	command_t *list = cmd;
 
 	while(p->type != TY_Cdr) {
 		switch(p->type) {
@@ -306,14 +306,14 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 			list = list->next;
 			break;
 		default:
-			printf("some error occured in asm_UseFunction().\n");
+			printf("some error occonsred in asm_UseFunction().\n");
 			break;
 		}
 		++count;
 		p = p->cdr;
 	}
 
-	if(strcmp(cu->string.s,"print") == 0) {
+	if(strcmp(cons->string.s,"print") == 0) {
 		list->command = C_Print;
 		list->v->type = CALLFUNCTION;
 		list->v->string.s = "print";
@@ -323,9 +323,9 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 		list->command = C_Call;
 		list->v->type = CALLFUNCTION;
 		list->v->num = count;
-		list->v->string.s = cu->string.s;
-		list->v->string.len = cu->string.len;
-		list->v->func = HashTable_lookup_Function(hash, cu->string.s,cu->string.len);
+		list->v->string.s = cons->string.s;
+		list->v->string.len = cons->string.len;
+		list->v->func = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
 	}
 
@@ -334,11 +334,11 @@ list_run_t *asm_UseFunction(list_run_t *cmd,cons_t *cu,st_table_t *hash)
 	return list;
 }
 
-list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu,st_table_t *argument, st_table_t *hash)
+command_t *asm_DefunUseFunction(command_t *cmd,cons_t *cons,hash_table_t *argument, hash_table_t *hash)
 {
 	int count = 0;
-	cons_t *p = cu->cdr;
-	list_run_t *list = cmd;
+	cons_t *p = cons->cdr;
+	command_t *list = cmd;
 
 	while(p->type != TY_Cdr) {
 		switch(p->type) {
@@ -368,7 +368,7 @@ list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu,st_table_t *argument
 		p = p->cdr;
 	}
 
-	if(strcmp(cu->string.s,"print") == 0) {
+	if(strcmp(cons->string.s,"print") == 0) {
 		list->command = C_Print;
 		list->v->type = CALLFUNCTION;
 		list->v->string.s = "print";
@@ -378,9 +378,9 @@ list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu,st_table_t *argument
 		list->command = C_Call;
 		list->v->type = CALLFUNCTION;
 		list->v->num = count;
-		list->v->string.s = cu->string.s;
-		list->v->string.len = cu->string.len;
-		list->v->func = HashTable_lookup_Function(hash, cu->string.s,cu->string.len);
+		list->v->string.s = cons->string.s;
+		list->v->string.len = cons->string.len;
+		list->v->func = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
 	}
 
@@ -389,11 +389,11 @@ list_run_t *asm_DefunUseFunction(list_run_t *cmd,cons_t *cu,st_table_t *argument
 	return list;
 }
 
-list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument, st_table_t *hash)
+command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument, hash_table_t *hash)
 {
 	int count = 0;
-	cons_t *p = cu->cdr;
-	list_run_t *list = cmd;
+	cons_t *p = cons->cdr;
+	command_t *list = cmd;
 
 	while(p->type != TY_Cdr) {
 		switch(p->type) {
@@ -423,27 +423,27 @@ list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument, st_tab
 		p = p->cdr;
 	}
 
-	switch(cu->string.s[0]) {
+	switch(cons->string.s[0]) {
 	case '+':
-		setOpt(list,C_OptPlus,count);
+		setOp(list,C_OpPlus,count);
 		break;
 	case '-':
-		setOpt(list,C_OptMinus,count);
+		setOp(list,C_OpMinus,count);
 		break;
 	case '*':
-		setOpt(list,C_OptMul,count);
+		setOp(list,C_OpMul,count);
 		break;
 	case '/':
-		setOpt(list,C_OptDiv,count);
+		setOp(list,C_OpDiv,count);
 		break;
 	case '<':
-		setOpt(list,C_OptLt,count);
+		setOp(list,C_OpLt,count);
 		break;
 	case '>':
-		setOpt(list,C_OptGt,count);
+		setOp(list,C_OpGt,count);
 		break;
 	default:
-		printf("some error occured in asm_Op() 2. %s\n",cu->string.s);
+		printf("some error occonsred in asm_Op() 2. %s\n",cons->string.s);
 		break;
 	}
 	list->next = ListRun_New();
@@ -451,36 +451,36 @@ list_run_t *asm_DefunOp(list_run_t *cmd,cons_t *cu, st_table_t *argument, st_tab
 	return list;
 }
 
-list_run_t *asm_DefunIf(list_run_t *cmd,cons_t *cu, st_table_t *argument,st_table_t *hash)
+command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash)
 {
-	list_run_t *list = cmd;
+	command_t *list = cmd;
 	
 	//condition
-	list = asm_DefunCar(list,cu->cdr,argument,hash);
+	list = asm_DefunCar(list,cons->cdr,argument,hash);
 
 	//tag jump
 	list->command = C_TJump;
 	list->iseq = tables[C_TJump];
-	list_run_t *t_jump = ListRun_New();
+	command_t *t_jump = ListRun_New();
 	list->v->func = t_jump;
 	
 	list->next = ListRun_New();
 	list = list->next;
 
 	//if true
-	if(cu->cdr->cdr->type == TY_Car) {
-		t_jump = asm_DefunCar(t_jump,cu->cdr->cdr,argument,hash);
-	}else if(cu->cdr->cdr->type == TY_Value) {
-		setValue(t_jump,cu->cdr->cdr->ivalue);
+	if(cons->cdr->cdr->type == TY_Car) {
+		t_jump = asm_DefunCar(t_jump,cons->cdr->cdr,argument,hash);
+	}else if(cons->cdr->cdr->type == TY_Value) {
+		setValue(t_jump,cons->cdr->cdr->ivalue);
 		t_jump->next = ListRun_New();
 		t_jump = t_jump->next;
 	}
 
 	//if false
-	if(cu->cdr->cdr->cdr->type == TY_Car) {
-		list = asm_DefunCar(list,cu->cdr->cdr->cdr,argument,hash);
-	}else if(cu->cdr->cdr->cdr->type == TY_Value) {
-		setValue(list,cu->cdr->cdr->cdr->ivalue);
+	if(cons->cdr->cdr->cdr->type == TY_Car) {
+		list = asm_DefunCar(list,cons->cdr->cdr->cdr,argument,hash);
+	}else if(cons->cdr->cdr->cdr->type == TY_Value) {
+		setValue(list,cons->cdr->cdr->cdr->ivalue);
 		list->next = ListRun_New();
 		list = list->next;
 	}

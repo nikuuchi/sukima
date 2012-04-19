@@ -7,7 +7,7 @@ void lisp_repl()
 	char *line;
 	using_history();
 
-	st_table_t *hash = HashTable_init();
+	hash_table_t *hash = HashTable_init();
 	int esp = 0;
 	value_t **st = (value_t **)calloc(8192,sizeof(value_t));
 
@@ -25,7 +25,7 @@ void lisp_repl()
 		dumpCons_t(root); //debug
 		printf("\n");
 
-		list_run_t *bytecode = ListRun_New();
+		command_t *bytecode = ListRun_New();
 		compile(root,bytecode,hash);
 		vm_exec(bytecode,st,esp,hash,0);
 
@@ -62,8 +62,8 @@ void lisp_main(char *file,size_t size)
 
 	//--run
 	printf("\n");
-	list_run_t *bytecode = ListRun_New();
-	st_table_t *hash = HashTable_init();
+	command_t *bytecode = ListRun_New();
+	hash_table_t *hash = HashTable_init();
 	int esp = 0;
 	value_t **st = (value_t **)calloc(8192, sizeof(value_t));
 
