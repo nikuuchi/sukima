@@ -54,15 +54,16 @@ typedef struct stack_frame_t {
 
 } stack_frame_t;
 
-typedef union boxed_value {
-	struct { uint64_t tag:4, value:60;} taged_value;
-	int32_t ivalue;
-	float   fvalue;
-	void   *ptr;
-} boxed_value;
+
+typedef union stack_value_t {
+	void *pointer;
+	uint64_t bytes;
+	double d;
+	int i;
+} stack_value_t;
 
 typedef enum Command {
-	C_Put, C_SetHash, C_LoadValue, C_OpPlus, C_OpMinus, C_OpMul, C_OpDiv, C_OpLt, C_OpGt, C_Print, C_Call, C_TJump, C_Jump,C_Tag, C_Args ,C_End
+	C_Put, C_SetHash, C_LoadValue, C_OpPlus, C_OpMinus, C_OpMul, C_OpDiv, C_OpLt, C_OpGt, C_Print, C_Call, C_TJump,C_Tag, C_Args ,C_End
 } Command;
 
 typedef struct command_t {
@@ -100,7 +101,7 @@ extern void freelist_string(token_t *p);
 
 extern void parse(token_t *list, cons_t *node);
 
-extern void **vm_exec(command_t *root,value_t **st,int esp,hash_table_t *hash, int table_flag);
+extern void **vm_exec(command_t *root,stack_value_t st[],int esp,hash_table_t *hash, int table_flag);
 
 //eval.c
 extern int eval(cons_t *p);
@@ -121,7 +122,6 @@ extern token_t *lex(token_t *list,char * buf,int size);
 extern void compile(cons_t *ast,command_t *root,hash_table_t *hash);
 
 extern void freeListRun(command_t *p);
-
 
 //hash.c
 extern hash_table_t *HashTable_init();

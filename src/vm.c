@@ -1,32 +1,28 @@
 #include "lisp.h"
 
-#define push(a) st[esp++]=(a) 
+#define push_v(a) st[esp++].i = (a)->num
+#define push(a) st[esp++] = (a)
+#define pop() (&st[--esp])
 
-#define pop()(st[--esp])
-
-
-
-
-void **vm_exec(command_t *root,value_t **st,int esp,hash_table_t *hash,int table_flag)
+void **vm_exec(command_t *root,stack_value_t st[],int esp,hash_table_t *hash,int table_flag)
 {
 
 	static void *tables[] = {
-		&&Ia_Put,
-		&&Ia_SetHash,
-		&&Ia_LoadValue,
-		&&Ia_OpPlus,
-		&&Ia_OpMinus,
-		&&Ia_OpMul,
-		&&Ia_OpDiv,
-		&&Ia_OpLt,
-		&&Ia_OpGt,
-		&&Ia_Print,
-		&&Ia_Call,
-		&&Ia_TJump,
-		&&Ia_Jump,
-		&&Ia_Tag,
-		&&Ia_Args,
-		&&Ia_End
+		&&Label_Put,
+		&&Label_SetHash,
+		&&Label_LoadValue,
+		&&Label_OpPlus,
+		&&Label_OpMinus,
+		&&Label_OpMul,
+		&&Label_OpDiv,
+		&&Label_OpLt,
+		&&Label_OpGt,
+		&&Label_Print,
+		&&Label_Call,
+		&&Label_TJump,
+		&&Label_Tag,
+		&&Label_Args,
+		&&Label_End
 	};
 	if(table_flag == 1){
 		return tables;
@@ -37,186 +33,157 @@ void **vm_exec(command_t *root,value_t **st,int esp,hash_table_t *hash,int table
 
 	goto *p->iseq;
 
-  Ia_Put: {
+  Label_Put: {
 //	printf("put %d\n",p->v->num);
-		push(p->v);
+		push_v(p->v);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_OpPlus: {
+  Label_OpPlus: {
 //	printf("OpPlus %d\n",p->v->num);
 		int ans = 0;
 		int i = 0;
 		int max = p->v->num;
 		for(;i < max;++i){
-			value_t *v = pop();
-			ans += v->num;
-			if(v->type == Int_push){
-				free(v);
-			}
+			stack_value_t *v = pop();
+			ans += v->i;
 		}
-		value_t *a = (value_t*)malloc(sizeof(value_t));
-		a->type = Int_push;
-		a->num = ans;
+		stack_value_t a;
+		a.i = ans;
 		push(a);
+
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_OpMinus: {
+  Label_OpMinus: {
 //	printf("OpMinus %d\n",p->v->num);
 		int i = 0;
 		int ans = 0;
 		int max = p->v->num-1;
 		for(;i < max;++i){
-			value_t *v = pop();
-			ans -= v->num;
-			if(v->type == Int_push){
-				free(v);
-			}
+			stack_value_t *v = pop();
+			ans -= v->i;
 		}
-		value_t *v = pop();
-
-		ans += v->num;
-		value_t *a = (value_t*)malloc(sizeof(value_t));
-		a->type = Int_push;
-		a->num = ans;
+		stack_value_t *v = pop();
+		ans += v->i;
+		stack_value_t a;
+		a.i = ans;
 		push(a);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_OpMul: {
+  Label_OpMul: {
 		int ans = 1;
 		int i = 0;
 		int max = p->v->num;
 		for(;i < max;++i){
-			value_t *v = pop();
-			ans *= v->num;
-			if(v->type == Int_push){
-				free(v);
-			}
+			stack_value_t *v = pop();
+			ans *= v->i;
 		}
-		value_t *a = (value_t*)malloc(sizeof(value_t));
-		a->type = Integer;
-		a->num = ans;
+		stack_value_t a;
+		a.i = ans;
 //	printf("OpMul %d,%d\n",p->v->num,a->num);
 		push(a);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_OpDiv: {
+  Label_OpDiv: {
 //	printf("OpDiv %d\n",p->v->num);
 		int ans = 1;
 		int i = 0;
 		int max = p->v->num-1;
 		for(;i < max;++i){
-			value_t *v = pop();
-			ans *= v->num;
-			if(v->type == Int_push){
-				free(v);
-			}
+			stack_value_t *v = pop();
+			ans *= v->i;
 		}
-		value_t *v = pop();
-		ans = v->num / ans;
-		value_t *a = (value_t*)malloc(sizeof(value_t));
-		if(v->type==Int_push){
-			free(v);
-		}
-		a->type = Integer;
-		a->num = ans;
+		stack_value_t *v = pop();
+		ans = v->i / ans;
+		stack_value_t a;
+		a.i = ans;
 		push(a);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_Print: {
-		value_t *v = pop();
-		printf("print %d\n",v->num);
-		if(v->type == Int_push)
-			free(v);
+  Label_Print: {
+		stack_value_t *v = pop();
+		printf("print %d\n",v->i);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_End: {
-		value_t *v = pop();
-		value_t *f = st[bsp != 0?bsp-1:0];
-		if(f != NULL)
-			if(f->type == Int_push)
-				free(f);
-		st[bsp-1] = v;
+  Label_End: {
+		stack_value_t *v = pop();
+		st[bsp-1] = *v;
 		//printf("End\n");
 		return NULL;
 	}
-  Ia_OpLt: {
+  Label_OpLt: {
 //	printf("OpLt %d\n",p->v->num);
-		int ans = pop()->num;
+		int ans = pop()->i;
 		int i = 0;
 		int flag = 0;
 		int max = p->v->num -1;
 		for(;i < max;++i) {
-			value_t *v = pop();
-			if(ans > v->num) {
-				ans = v->num;
+			stack_value_t *v = pop();
+			if(ans > v->i) {
+				ans = v->i;
 				flag = 1;
 			}else {
 				flag = 0;
 				break;
 			}
-			if(v->type == Int_push) {
-				free(v);
-			}
 		}
-		value_t *a = (value_t*)malloc(sizeof(value_t));
-		a->type = Boolean;
-		a->num = flag;
+		stack_value_t a;
+		a.i = flag;
 		push(a);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_OpGt: {
+  Label_OpGt: {
 //	printf("OpGt %d\n",p->v->num);
-		int ans = pop()->num;
+		int ans = pop()->i;
 		int i = 0;
 		int flag = 0;
 		int max = p->v->num - 1;
 		for(;i < max;++i) {
-			value_t *v = pop();
-			if(ans < v->num) {
-				ans = v->num;
+			stack_value_t *v = pop();
+			if(ans < v->i) {
+				ans = v->i;
 				flag = 1;
 			}else {
 				flag = 0;
 				break;
 			}
 		}
-		value_t *a = (value_t*)malloc(sizeof(value_t));
-		a->type = Boolean;
-		a->num = flag;
+		stack_value_t a;
+		a.i = flag;
 		push(a);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_SetHash: {
-		value_t *a = pop();
+  Label_SetHash: {
+		stack_value_t *a = pop();
+		value_t *b = (value_t *)malloc(sizeof(value_t));
+		b->num = a->i;
 //	printf("SetHash %s,%d\n",p->v->string.s,a->num);
-		HashTable_insert_Value(hash, p->v->string.s, p->v->string.len, a);
+		HashTable_insert_Value(hash, p->v->string.s, p->v->string.len, b);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_LoadValue: {
+  Label_LoadValue: {
 		value_t *b = HashTable_lookup_Value(hash, p->v->string.s, p->v->string.len);
 //	printf("LoadValue %s,%d\n",p->v->string.s,b->num);
-		push(b);
+		push_v(b);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_Call: {
+  Label_Call: {
 		vm_exec( p->v->func, st, esp, hash, 0);
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_TJump: {
-		value_t *b = pop();
-		int booleanflag = b->num;
-		free(b);
+  Label_TJump: {
+		stack_value_t *b = pop();
+		int booleanflag = b->i;
 		if(booleanflag == 1) {
 			p = p->v->func;
 			goto *p->iseq;
@@ -225,28 +192,12 @@ void **vm_exec(command_t *root,value_t **st,int esp,hash_table_t *hash,int table
 			goto *p->iseq;
 		}
 	}
-  Ia_Jump: {
-//	printf("Jump %s\n",p->v->string.s);
-		char *str = p->v->string.s;
-		while(p != NULL){
-			if(p->command == C_Tag){
-				if(strcmp(p->v->string.s, str) == 0) {
-//				printf("Tag %s\n",p->v->string.s);
-					goto jump2;
-				}
-			}
-			p = p->next;
-		}
-	  jump2:
+  Label_Tag: {
 		p = p->next;
 		goto *p->iseq;
 	}
-  Ia_Tag: {
-		p = p->next;
-		goto *p->iseq;
-	}
-  Ia_Args: {
-		value_t *v = st[bsp - p->v->num];
+  Label_Args: {
+		stack_value_t v = st[bsp - p->v->num];
 //	printf("args: %d\n",v->num);
 		push(v);
 		p = p->next;
@@ -254,5 +205,4 @@ void **vm_exec(command_t *root,value_t **st,int esp,hash_table_t *hash,int table
 	}
 	return NULL;
 }
-
 

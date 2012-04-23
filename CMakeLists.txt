@@ -24,6 +24,7 @@ ADD_EXECUTABLE(lisp
 	src/parser.c
 	src/runtime.c
 	src/vm.c
+	src/nanbox.c
 )
 
 target_link_libraries(lisp ${ExtraLibs})

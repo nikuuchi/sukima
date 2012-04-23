@@ -70,9 +70,8 @@ void compile(cons_t *ast,command_t *root,hash_table_t *hash)
 {
 	cons_t *chain = ast;
 	command_t *p = root;
-	value_t **st = (value_t **)malloc(sizeof(value_t));
+	stack_value_t st[2];
 	tables = vm_exec(root,st,0,hash,1);
-	free(st);
 	while(chain->cdr != NULL){
 		switch(chain->type){
 		case TY_Car:
