@@ -1,3 +1,1 @@
-(setq aa 222)
-(setq x 3)
-(print (* x aa))
+(print 3.2)

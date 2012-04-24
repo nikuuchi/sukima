@@ -99,23 +99,25 @@ token_t *lex(token_t *list,char * buf,int size)
 		case '8':
 		case '9':
 			next = 1;
-			while( isdigit(buf[index+next]) ) { ++next; }
-			list_string_init(list,&buf[index],next,TY_Value);
-			index += next;
-//			if(index < size) {
+			while ( isdigit(buf[index+next]) ) { ++next; }
+			if(buf[index+next] == '.') {
+				++next;
+				while ( isdigit(buf[index+next]) ) { ++next; }
+				list_string_init(list,&buf[index],next,TY_Float);
+			}else {
+				list_string_init(list,&buf[index],next,TY_Int);
+			}
+				index += next;
 				list->next = list_string_New();
 				list = list->next;
-//			}
 			break;
 		default:
 			next = 1;
 			while( isalpha(buf[index+next]) ) { ++next; }
 			list_string_init(list,&buf[index],next,TY_Str);
 			index += next;
-//			if(index < size) {
-				list->next = list_string_New();
-				list = list->next;
-//			}
+			list->next = list_string_New();
+			list = list->next;
 			break;
 		}
 	}

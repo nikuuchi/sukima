@@ -9,7 +9,7 @@ void lisp_repl()
 
 	hash_table_t *hash = HashTable_init();
 	int esp = 0;
-	stack_value_t st[8192];
+	value_t st[8192];
 
 	while((line = readline("Lisp> ")) != NULL) {
 		add_history(line);
@@ -65,14 +65,12 @@ void lisp_main(char *file,size_t size)
 	command_t *bytecode = ListRun_New();
 	hash_table_t *hash = HashTable_init();
 	int esp = 0;
-	stack_value_t *st = (stack_value_t *)calloc(8192,sizeof(stack_value_t));
+	value_t st[8192];
 
 	compile(root,bytecode,hash);
 	vm_exec(bytecode,st,esp,hash,0);
 
 	HashTable_free(hash);
-	//freeStack(st);
-	free(st);
 	freeListRun(bytecode);
 	freelist_string(lex_buf);
 	freeCons_t(root);
@@ -80,7 +78,7 @@ void lisp_main(char *file,size_t size)
 }
 
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
 	if(argc == 1) {
 		lisp_repl();

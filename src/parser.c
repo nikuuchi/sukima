@@ -17,7 +17,8 @@
 
 int F_Car(token_t *list, cons_t *node,int n);
 int F_Op(token_t *list, cons_t *node, int n);
-int F_Value(token_t *list, cons_t *node,int n);
+int F_Int(token_t *list, cons_t *node,int n);
+int F_Float(token_t *list, cons_t *node,int n);
 
 token_t *at(token_t *list,int n)
 {
@@ -29,7 +30,7 @@ token_t *at(token_t *list,int n)
 
 void parse(token_t *list, cons_t *node)
 {
-//	printf("car:%d:cdr:%d:op:%d:value:%d:str:%d:setq:%d\n",TY_Car,TY_Cdr,TY_Op,TY_Value,TY_Str,TY_Setq);
+//	printf("car:%d:cdr:%d:op:%d:value:%d:str:%d:setq:%d\n",TY_Car,TY_Cdr,TY_Op,TY_Int,TY_Str,TY_Setq);
 	int n = 0;
 //	printf("type:%d:n:%d\n",at(list,n)->type,n);
 	Type t = TY_Car;
@@ -37,8 +38,8 @@ void parse(token_t *list, cons_t *node)
 	case TY_Car:
 		n = F_Car(list,node,n);
 		break;
-	case TY_Value:
-		n = F_Value(list,node,n);
+	case TY_Int:
+		n = F_Int(list,node,n);
 		break;
 	default:
 		DEFAULT(node);
@@ -88,8 +89,11 @@ int F_Car(token_t *list, cons_t *node,int n)
 	case TY_Str:
 		n = F_Op(list,node->cdr,n);
 		break;
-	case TY_Value:
-		n = F_Value(list,node->cdr,n);
+	case TY_Int:
+		n = F_Int(list,node->cdr,n);
+		break;
+	case TY_Float:
+		n = F_Float(list,node->cdr,n);
 		break;
 	case TY_EOL:
 		break;
@@ -117,8 +121,11 @@ int F_Op(token_t *list, cons_t *node,int n)
 	case TY_Cdr:
 		CASE_CDR(node);
 		break;
-	case TY_Value:
-		n = F_Value(list,node,n);
+	case TY_Int:
+		n = F_Int(list,node,n);
+		break;
+	case TY_Float:
+		n = F_Float(list,node,n);
 		break;
 	case TY_Str:
 		n = F_Op(list,node,n);
@@ -131,9 +138,9 @@ int F_Op(token_t *list, cons_t *node,int n)
 	return n;
 }
 
-int F_Value(token_t *list, cons_t *node,int n)
+int F_Int(token_t *list, cons_t *node,int n)
 {
-	node->type = TY_Value;
+	node->type = TY_Int;
 	node->ivalue = atoi(at(list,n)->str);
 	node->cdr = Cons_New();
 	++n;
@@ -146,8 +153,43 @@ int F_Value(token_t *list, cons_t *node,int n)
 	case TY_Cdr:
 		CASE_CDR(node);
 		break;
-	case TY_Value:
-		n = F_Value(list,node,n);
+	case TY_Int:
+		n = F_Int(list,node,n);
+		break;
+	case TY_Float:
+		n = F_Float(list,node,n);
+		break;
+	case TY_Str:
+		n = F_Op(list,node,n);
+		break;
+	case TY_EOL:
+		break;
+	default:
+		DEFAULT(node);
+	}
+	return n;
+}
+
+int F_Float(token_t *list, cons_t *node,int n)
+{
+	node->type = TY_Float;
+	node->fvalue = atof(at(list,n)->str);
+	node->cdr = Cons_New();
+	++n;
+	node = node->cdr;
+	//printf("value:type:%d:n:%d\n",at(list,n)->type,n);
+	switch(at(list,n)->type) {
+	case TY_Car:
+		n = F_Car(list,node,n);
+		break;
+	case TY_Cdr:
+		CASE_CDR(node);
+		break;
+	case TY_Int:
+		n = F_Int(list,node,n);
+		break;
+	case TY_Float:
+		n = F_Float(list,node,n);
 		break;
 	case TY_Str:
 		n = F_Op(list,node,n);

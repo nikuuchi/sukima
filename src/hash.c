@@ -35,7 +35,7 @@ void HashTable_free(hash_table_t *self)
 			free(self->bins[i]);
 		}
 	}
-	free(self->bins);
+	//free(self->bins);
 	free(self);
 }
 

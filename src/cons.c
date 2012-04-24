@@ -22,8 +22,11 @@ void dumpCons_t(cons_t * p)
 		case TY_Str:
 			printf("%s ",p->string.s);
 			break;
-		case TY_Value:
+		case TY_Int:
 			printf("%d ",p->ivalue);
+			break;
+		case TY_Float:
+			printf("%f ",p->fvalue);
 			break;
 		case TY_Cdr:
 			printf(") ");
