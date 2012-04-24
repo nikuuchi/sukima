@@ -42,9 +42,9 @@ command_t *asm_Setq(command_t *cmd,cons_t *cons,hash_table_t *hash);
 command_t *asm_If(command_t *cmd,cons_t *cons,hash_table_t *hash);
 command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash);
 command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash);
-command_t *asm_UseFunction(command_t *cmd,cons_t *cons,hash_table_t *hash);
+command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash);
 command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash);
-command_t *asm_DefunUseFunction(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
+command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
 command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
 command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
 
@@ -77,6 +77,9 @@ void compile(cons_t *ast,command_t *root,hash_table_t *hash)
 		case TY_Int:
 			setInt(p,chain->ivalue,0);
 			break;
+		case TY_Float:
+			setFloat(p,chain->fvalue,0);
+			break;
 		default:
 			printf("some error occured in compile().\n");
 			break;
@@ -100,7 +103,7 @@ command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash)
 		p->command = C_End;
 		break;
 	case TY_Str:
-		p = asm_UseFunction(p,cons,hash);
+		p = asm_CallFunction(p,cons,hash);
 		break;
 	case TY_Setq:
 		p = asm_Setq(p,cons,hash);
@@ -121,7 +124,7 @@ command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash)
 command_t *asm_Car(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
 	if(cons->car->type == TY_Str) {
-		return asm_UseFunction(cmd,cons->car,hash);
+		return asm_CallFunction(cmd,cons->car,hash);
 	}else if(cons->car->type == TY_If) {
 		return asm_If(cmd,cons->car,hash);
 	}
@@ -131,7 +134,7 @@ command_t *asm_Car(command_t *cmd,cons_t *cons,hash_table_t *hash)
 command_t *asm_DefunCar(command_t *cmd,cons_t *cons,hash_table_t *argument,hash_table_t *hash)
 {
 	if(cons->car->type == TY_Str) {
-		return asm_DefunUseFunction(cmd,cons->car,argument,hash);
+		return asm_DefunCallFunction(cmd,cons->car,argument,hash);
 	}else if(cons->car->type == TY_If) {
 		return asm_DefunIf(cmd,cons->car,argument,hash);
 	}
@@ -186,6 +189,10 @@ command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 		setInt(t_jump,cons->cdr->cdr->ivalue,0);
 		t_jump->next = ListRun_New();
 		t_jump = t_jump->next;
+	}else if(cons->cdr->cdr->type == TY_Float) {
+		setFloat(t_jump,cons->cdr->cdr->fvalue,0);
+		t_jump->next = ListRun_New();
+		t_jump = t_jump->next;
 	}
 
 	//if false
@@ -193,6 +200,10 @@ command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 		list = asm_Car(list,cons->cdr->cdr->cdr,hash);
 	}else if(cons->cdr->cdr->cdr->type == TY_Int) {
 		setInt(list,cons->cdr->cdr->cdr->ivalue,0);
+		list->next = ListRun_New();
+		list = list->next;
+	}else if(cons->cdr->cdr->cdr->type == TY_Float) {
+		setInt(list,cons->cdr->cdr->cdr->fvalue,0);
 		list->next = ListRun_New();
 		list = list->next;
 	}
@@ -303,7 +314,7 @@ command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	return list;
 }
 
-command_t *asm_UseFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
+command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
 	int count = 0;
 	cons_t *p = cons->cdr;
@@ -330,7 +341,7 @@ command_t *asm_UseFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
 			list = list->next;
 			break;
 		default:
-			printf("some error occonsred in asm_UseFunction().\n");
+			printf("some error occonsred in asm_CallFunction().\n");
 			break;
 		}
 		++count;
@@ -352,7 +363,7 @@ command_t *asm_UseFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	return list;
 }
 
-command_t *asm_DefunUseFunction(command_t *cmd,cons_t *cons,hash_table_t *argument, hash_table_t *hash)
+command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons,hash_table_t *argument, hash_table_t *hash)
 {
 	int count = 0;
 	cons_t *p = cons->cdr;
@@ -368,6 +379,11 @@ command_t *asm_DefunUseFunction(command_t *cmd,cons_t *cons,hash_table_t *argume
 			list->next = ListRun_New();
 			list = list->next;
 			break;
+		case TY_Float:
+			setFloat(list,p->fvalue,0);
+			list->next = ListRun_New();
+			list = list->next;
+			break;
 		case TY_Str: {
 			value_t *v = HashTable_lookup_Value(argument,p->string.s,p->string.len);
 			list->command = C_Args;
@@ -378,7 +394,7 @@ command_t *asm_DefunUseFunction(command_t *cmd,cons_t *cons,hash_table_t *argume
 			break;
 		}
 		default:
-			printf("some error occured in asm_UseFunction().\n");
+			printf("some error occured in asm_CallFunction().\n");
 			break;
 		}
 		++count;
@@ -413,6 +429,11 @@ command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument, hash
 			break;
 		case TY_Int:
 			setInt(list,p->ivalue,0);
+			list->next = ListRun_New();
+			list = list->next;
+			break;
+		case TY_Float:
+			setFloat(list,p->fvalue,0);
 			list->next = ListRun_New();
 			list = list->next;
 			break;
@@ -484,6 +505,10 @@ command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_
 		setInt(t_jump,cons->cdr->cdr->ivalue,0);
 		t_jump->next = ListRun_New();
 		t_jump = t_jump->next;
+	}else if(cons->cdr->cdr->type == TY_Float) {
+		setFloat(t_jump,cons->cdr->cdr->fvalue,0);
+		t_jump->next = ListRun_New();
+		t_jump = t_jump->next;
 	}
 
 	//if false
@@ -491,6 +516,10 @@ command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_
 		list = asm_DefunCar(list,cons->cdr->cdr->cdr,argument,hash);
 	}else if(cons->cdr->cdr->cdr->type == TY_Int) {
 		setInt(list,cons->cdr->cdr->cdr->ivalue,0);
+		list->next = ListRun_New();
+		list = list->next;
+	}else if(cons->cdr->cdr->cdr->type == TY_Float) {
+		setFloat(list,cons->cdr->cdr->cdr->fvalue,0);
 		list->next = ListRun_New();
 		list = list->next;
 	}
