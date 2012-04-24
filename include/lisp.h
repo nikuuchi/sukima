@@ -123,12 +123,13 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 //boxing
 #define NaN       (0xFFF0000000000000)
 #define IntTag    (0x0001000000000000)
+#define NaNInt    (0xFFF1000000000000)
 
 #define NaN_Check(t) (((t)->bytes & NaN) == NaN)
 #define Is_Int(t) NaN_Check((t)) && (((t)->bytes & IntTag) >> 48 )
 
 #define Int_init(a,b) do { \
 	(a).i = (b); \
-	(a).bytes = (a).bytes | NaN |IntTag; \
+	(a).bytes |= NaNInt; \
 	} while(0); \
 

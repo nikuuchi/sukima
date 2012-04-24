@@ -278,7 +278,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_SetHash: {
 		value_t *a = pop();
 		value_t *b = (value_t *)malloc(sizeof(value_t));
-		b = a;
+		*b = *a;
 //	printf("SetHash %s,%d\n",p->v->string.s,a->num);
 		HashTable_insert_Value(hash, p->data[0].string->s, p->data[0].string->len, b);
 		p = p->next;
