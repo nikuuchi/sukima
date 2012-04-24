@@ -1,5 +1,10 @@
-#include "nanbox.h"
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <time.h>
+#include <stdint.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -126,7 +131,7 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 #define NaNInt    (0xFFF1000000000000)
 
 #define NaN_Check(t) (((t)->bytes & NaN) == NaN)
-#define Is_Int(t) NaN_Check((t)) && (((t)->bytes & IntTag) >> 48 )
+#define Is_Int(t) (NaN_Check((t)) && (((t)->bytes & IntTag) >> 48 ))
 
 #define Int_init(a,b) do { \
 	(a).i = (b); \
