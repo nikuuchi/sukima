@@ -54,7 +54,7 @@ typedef union value_t {
 } value_t;
 
 typedef enum Command {
-	C_Put, C_SetHash, C_LoadValue, C_OpPlus, C_OpMinus, C_OpMul, C_OpDiv, C_OpLt, C_OpGt, C_Print, C_Call, C_TJump,C_Tag, C_Args ,C_End
+	C_Put, C_SetHash, C_LoadValue, C_OpPlus, C_OpMinus, C_OpMul, C_OpDiv, C_OpLt, C_OpGt, C_Print, C_Call, C_TJump,C_Nop, C_Args ,C_End
 } Command;
 
 typedef struct command_t {
@@ -130,4 +130,14 @@ extern void HashTable_free(hash_table_t *self);
 extern hash_table_t *HashTable_createLocal(hash_table_t *self);
 
 extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
+
+//boxing
+#define NaN (0xFFF0000000000000)
+#define IntTag (0x0001000000000000)
+#define IS_Int(t) (((t->bytes) & NaN) == NaN) && (((t->bytes) & IntTag) >> 48)
+
+#define Int_init(a,b) do { \
+	(a).i = (b); \
+	(a).bytes = (a).bytes | NaN | IntTag; \
+	} while(0); \
 

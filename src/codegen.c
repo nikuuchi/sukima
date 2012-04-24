@@ -3,7 +3,7 @@
 #define setInt(c,d,arg) \
 	do { \
 		(c)->command = C_Put; \
-		(c)->data[(arg)].i = (d);	   \
+		Int_init((c)->data[(arg)],(d)); \
 		(c)->iseq = tables[C_Put]; \
 	} while(0);
 
@@ -29,10 +29,9 @@
 		(c)->iseq = tables[C_Put]; \
 	} while(0);
 
-#define setOp(c,d,e,arg) \
+#define setOp(c,d) \
 	do { \
 		(c)->command = (d); \
-		(c)->data[(arg)].i = (e); \
 		(c)->iseq = tables[(d)]; \
 	} while(0);
 
@@ -209,8 +208,8 @@ command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	}
 	//end_tag
 
-	t_jump->command = C_Tag;
-	t_jump->iseq = tables[C_Tag];
+	t_jump->command = C_Nop;
+	t_jump->iseq = tables[C_Nop];
 	t_jump->next = list;
 
 	return list;
@@ -269,7 +268,7 @@ command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
 			list = list->next;
 			break;
 		case TY_Float:
-			setFloat(list,p->ivalue,0);
+			setFloat(list,p->fvalue,0);
 			list->next = ListRun_New();
 			list = list->next;
 			break;
@@ -282,35 +281,37 @@ command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
 			printf("some error occured in asm_Op() 1.\n");
 			break;
 		}
+		if(count > 0) {
+			switch(cons->string.s[0]) {
+			case '+':
+				setOp(list,C_OpPlus);
+				break;
+			case '-':
+				setOp(list,C_OpMinus);
+				break;
+			case '*':
+				setOp(list,C_OpMul);
+				break;
+			case '/':
+				setOp(list,C_OpDiv);
+				break;
+			case '<':
+				setOp(list,C_OpLt);
+				break;
+			case '>':
+				setOp(list,C_OpGt);
+				break;
+			default:
+				printf("some error occonsred in asm_Op() 2. %s\n",cons->string.s);
+				break;
+			}
+			list->next = ListRun_New();
+			list = list->next;
+		}
 		++count;
 		p = p->cdr;
 	}
 
-	switch(cons->string.s[0]) {
-	case '+':
-		setOp(list,C_OpPlus,count,0);
-		break;
-	case '-':
-		setOp(list,C_OpMinus,count,0);
-		break;
-	case '*':
-		setOp(list,C_OpMul,count,0);
-		break;
-	case '/':
-		setOp(list,C_OpDiv,count,0);
-		break;
-	case '<':
-		setOp(list,C_OpLt,count,0);
-		break;
-	case '>':
-		setOp(list,C_OpGt,count,0);
-		break;
-	default:
-		printf("some error occonsred in asm_Op() 2. %s\n",cons->string.s);
-		break;
-	}
-	list->next = ListRun_New();
-	list = list->next;
 	return list;
 }
 
@@ -450,35 +451,36 @@ command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument, hash
 			printf("some error occured in asm_Op() 1.\n");
 			break;
 		}
+		if(count > 0) {
+			switch(cons->string.s[0]) {
+			case '+':
+				setOp(list,C_OpPlus);
+				break;
+			case '-':
+				setOp(list,C_OpMinus);
+				break;
+			case '*':
+				setOp(list,C_OpMul);
+				break;
+			case '/':
+				setOp(list,C_OpDiv);
+				break;
+			case '<':
+				setOp(list,C_OpLt);
+				break;
+			case '>':
+				setOp(list,C_OpGt);
+				break;
+			default:
+				printf("some error occonsred in asm_Op() 2. %s\n",cons->string.s);
+				break;
+			}
+			list->next = ListRun_New();
+			list = list->next;
+		}
 		++count;
 		p = p->cdr;
 	}
-
-	switch(cons->string.s[0]) {
-	case '+':
-		setOp(list,C_OpPlus,count,0);
-		break;
-	case '-':
-		setOp(list,C_OpMinus,count,0);
-		break;
-	case '*':
-		setOp(list,C_OpMul,count,0);
-		break;
-	case '/':
-		setOp(list,C_OpDiv,count,0);
-		break;
-	case '<':
-		setOp(list,C_OpLt,count,0);
-		break;
-	case '>':
-		setOp(list,C_OpGt,count,0);
-		break;
-	default:
-		printf("some error occonsred in asm_Op() 2. %s\n",cons->string.s);
-		break;
-	}
-	list->next = ListRun_New();
-	list = list->next;
 	return list;
 }
 
@@ -525,8 +527,8 @@ command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_
 	}
 	//end_tag
 
-	t_jump->command = C_Tag;
-	t_jump->iseq = tables[C_Tag];
+	t_jump->command = C_Nop;
+	t_jump->iseq = tables[C_Nop];
 	t_jump->next = list;
 
 	return list;

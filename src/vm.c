@@ -3,6 +3,22 @@
 #define push(a) st[esp++] = (a)
 #define pop() (&st[--esp])
 
+
+
+static void PrintInt(value_t *v)
+{
+	printf("%d\n",v->i);
+}
+static void PrintDouble(value_t *v)
+{
+	printf("%f\n",v->d);
+}
+
+static void(* Print[2])() = {
+	PrintDouble,
+	PrintInt,
+};
+
 void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table_flag)
 {
 
@@ -19,7 +35,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		&&Label_Print,
 		&&Label_Call,
 		&&Label_TJump,
-		&&Label_Tag,
+		&&Label_Nop,
 		&&Label_Args,
 		&&Label_End
 	};
@@ -33,38 +49,24 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 	goto *p->iseq;
 
   Label_Put: {
-//	printf("put %d\n",p->v->num);
 		push(p->data[0]);
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_OpPlus: {
-//	printf("OpPlus %d\n",p->v->num);
-		int ans = 0;
-		int i = 0;
-		int max = p->data[0].i;
-		for(;i < max;++i){
-			value_t *v = pop();
-			ans += v->i;
-		}
+		value_t *v1 = pop();
+		value_t *v2 = pop();
+		int ans = v2->i + v1->i;
 		value_t a;
 		a.i = ans;
 		push(a);
-
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_OpMinus: {
-//	printf("OpMinus %d\n",p->v->num);
-		int i = 0;
-		int ans = 0;
-		int max = p->data[0].i-1;
-		for(;i < max;++i){
-			value_t *v = pop();
-			ans -= v->i;
-		}
-		value_t *v = pop();
-		ans += v->i;
+		value_t *v1 = pop();
+		value_t *v2 = pop();
+		int ans = v2->i - v1->i;
 		value_t a;
 		a.i = ans;
 		push(a);
@@ -72,31 +74,19 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		goto *p->iseq;
 	}
   Label_OpMul: {
-		int ans = 1;
-		int i = 0;
-		int max = p->data[0].i;
-		for(;i < max;++i){
-			value_t *v = pop();
-			ans *= v->i;
-		}
+		value_t *v1 = pop();
+		value_t *v2 = pop();
+		int ans = v2->i * v1->i;
 		value_t a;
 		a.i = ans;
-//	printf("OpMul %d,%d\n",p->data[0].i,a->num);
 		push(a);
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_OpDiv: {
-//	printf("OpDiv %d\n",p->data[0].i);
-		int ans = 1;
-		int i = 0;
-		int max = p->data[0].i-1;
-		for(;i < max;++i){
-			value_t *v = pop();
-			ans *= v->i;
-		}
-		value_t *v = pop();
-		ans = v->i / ans;
+		value_t *v1 = pop();
+		value_t *v2 = pop();
+		int ans = v2->i / v1->i;
 		value_t a;
 		a.i = ans;
 		push(a);
@@ -105,7 +95,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 	}
   Label_Print: {
 		value_t *v = pop();
-		printf("print %d\n",v->i);
+		Print[IS_Int(v)](v);
 		p = p->next;
 		goto *p->iseq;
 	}
@@ -116,45 +106,21 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		return NULL;
 	}
   Label_OpLt: {
-//	printf("OpLt %d\n",p->data[0].i);
-		int ans = pop()->i;
-		int i = 0;
-		int flag = 0;
-		int max = p->data[0].i -1;
-		for(;i < max;++i) {
-			value_t *v = pop();
-			if(ans > v->i) {
-				ans = v->i;
-				flag = 1;
-			}else {
-				flag = 0;
-				break;
-			}
-		}
+		value_t *v1 = pop();
+		value_t *v2 = pop();
+		int ans = v2->i < v1->i;
 		value_t a;
-		a.i = flag;
+		a.i = ans;
 		push(a);
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_OpGt: {
-//	printf("OpGt %d\n",p->data[0].i);
-		int ans = pop()->i;
-		int i = 0;
-		int flag = 0;
-		int max = p->data[0].i - 1;
-		for(;i < max;++i) {
-			value_t *v = pop();
-			if(ans < v->i) {
-				ans = v->i;
-				flag = 1;
-			}else {
-				flag = 0;
-				break;
-			}
-		}
+		value_t *v1 = pop();
+		value_t *v2 = pop();
+		int ans = v2->i > v1->i;
 		value_t a;
-		a.i = flag;
+		a.i = ans;
 		push(a);
 		p = p->next;
 		goto *p->iseq;
@@ -184,7 +150,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		p = (pop()->i == 1)? (command_t *)p->data[0].pointer : p->next;
 		goto *p->iseq;
 	}
-  Label_Tag: {
+  Label_Nop: {
 		p = p->next;
 		goto *p->iseq;
 	}
