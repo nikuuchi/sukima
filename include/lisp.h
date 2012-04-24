@@ -34,17 +34,6 @@ typedef struct token_t {
 
 } token_t;
 
-struct command_t;
-/*
-typedef struct stack_frame_t {
-	int returnAddr;
-	int argc;
-	int locals;
-	value_t **fields; //type will change
-
-} stack_frame_t;
-*/
-
 typedef union value_t {
 	void *pointer;
 	struct string *string;
@@ -132,12 +121,14 @@ extern hash_table_t *HashTable_createLocal(hash_table_t *self);
 extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 
 //boxing
-#define NaN (0xFFF0000000000000)
-#define IntTag (0x0001000000000000)
-#define IS_Int(t) (((t->bytes) & NaN) == NaN) && (((t->bytes) & IntTag) >> 48)
+#define NaN       (0xFFF0000000000000)
+#define IntTag    (0x0001000000000000)
+
+#define NaN_Check(t) (((t)->bytes & NaN) == NaN)
+#define Is_Int(t) NaN_Check((t)) && (((t)->bytes & IntTag) >> 48 )
 
 #define Int_init(a,b) do { \
 	(a).i = (b); \
-	(a).bytes = (a).bytes | NaN | IntTag; \
+	(a).bytes = (a).bytes | NaN |IntTag; \
 	} while(0); \
 
