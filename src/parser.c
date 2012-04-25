@@ -40,13 +40,15 @@ void parse(token_t *list, cons_t *node)
 //	printf("car:%d:cdr:%d:op:%d:value:%d:str:%d:setq:%d\n",TY_LParen,TY_RParen,TY_Op,TY_Int,TY_Str,TY_Setq);
 	int n = 0;
 //	printf("type:%d:n:%d\n",at(list,n)->type,n);
-	Type t = TY_LParen;
-	switch(t) {
+	switch(at(list,n)->type) {
 	case TY_LParen:
 		n = F_LParen(list,node,n);
 		break;
 	case TY_Int:
 		n = F_Int(list,node,n);
+		break;
+	case TY_Double:
+		n = F_Double(list,node,n);
 		break;
 	default:
 		DEFAULT(node);
@@ -139,7 +141,7 @@ int F_Op(token_t *list, cons_t *node,int n)
 		n = F_Op(list,node,n);
 		break;
 	case TY_EOL:
-		CASE_END(node->cdr);
+		CASE_END(node);
 		break;
 	default:
 		DEFAULT(node);
@@ -172,7 +174,7 @@ int F_Int(token_t *list, cons_t *node,int n)
 		n = F_Op(list,node,n);
 		break;
 	case TY_EOL:
-		CASE_END(node->cdr);
+		CASE_END(node);
 		break;
 	default:
 		DEFAULT(node);
@@ -205,7 +207,7 @@ int F_Double(token_t *list, cons_t *node,int n)
 		n = F_Op(list,node,n);
 		break;
 	case TY_EOL:
-		CASE_END(node->cdr);
+		CASE_END(node);
 		break;
 	default:
 		DEFAULT(node);

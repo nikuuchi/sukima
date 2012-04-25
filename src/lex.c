@@ -135,7 +135,7 @@ void dumpLexer(token_t *p)
 {
 	token_t *lex_current = p;
 	while(lex_current != NULL){
-		//printf("%s:type:%d\n",lex_current->str,lex_current->type);
+		printf("%s:type:%d\n",lex_current->str,lex_current->type);
 		lex_current = lex_current->next;
 	}
 }
