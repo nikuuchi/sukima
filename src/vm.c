@@ -7,9 +7,18 @@ static void PrintInt(value_t *v)
 {
 	printf("%d\n",v->i);
 }
+
 static void PrintDouble(value_t *v)
 {
 	printf("%f\n",v->d);
+}
+
+static void PrintBoolean(value_t *v)
+{
+	if(v->i == 1)
+		printf("T\n");
+	else
+		printf("Nil\n");
 }
 
 
@@ -97,25 +106,25 @@ static value_t DivII(value_t *v2,value_t *v1)
 static value_t LtDD(value_t *v2,value_t *v1)
 {
 	value_t t;
-	Int_init(t,v2->d < v1->d);
+	Boolean_init(t,v2->d < v1->d);
 	return t;
 }
 static value_t LtDI(value_t *v2,value_t *v1)
 {
 	value_t t;
-	Int_init(t,v2->d < v1->i);
+	Boolean_init(t,v2->d < v1->i);
 	return t;
 }
 static value_t LtID(value_t *v2,value_t *v1)
 {
 	value_t t;
-	Int_init(t,v2->i < v1->d);
+	Boolean_init(t,v2->i < v1->d);
 	return t;
 }
 static value_t LtII(value_t *v2,value_t *v1)
 {
 	value_t t;
-	Int_init(t,v2->i < v1->i);
+	Boolean_init(t,v2->i < v1->i);
 	return t;
 }
 
@@ -123,31 +132,32 @@ static value_t LtII(value_t *v2,value_t *v1)
 static value_t GtDD(value_t *v2,value_t *v1)
 {
 	value_t t;
-	Int_init(t,v2->d > v1->d);
+	Boolean_init(t,v2->d > v1->d);
 	return t;
 }
 static value_t GtDI(value_t *v2,value_t *v1)
 {
 	value_t t;
-	Int_init(t,v2->d > v1->i);
+	Boolean_init(t,v2->d > v1->i);
 	return t;
 }
 static value_t GtID(value_t *v2,value_t *v1)
 {
 	value_t t;
-	Int_init(t,v2->i > v1->d);
+	Boolean_init(t,v2->i > v1->d);
 	return t;
 }
 static value_t GtII(value_t *v2,value_t *v1)
 {
 	value_t t;
-	Int_init(t,v2->i > v1->i);
+	Boolean_init(t,v2->i > v1->i);
 	return t;
 }
 
-static void(* Print[2])() = {
+static void(* Print[3])() = {
 	PrintDouble,
-	PrintInt
+	PrintInt,
+	PrintBoolean,
 };
 
 static value_t(* Plus[2][2])() = {
@@ -218,7 +228,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpPlus: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Plus[Is_Int(v2)][Is_Int(v1)](v2,v1);
+		value_t ans = Plus[Type_Check(v2)][Type_Check(v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
@@ -226,7 +236,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpMinus: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Minus[Is_Int(v2)][Is_Int(v1)](v2,v1);
+		value_t ans = Minus[Type_Check(v2)][Type_Check(v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
@@ -234,7 +244,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpMul: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Mul[Is_Int(v2)][Is_Int(v1)](v2,v1);
+		value_t ans = Mul[Type_Check(v2)][Type_Check(v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
@@ -242,14 +252,14 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpDiv: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Div[Is_Int(v2)][Is_Int(v1)](v2,v1);
+		value_t ans = Div[Type_Check(v2)][Type_Check(v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_Print: {
 		value_t *v = pop();
-		Print[Is_Int(v)](v);
+		Print[Type_Check(v)](v);
 		p = p->next;
 		goto *p->iseq;
 	}
@@ -262,7 +272,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpLt: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Lt[Is_Int(v2)][Is_Int(v1)](v2,v1);
+		value_t ans = Lt[Type_Check(v2)][Type_Check(v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
@@ -270,7 +280,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpGt: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Gt[Is_Int(v2)][Is_Int(v1)](v2,v1);
+		value_t ans = Gt[Type_Check(v2)][Type_Check(v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
@@ -279,14 +289,12 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		value_t *a = pop();
 		value_t *b = (value_t *)malloc(sizeof(value_t));
 		*b = *a;
-//	printf("SetHash %s,%d\n",p->v->string.s,a->num);
 		HashTable_insert_Value(hash, p->data[0].string->s, p->data[0].string->len, b);
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_LoadValue: {
 		value_t *b = HashTable_lookup_Value(hash, p->data[0].string->s, p->data[0].string->len);
-//	printf("LoadValue %s,%d\n",p->v->string.s,b->num);
 		push(*b);
 		p = p->next;
 		goto *p->iseq;
@@ -297,7 +305,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		goto *p->iseq;
 	}
   Label_TJump: {
-		p = (pop()->i == 1)? (command_t *)p->data[0].pointer : p->next;
+		p = (pop()->bytes == True)? (command_t *)p->data[0].pointer : p->next;
 		goto *p->iseq;
 	}
   Label_Nop: {
@@ -306,7 +314,6 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 	}
   Label_Args: {
 		value_t v = st[bsp - p->data[0].i];
-//	printf("args: %d\n",data[0].i);
 		push(v);
 		p = p->next;
 		goto *p->iseq;

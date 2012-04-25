@@ -9,7 +9,6 @@ void lisp_repl()
 
 	hash_table_t *hash = HashTable_init();
 	int esp = 0;
-	value_t st[8192];
 
 	while((line = readline("Lisp> ")) != NULL) {
 		add_history(line);
@@ -22,10 +21,11 @@ void lisp_repl()
 
 		cons_t *root = (cons_t *)malloc(sizeof(cons_t));
 		parse(lex_buf,root);
-		//dumpCons_t(root); //debug
+		dumpCons_t(root); //debug
 		//printf("\n");
 
 		command_t *bytecode = ListRun_New();
+		value_t st[8192];
 		compile(root,bytecode,hash);
 		vm_exec(bytecode,st,esp,hash,0);
 

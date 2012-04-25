@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(lisp)
 
 set(CMAKE_C_FLAGS_RELEASE "-W -Wall -O2")
-set(CMAKE_C_FLAGS_DEBUG "-W -Wall -pg")
+set(CMAKE_C_FLAGS_DEBUG "-W -Wall -g ")
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "Release")
 endif()
