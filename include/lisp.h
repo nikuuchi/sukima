@@ -58,13 +58,7 @@ typedef struct command_t {
 	struct command_t *next;
 } command_t;
 
-typedef struct hash_table_t {
-	int num_bins;
-	int num_entries;
-	struct hash_entry_t **bins;
-	struct hash_table_t *next;
-} hash_table_t;
-
+#define BINS 16
 typedef enum entryType {
 	entryFunction, entryValue
 } entryType;
@@ -80,7 +74,14 @@ typedef struct hash_entry_t {
 	struct hash_entry_t *next;
 } hash_entry_t;
 
-extern command_t *ListRun_New();
+typedef struct hash_table_t {
+	int num_bins;
+	int num_entries;
+	struct hash_entry_t **bins;
+	struct hash_table_t *next;
+} hash_table_t;
+
+extern command_t *Command_New();
 
 extern void freelist_string(token_t *p);
 
@@ -106,7 +107,7 @@ extern token_t *lex(token_t *list,char * buf,int size);
 //codegen.c
 extern void compile(cons_t *ast,command_t *root,hash_table_t *hash);
 
-extern void freeListRun(command_t *p);
+extern void Command_free(command_t *p);
 
 //hash.c
 extern hash_table_t *HashTable_init();
@@ -143,3 +144,11 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 #define Boolean_init(a,b) do { \
 		(a).bytes = (False | (b)); \
 	} while(0);
+
+//copy string
+#define String_Copy(p,buf,size) \
+	do { \
+		(p) = (char *)malloc(sizeof(char) * ((size) + 1)); \
+		(p) = strncpy((p),(buf),(size)); \
+		(p)[size] = '\0'; \
+	}while(0);

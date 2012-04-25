@@ -22,14 +22,14 @@ void lisp_repl()
 		cons_t *root = (cons_t *)malloc(sizeof(cons_t));
 		parse(lex_buf,root);
 		dumpCons_t(root); //debug
-		//printf("\n");
+		printf("\n");
 
-		command_t *bytecode = ListRun_New();
+		command_t *bytecode = Command_New();
 		value_t st[8192];
 		compile(root,bytecode,hash);
 		vm_exec(bytecode,st,esp,hash,0);
 
-		freeListRun(bytecode);
+		Command_free(bytecode);
 		freelist_string(lex_buf);
 		freeCons_t(root);
 		free(line);
@@ -51,7 +51,7 @@ void lisp_main(char *file,size_t size)
 
 	//--Lexer
 	startLex(lex_buf,fp);
-	dumpLexer(lex_buf);
+	//dumpLexer(lex_buf);
 
 	//--Parser
 	parse(lex_buf,root);
@@ -62,7 +62,7 @@ void lisp_main(char *file,size_t size)
 
 	//--run
 	printf("\n");
-	command_t *bytecode = ListRun_New();
+	command_t *bytecode = Command_New();
 	hash_table_t *hash = HashTable_init();
 	int esp = 0;
 	value_t st[8192];
@@ -71,7 +71,7 @@ void lisp_main(char *file,size_t size)
 	vm_exec(bytecode,st,esp,hash,0);
 
 	HashTable_free(hash);
-	freeListRun(bytecode);
+	Command_free(bytecode);
 	freelist_string(lex_buf);
 	freeCons_t(root);
 	fclose(fp);

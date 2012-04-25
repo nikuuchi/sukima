@@ -1,7 +1,5 @@
 #include "lisp.h"
 
-#define BINS 16
-
 
 unsigned int getHashNumber(char * s, size_t len)
 {
@@ -28,14 +26,16 @@ void HashTable_free(hash_table_t *self)
 	int i = 0;
 	for(i=0;i<BINS;++i) {
 		if(self->bins[i] != NULL){
+			free(self->bins[i]->key);
 			if(self->bins[i]->type == entryValue){
+				free(self->bins[i]->v);
 			}else{
-				freeListRun(self->bins[i]->list);
+				Command_free(self->bins[i]->list);
 			}
 			free(self->bins[i]);
 		}
 	}
-	//free(self->bins);
+	free(self->bins);
 	free(self);
 }
 
@@ -57,12 +57,12 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 			point->next = (hash_entry_t *)malloc(sizeof(hash_entry_t));
 			if(flag == entryValue) {
 				point->next->hash = hash_number;
-				point->next->key  = key;
+				String_Copy(point->next->key,key,len);
 				point->next->v = (value_t *)p;
 				point->next->type = entryValue;
 			}else{
 				point->next->hash = hash_number;
-				point->next->key  = key;
+				String_Copy(point->next->key,key,len);
 				point->next->list = (command_t *)p;
 				point->next->type = entryFunction;
 			}
@@ -71,12 +71,12 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 		self->bins[hash_number] = (hash_entry_t *)malloc(sizeof(hash_entry_t));
 		if(flag == entryValue) {
 			self->bins[hash_number]->hash = hash_number;
-			self->bins[hash_number]->key  = key;
+			String_Copy(self->bins[hash_number]->key,key,len);
 			self->bins[hash_number]->v = (value_t *)p;
 			self->bins[hash_number]->type = entryValue;
 		}else{
 			self->bins[hash_number]->hash = hash_number;
-			self->bins[hash_number]->key  = key;
+			String_Copy(self->bins[hash_number]->key,key,len);
 			self->bins[hash_number]->list = (command_t *)p;
 			self->bins[hash_number]->type = entryFunction;
 		}

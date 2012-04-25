@@ -8,6 +8,14 @@
 		++n; \
 	} while(0);
 
+#define CASE_END(c) \
+	do { \
+		(c)->type = TY_EOL; \
+		(c)->string.s = "EOL"; \
+		(c)->string.len = 3; \
+		++n; \
+	} while(0);
+
 #define DEFAULT(c) \
 	do { \
 		printf("parse error. %s \n",at(list,n)->str); \
@@ -96,6 +104,7 @@ int F_Car(token_t *list, cons_t *node,int n)
 		n = F_Float(list,node->cdr,n);
 		break;
 	case TY_EOL:
+		CASE_END(node->cdr);
 		break;
 	default:
 		DEFAULT(node->cdr);
@@ -107,7 +116,7 @@ int F_Op(token_t *list, cons_t *node,int n)
 {
 	token_t *c = at(list,n);
 	node->type = c->type;
-	node->string.s = c->str;
+	String_Copy(node->string.s,c->str,c->size);
 	node->string.len = c->size;
 	node->cdr = Cons_New();
 	node = node->cdr;
@@ -131,6 +140,7 @@ int F_Op(token_t *list, cons_t *node,int n)
 		n = F_Op(list,node,n);
 		break;
 	case TY_EOL:
+		CASE_END(node->cdr);
 		break;
 	default:
 		DEFAULT(node);
@@ -145,7 +155,7 @@ int F_Int(token_t *list, cons_t *node,int n)
 	node->cdr = Cons_New();
 	++n;
 	node = node->cdr;
-	printf("value:type:%d:n:%d\n",at(list,n)->type,n);
+//	printf("value:type:%d:n:%d\n",at(list,n)->type,n);
 	switch(at(list,n)->type) {
 	case TY_Car:
 		n = F_Car(list,node,n);
@@ -163,6 +173,7 @@ int F_Int(token_t *list, cons_t *node,int n)
 		n = F_Op(list,node,n);
 		break;
 	case TY_EOL:
+		CASE_END(node->cdr);
 		break;
 	default:
 		DEFAULT(node);
@@ -195,6 +206,7 @@ int F_Float(token_t *list, cons_t *node,int n)
 		n = F_Op(list,node,n);
 		break;
 	case TY_EOL:
+		CASE_END(node->cdr);
 		break;
 	default:
 		DEFAULT(node);

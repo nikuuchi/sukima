@@ -2,6 +2,18 @@
 
 void freeCons_t(cons_t * p)
 {
+	switch(p->type) {
+	case TY_Op:
+	case TY_Str:
+	case TY_If:
+	case TY_Setq:
+	case TY_Defun:
+		free(p->string.s);
+		break;
+	default:
+		;
+	}
+
 	if(p->car != NULL && p->type == TY_Car)
 		freeCons_t(p->car);
 	if(p->cdr != NULL)
@@ -29,7 +41,7 @@ void dumpCons_t(cons_t * p)
 			printf("%f ",p->fvalue);
 			break;
 		case TY_Cdr:
-			printf(") ");
+			printf(")");
 			break;
 		case TY_If:
 			printf("if ");
@@ -41,7 +53,7 @@ void dumpCons_t(cons_t * p)
 			printf("defun ");
 			break;
 		case TY_EOL:
-			printf("EOL ");
+			printf(" EOL");
 			break;
 		default:
 			printf("Not implemented yet.");
