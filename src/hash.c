@@ -1,6 +1,5 @@
 #include "lisp.h"
 
-
 unsigned int getHashNumber(char * s, size_t len)
 {
 	int i = 0;

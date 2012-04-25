@@ -13,7 +13,7 @@ extern void **tables;
 #define BUF_SIZE 1024
 
 typedef enum Type {
-	TY_LParen, TY_RParen, TY_Op, TY_Int, TY_Double, TY_Str, TY_Defun, TY_If, TY_Setq, TY_EOL
+	TY_LParen, TY_RParen, TY_Op, TY_List, TY_Int, TY_Double, TY_Str, TY_Defun, TY_If, TY_Setq, TY_EOL
 } Type;
 
 typedef struct cons_t {
@@ -83,7 +83,7 @@ typedef struct hash_table_t {
 
 #define Command_New() (command_t *)calloc(1,sizeof(command_t));
 
-extern void freelist_string(token_t *p);
+extern void token_free(token_t *p);
 
 extern void parse(token_t *list, cons_t *node);
 
@@ -129,25 +129,27 @@ extern hash_table_t *HashTable_createLocal(hash_table_t *self);
 extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 
 //boxing
+
 #define NaN       (0xFFF0000000000000)
-#define IntTag    (0x0001000000000000)
-#define NaNInt    (0xFFF1000000000000)
-#define True      (0xFFF2000000000001)
+#define TYPE      (0x000F000000000000) // for typecheck
+
+#define IntTag    (0x0001000000000000) //Type int
+#define True      (0xFFF2000000000001) //Type bool
 #define False     (0xFFF2000000000000)
-#define TYPE      (0x000F000000000000)
+
+#define ListTag   (0x0003000000000000) //Type List
 
 #define NaN_Check(t) (((t).bytes & NaN) == NaN)
 
 #define Int_init(a,b) do { \
 		(a).i = (b); \
-		(a).bytes |= NaNInt; \
+		(a).bytes |= NaN | IntTag; \
 	} while(0);
 
 #define Boolean_init(a,b) do { \
 		(a).bytes = (False | (b)); \
 	} while(0);
 
-//copy string
 #define String_Copy(p,buf,size) \
 	do { \
 		(p) = (char *)malloc(sizeof(char) * ((size) + 1)); \

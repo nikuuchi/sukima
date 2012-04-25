@@ -30,7 +30,7 @@ void lisp_repl()
 		vm_exec(bytecode,st,esp,hash,0);
 
 		Command_free(bytecode);
-		freelist_string(lex_buf);
+		token_free(lex_buf);
 		freeCons_t(root);
 		free(line);
 	}
@@ -72,7 +72,7 @@ void lisp_main(char *file)
 
 	HashTable_free(hash);
 	Command_free(bytecode);
-	freelist_string(lex_buf);
+	token_free(lex_buf);
 	freeCons_t(root);
 	fclose(fp);
 }

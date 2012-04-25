@@ -1,13 +1,13 @@
 #include "lisp.h"
 
-token_t *list_string_New()
+token_t *token_New()
 {
 	token_t *p = (token_t *)calloc(1,sizeof(token_t));
 	p->str = NULL;
 	p->next = NULL;
 	return p;
 }
-void list_string_init(token_t *p,char *buf,size_t size,Type t)
+void token_init(token_t *p,char *buf,size_t size,Type t)
 {
 	p->str = (char *)malloc(sizeof(char) * (size + 1));
 	p->str = strncpy(p->str,buf,size);
@@ -25,10 +25,10 @@ void list_string_init(token_t *p,char *buf,size_t size,Type t)
 	p->type = t;
 }
 
-void freelist_string(token_t *p)
+void token_free(token_t *p)
 {
 	if(p->next != NULL)
-		freelist_string(p->next);
+		token_free(p->next);
 	if(p->type != TY_EOL) {
 		free(p->str);
 		p->str = NULL;
@@ -50,18 +50,18 @@ token_t *lex(token_t *list,char * buf,int size)
 			++index;
 			break;
 		case '(':
-			list_string_init(list,&buf[index],1,TY_LParen);
+			token_init(list,&buf[index],1,TY_LParen);
 			++index;
 			if(index < size){
-				list->next = list_string_New();
+				list->next = token_New();
 				list = list->next;
 			}
 			break;
 		case ')':
-			list_string_init(list,&buf[index],1,TY_RParen);
+			token_init(list,&buf[index],1,TY_RParen);
 			++index;
 //			if(index < size){
-			list->next = list_string_New();
+			list->next = token_New();
 			list = list->next;
 //			}
 			break;
@@ -71,19 +71,19 @@ token_t *lex(token_t *list,char * buf,int size)
 		case '=':
 		case '<':
 		case '>':
-			list_string_init(list,&buf[index],1,TY_Op);
+			token_init(list,&buf[index],1,TY_Op);
 			++index;
 			if(index < size){
-				list->next = list_string_New();
+				list->next = token_New();
 				list = list->next;
 			}
 			break;
 		case '-':
 			if(buf[index+1] == ' '){
-				list_string_init(list,&buf[index],1,TY_Op);
+				token_init(list,&buf[index],1,TY_Op);
 				++index;
 				if(index < size){
-					list->next = list_string_New();
+					list->next = token_New();
 					list = list->next;
 				}
 			break;
@@ -103,20 +103,27 @@ token_t *lex(token_t *list,char * buf,int size)
 			if(buf[index+next] == '.') {
 				++next;
 				while ( isdigit(buf[index+next]) ) { ++next; }
-				list_string_init(list,&buf[index],next,TY_Double);
+				token_init(list,&buf[index],next,TY_Double);
 			}else {
-				list_string_init(list,&buf[index],next,TY_Int);
+				token_init(list,&buf[index],next,TY_Int);
 			}
 				index += next;
-				list->next = list_string_New();
+				list->next = token_New();
 				list = list->next;
+			break;
+		case '\'':
+		case '`':
+			token_init(list,&buf[index],1,TY_List);
+			++index;
+			list->next = token_New();
+			list = list->next;
 			break;
 		default:
 			next = 1;
 			while( isalpha(buf[index+next]) ) { ++next; }
-			list_string_init(list,&buf[index],next,TY_Str);
+			token_init(list,&buf[index],next,TY_Str);
 			index += next;
-			list->next = list_string_New();
+			list->next = token_New();
 			list = list->next;
 			break;
 		}
