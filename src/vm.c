@@ -3,6 +3,10 @@
 #define push(a) st[esp++] = (a)
 #define pop() (&st[--esp])
 
+static int Type_Check(value_t t){
+	return (NaN_Check(t) * ((t.bytes & TYPE) >> 48 ));
+}
+
 static void PrintInt(value_t *v)
 {
 	printf("%d\n",v->i);
@@ -228,7 +232,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpPlus: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Plus[Type_Check(v2)][Type_Check(v1)](v2,v1);
+		value_t ans = Plus[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
@@ -236,7 +240,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpMinus: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Minus[Type_Check(v2)][Type_Check(v1)](v2,v1);
+		value_t ans = Minus[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
@@ -244,7 +248,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpMul: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Mul[Type_Check(v2)][Type_Check(v1)](v2,v1);
+		value_t ans = Mul[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
@@ -252,14 +256,14 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpDiv: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Div[Type_Check(v2)][Type_Check(v1)](v2,v1);
+		value_t ans = Div[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_Print: {
 		value_t *v = pop();
-		Print[Type_Check(v)](v);
+		Print[Type_Check(*v)](v);
 		p = p->next;
 		goto *p->iseq;
 	}
@@ -272,7 +276,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpLt: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Lt[Type_Check(v2)][Type_Check(v1)](v2,v1);
+		value_t ans = Lt[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;
@@ -280,7 +284,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_OpGt: {
 		value_t *v1 = pop();
 		value_t *v2 = pop();
-		value_t ans = Gt[Type_Check(v2)][Type_Check(v1)](v2,v1);
+		value_t ans = Gt[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
 		goto *p->iseq;

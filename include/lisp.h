@@ -133,8 +133,7 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 #define False     (0xFFF2000000000000)
 #define TYPE      (0x000F000000000000)
 
-#define NaN_Check(t) (((t)->bytes & NaN) == NaN)
-#define Type_Check(t) (NaN_Check((t)) * (((t)->bytes & TYPE) >> 48 ))
+#define NaN_Check(t) (((t).bytes & NaN) == NaN)
 
 #define Int_init(a,b) do { \
 		(a).i = (b); \
