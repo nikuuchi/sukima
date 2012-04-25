@@ -81,7 +81,7 @@ typedef struct hash_table_t {
 	struct hash_table_t *next;
 } hash_table_t;
 
-extern command_t *Command_New();
+#define Command_New() (command_t *)calloc(1,sizeof(command_t));
 
 extern void freelist_string(token_t *p);
 
@@ -93,6 +93,8 @@ extern void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash, i
 extern int eval(cons_t *p);
 
 //cons.c
+#define Cons_New() (cons_t *)calloc(1,sizeof(cons_t))
+
 extern void dumpCons_t(cons_t * p);
 
 extern void freeCons_t(cons_t * p);

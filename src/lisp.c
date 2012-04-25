@@ -19,7 +19,7 @@ void lisp_repl()
 		lex_current->type = TY_EOL;
 		//dumpLexer(lex_buf);
 
-		cons_t *root = (cons_t *)malloc(sizeof(cons_t));
+		cons_t *root = Cons_New();
 		parse(lex_buf,root);
 		dumpCons_t(root); //debug
 		printf("\n");
@@ -46,7 +46,7 @@ void lisp_main(char *file,size_t size)
 		exit(0);
 	}
 
-	cons_t *root = (cons_t *)malloc(sizeof(cons_t));
+	cons_t *root = Cons_New();
 	token_t *lex_buf = (token_t *)malloc(sizeof(token_t));
 
 	//--Lexer

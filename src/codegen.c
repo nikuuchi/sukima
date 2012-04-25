@@ -47,13 +47,6 @@ command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons, hash_table_t *argu
 command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
 command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
 
-command_t *Command_New()
-{
-	command_t *command_t_ptr = (command_t *)malloc(sizeof(command_t));
-	memset(command_t_ptr,0x00,sizeof(command_t));
-	return command_t_ptr;
-}
-
 void Command_free(command_t *p)
 {
 	if(p != NULL) {

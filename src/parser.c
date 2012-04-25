@@ -21,7 +21,6 @@
 		printf("parse error. %s \n",at(list,n)->str); \
 		exit(1); \
 	} while(0);
-#define Cons_New() (cons_t *)malloc(sizeof(cons_t))
 
 int F_Car(token_t *list, cons_t *node,int n);
 int F_Op(token_t *list, cons_t *node, int n);
