@@ -50,7 +50,7 @@ token_t *lex(token_t *list,char * buf,int size)
 			++index;
 			break;
 		case '(':
-			list_string_init(list,&buf[index],1,TY_Car);
+			list_string_init(list,&buf[index],1,TY_LParen);
 			++index;
 			if(index < size){
 				list->next = list_string_New();
@@ -58,7 +58,7 @@ token_t *lex(token_t *list,char * buf,int size)
 			}
 			break;
 		case ')':
-			list_string_init(list,&buf[index],1,TY_Cdr);
+			list_string_init(list,&buf[index],1,TY_RParen);
 			++index;
 //			if(index < size){
 			list->next = list_string_New();
@@ -103,7 +103,7 @@ token_t *lex(token_t *list,char * buf,int size)
 			if(buf[index+next] == '.') {
 				++next;
 				while ( isdigit(buf[index+next]) ) { ++next; }
-				list_string_init(list,&buf[index],next,TY_Float);
+				list_string_init(list,&buf[index],next,TY_Double);
 			}else {
 				list_string_init(list,&buf[index],next,TY_Int);
 			}

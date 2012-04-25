@@ -7,7 +7,7 @@
 		(c)->iseq = tables[C_Put]; \
 	} while(0);
 
-#define setFloat(c,f,arg) \
+#define setDouble(c,f,arg) \
 	do { \
 		(c)->command = C_Put; \
 		(c)->data[(arg)].d = (f);	   \
@@ -36,7 +36,7 @@
 	} while(0);
 
 void **tables;
-command_t *asm_Car(command_t *cmd,cons_t *cons,hash_table_t *hash);
+command_t *asm_LParen(command_t *cmd,cons_t *cons,hash_table_t *hash);
 command_t *asm_Setq(command_t *cmd,cons_t *cons,hash_table_t *hash);
 command_t *asm_If(command_t *cmd,cons_t *cons,hash_table_t *hash);
 command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash);
@@ -68,14 +68,14 @@ void compile(cons_t *ast,command_t *root,hash_table_t *hash)
 	tables = vm_exec(root,st,0,hash,1);
 	while(chain->cdr != NULL){
 		switch(chain->type){
-		case TY_Car:
+		case TY_LParen:
 			p = assemble(p,chain->car,hash);
 			break;
 		case TY_Int:
 			setInt(p,chain->ivalue,0);
 			break;
-		case TY_Float:
-			setFloat(p,chain->fvalue,0);
+		case TY_Double:
+			setDouble(p,chain->fvalue,0);
 			break;
 		default:
 			printf("some error occured in compile().\n");
@@ -90,7 +90,7 @@ void compile(cons_t *ast,command_t *root,hash_table_t *hash)
 command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash)
 {
 	switch(cons->type) {
-	case TY_Cdr:
+	case TY_RParen:
 		setBoolean(p,"Nil",0);
 		break;
 	case TY_Op:
@@ -118,7 +118,7 @@ command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash)
 	return p;
 }
 
-command_t *asm_Car(command_t *cmd,cons_t *cons,hash_table_t *hash)
+command_t *asm_LParen(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
 	if(cons->car->type == TY_Str) {
 		return asm_CallFunction(cmd,cons->car,hash);
@@ -128,7 +128,7 @@ command_t *asm_Car(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	return asm_Op(cmd,cons->car,hash);
 }
 
-command_t *asm_DefunCar(command_t *cmd,cons_t *cons,hash_table_t *argument,hash_table_t *hash)
+command_t *asm_DefunLParen(command_t *cmd,cons_t *cons,hash_table_t *argument,hash_table_t *hash)
 {
 	if(cons->car->type == TY_Str) {
 		return asm_DefunCallFunction(cmd,cons->car,argument,hash);
@@ -148,14 +148,14 @@ command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash)
 
 	cons_t *tmp = cons->cdr->cdr->car;
 	int i = 1;
-	while(tmp->type != TY_Cdr) {
+	while(tmp->type != TY_RParen) {
 		value_t *v = (value_t *)malloc(sizeof(value_t));
 		v->i = i;
 		HashTable_insert_Value(argument,tmp->string.s,tmp->string.len,v);
 		tmp = tmp->cdr;
 		++i;
 	}
-	list = asm_DefunCar(list,cons->cdr->cdr->cdr,argument,hash);
+	list = asm_DefunLParen(list,cons->cdr->cdr->cdr,argument,hash);
 	list->command = C_End;
 	list->iseq = tables[C_End];
 
@@ -168,7 +168,7 @@ command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	command_t *list = cmd;
 	
 	//condition
-	list = asm_Car(list,cons->cdr,hash);
+	list = asm_LParen(list,cons->cdr,hash);
 
 	//tag jump
 	list->command = C_TJump;
@@ -180,26 +180,26 @@ command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	list = list->next;
 
 	//if true
-	if(cons->cdr->cdr->type == TY_Car) {
-		t_jump = asm_Car(t_jump,cons->cdr->cdr,hash);
+	if(cons->cdr->cdr->type == TY_LParen) {
+		t_jump = asm_LParen(t_jump,cons->cdr->cdr,hash);
 	}else if(cons->cdr->cdr->type == TY_Int) {
 		setInt(t_jump,cons->cdr->cdr->ivalue,0);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
-	}else if(cons->cdr->cdr->type == TY_Float) {
-		setFloat(t_jump,cons->cdr->cdr->fvalue,0);
+	}else if(cons->cdr->cdr->type == TY_Double) {
+		setDouble(t_jump,cons->cdr->cdr->fvalue,0);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
 	}
 
 	//if false
-	if(cons->cdr->cdr->cdr->type == TY_Car) {
-		list = asm_Car(list,cons->cdr->cdr->cdr,hash);
+	if(cons->cdr->cdr->cdr->type == TY_LParen) {
+		list = asm_LParen(list,cons->cdr->cdr->cdr,hash);
 	}else if(cons->cdr->cdr->cdr->type == TY_Int) {
 		setInt(list,cons->cdr->cdr->cdr->ivalue,0);
 		list->next = Command_New();
 		list = list->next;
-	}else if(cons->cdr->cdr->cdr->type == TY_Float) {
+	}else if(cons->cdr->cdr->cdr->type == TY_Double) {
 		setInt(list,cons->cdr->cdr->cdr->fvalue,0);
 		list->next = Command_New();
 		list = list->next;
@@ -219,16 +219,16 @@ command_t *asm_Setq(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	command_t *list = cmd;
 
 	switch(p->type) {
-	case TY_Car:
-		list = asm_Car(list,p,hash);
+	case TY_LParen:
+		list = asm_LParen(list,p,hash);
 		break;
 	case TY_Int:
 		setInt(list,p->ivalue,0);
 		list->next = Command_New();
 		list = list->next;
 		break;
-	case TY_Float:
-		setFloat(list,p->fvalue,0);
+	case TY_Double:
+		setDouble(list,p->fvalue,0);
 		list->next = Command_New();
 		list = list->next;
 		break;
@@ -255,18 +255,18 @@ command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	cons_t *p = cons->cdr;
 	command_t *list = cmd;
 
-	while(p->type != TY_Cdr) {
+	while(p->type != TY_RParen) {
 		switch(p->type) {
-		case TY_Car:
-			list = asm_Car(list,p,hash);
+		case TY_LParen:
+			list = asm_LParen(list,p,hash);
 			break;
 		case TY_Int:
 			setInt(list,p->ivalue,0);
 			list->next = Command_New();
 			list = list->next;
 			break;
-		case TY_Float:
-			setFloat(list,p->fvalue,0);
+		case TY_Double:
+			setDouble(list,p->fvalue,0);
 			list->next = Command_New();
 			list = list->next;
 			break;
@@ -319,18 +319,18 @@ command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	cons_t *p = cons->cdr;
 	command_t *list = cmd;
 
-	while(p->type != TY_Cdr) {
+	while(p->type != TY_RParen) {
 		switch(p->type) {
-		case TY_Car:
-			list = asm_Car(list,p,hash);
+		case TY_LParen:
+			list = asm_LParen(list,p,hash);
 			break;
 		case TY_Int:
 			setInt(list,p->ivalue,0);
 			list->next = Command_New();
 			list = list->next;
 			break;
-		case TY_Float:
-			setFloat(list,p->fvalue,0);
+		case TY_Double:
+			setDouble(list,p->fvalue,0);
 			list->next = Command_New();
 			list = list->next;
 			break;
@@ -368,18 +368,18 @@ command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons,hash_table_t *argum
 	cons_t *p = cons->cdr;
 	command_t *list = cmd;
 
-	while(p->type != TY_Cdr) {
+	while(p->type != TY_RParen) {
 		switch(p->type) {
-		case TY_Car:
-			list = asm_DefunCar(list,p,argument,hash);
+		case TY_LParen:
+			list = asm_DefunLParen(list,p,argument,hash);
 			break;
 		case TY_Int:
 			setInt(list,p->ivalue,0);
 			list->next = Command_New();
 			list = list->next;
 			break;
-		case TY_Float:
-			setFloat(list,p->fvalue,0);
+		case TY_Double:
+			setDouble(list,p->fvalue,0);
 			list->next = Command_New();
 			list = list->next;
 			break;
@@ -421,18 +421,18 @@ command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument, hash
 	cons_t *p = cons->cdr;
 	command_t *list = cmd;
 
-	while(p->type != TY_Cdr) {
+	while(p->type != TY_RParen) {
 		switch(p->type) {
-		case TY_Car:
-			list = asm_DefunCar(list,p,argument,hash);
+		case TY_LParen:
+			list = asm_DefunLParen(list,p,argument,hash);
 			break;
 		case TY_Int:
 			setInt(list,p->ivalue,0);
 			list->next = Command_New();
 			list = list->next;
 			break;
-		case TY_Float:
-			setFloat(list,p->fvalue,0);
+		case TY_Double:
+			setDouble(list,p->fvalue,0);
 			list->next = Command_New();
 			list = list->next;
 			break;
@@ -487,7 +487,7 @@ command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_
 	command_t *list = cmd;
 	
 	//condition
-	list = asm_DefunCar(list,cons->cdr,argument,hash);
+	list = asm_DefunLParen(list,cons->cdr,argument,hash);
 
 	//tag jump
 	list->command = C_TJump;
@@ -499,27 +499,27 @@ command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_
 	list = list->next;
 
 	//if true
-	if(cons->cdr->cdr->type == TY_Car) {
-		t_jump = asm_DefunCar(t_jump,cons->cdr->cdr,argument,hash);
+	if(cons->cdr->cdr->type == TY_LParen) {
+		t_jump = asm_DefunLParen(t_jump,cons->cdr->cdr,argument,hash);
 	}else if(cons->cdr->cdr->type == TY_Int) {
 		setInt(t_jump,cons->cdr->cdr->ivalue,0);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
-	}else if(cons->cdr->cdr->type == TY_Float) {
-		setFloat(t_jump,cons->cdr->cdr->fvalue,0);
+	}else if(cons->cdr->cdr->type == TY_Double) {
+		setDouble(t_jump,cons->cdr->cdr->fvalue,0);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
 	}
 
 	//if false
-	if(cons->cdr->cdr->cdr->type == TY_Car) {
-		list = asm_DefunCar(list,cons->cdr->cdr->cdr,argument,hash);
+	if(cons->cdr->cdr->cdr->type == TY_LParen) {
+		list = asm_DefunLParen(list,cons->cdr->cdr->cdr,argument,hash);
 	}else if(cons->cdr->cdr->cdr->type == TY_Int) {
 		setInt(list,cons->cdr->cdr->cdr->ivalue,0);
 		list->next = Command_New();
 		list = list->next;
-	}else if(cons->cdr->cdr->cdr->type == TY_Float) {
-		setFloat(list,cons->cdr->cdr->cdr->fvalue,0);
+	}else if(cons->cdr->cdr->cdr->type == TY_Double) {
+		setDouble(list,cons->cdr->cdr->cdr->fvalue,0);
 		list->next = Command_New();
 		list = list->next;
 	}

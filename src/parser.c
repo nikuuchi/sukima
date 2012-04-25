@@ -1,8 +1,8 @@
 #include "lisp.h"
 
-#define CASE_CDR(c) \
+#define CASE_RParen(c) \
 	do { \
-		(c)->type = TY_Cdr; \
+		(c)->type = TY_RParen; \
 		(c)->string.s = ")"; \
 		(c)->string.len = 1; \
 		++n; \
@@ -22,10 +22,10 @@
 		exit(1); \
 	} while(0);
 
-int F_Car(token_t *list, cons_t *node,int n);
+int F_LParen(token_t *list, cons_t *node,int n);
 int F_Op(token_t *list, cons_t *node, int n);
 int F_Int(token_t *list, cons_t *node,int n);
-int F_Float(token_t *list, cons_t *node,int n);
+int F_Double(token_t *list, cons_t *node,int n);
 
 token_t *at(token_t *list,int n)
 {
@@ -37,13 +37,13 @@ token_t *at(token_t *list,int n)
 
 void parse(token_t *list, cons_t *node)
 {
-//	printf("car:%d:cdr:%d:op:%d:value:%d:str:%d:setq:%d\n",TY_Car,TY_Cdr,TY_Op,TY_Int,TY_Str,TY_Setq);
+//	printf("car:%d:cdr:%d:op:%d:value:%d:str:%d:setq:%d\n",TY_LParen,TY_RParen,TY_Op,TY_Int,TY_Str,TY_Setq);
 	int n = 0;
 //	printf("type:%d:n:%d\n",at(list,n)->type,n);
-	Type t = TY_Car;
+	Type t = TY_LParen;
 	switch(t) {
-	case TY_Car:
-		n = F_Car(list,node,n);
+	case TY_LParen:
+		n = F_LParen(list,node,n);
 		break;
 	case TY_Int:
 		n = F_Int(list,node,n);
@@ -54,19 +54,19 @@ void parse(token_t *list, cons_t *node)
 	
 }
 
-int F_Car(token_t *list, cons_t *node,int n)
+int F_LParen(token_t *list, cons_t *node,int n)
 {
-	node->type = TY_Car;
+	node->type = TY_LParen;
 	node->car = Cons_New();
 	++n;
 //	printf("car1:type:%d:n:%d\n",at(list,n)->type,n);
 
 	switch(at(list,n)->type) {
-	case TY_Car:
-		n = F_Car(list,node->car,n);
+	case TY_LParen:
+		n = F_LParen(list,node->car,n);
 		break;
-	case TY_Cdr:
-		CASE_CDR(node); //Need check
+	case TY_RParen:
+		CASE_RParen(node); //Need check
 		break;
 	case TY_Op:
 	case TY_Str:
@@ -86,11 +86,11 @@ int F_Car(token_t *list, cons_t *node,int n)
 	node->cdr = Cons_New();
 
 	switch(at(list,n)->type) {
-	case TY_Car:
-		n = F_Car(list,node->cdr,n);
+	case TY_LParen:
+		n = F_LParen(list,node->cdr,n);
 		break;
-	case TY_Cdr:
-		CASE_CDR(node->cdr);
+	case TY_RParen:
+		CASE_RParen(node->cdr);
 		break;
 	case TY_Op:
 	case TY_Str:
@@ -99,8 +99,8 @@ int F_Car(token_t *list, cons_t *node,int n)
 	case TY_Int:
 		n = F_Int(list,node->cdr,n);
 		break;
-	case TY_Float:
-		n = F_Float(list,node->cdr,n);
+	case TY_Double:
+		n = F_Double(list,node->cdr,n);
 		break;
 	case TY_EOL:
 		CASE_END(node->cdr);
@@ -123,17 +123,17 @@ int F_Op(token_t *list, cons_t *node,int n)
 //	printf("op:type:%d:n:%d\n",at(list,n)->type,n);
 
 	switch(at(list,n)->type) {
-	case TY_Car:
-		n = F_Car(list,node,n);
+	case TY_LParen:
+		n = F_LParen(list,node,n);
 		break;
-	case TY_Cdr:
-		CASE_CDR(node);
+	case TY_RParen:
+		CASE_RParen(node);
 		break;
 	case TY_Int:
 		n = F_Int(list,node,n);
 		break;
-	case TY_Float:
-		n = F_Float(list,node,n);
+	case TY_Double:
+		n = F_Double(list,node,n);
 		break;
 	case TY_Str:
 		n = F_Op(list,node,n);
@@ -156,17 +156,17 @@ int F_Int(token_t *list, cons_t *node,int n)
 	node = node->cdr;
 //	printf("value:type:%d:n:%d\n",at(list,n)->type,n);
 	switch(at(list,n)->type) {
-	case TY_Car:
-		n = F_Car(list,node,n);
+	case TY_LParen:
+		n = F_LParen(list,node,n);
 		break;
-	case TY_Cdr:
-		CASE_CDR(node);
+	case TY_RParen:
+		CASE_RParen(node);
 		break;
 	case TY_Int:
 		n = F_Int(list,node,n);
 		break;
-	case TY_Float:
-		n = F_Float(list,node,n);
+	case TY_Double:
+		n = F_Double(list,node,n);
 		break;
 	case TY_Str:
 		n = F_Op(list,node,n);
@@ -180,26 +180,26 @@ int F_Int(token_t *list, cons_t *node,int n)
 	return n;
 }
 
-int F_Float(token_t *list, cons_t *node,int n)
+int F_Double(token_t *list, cons_t *node,int n)
 {
-	node->type = TY_Float;
+	node->type = TY_Double;
 	node->fvalue = atof(at(list,n)->str);
 	node->cdr = Cons_New();
 	++n;
 	node = node->cdr;
 	//printf("value:type:%d:n:%d\n",at(list,n)->type,n);
 	switch(at(list,n)->type) {
-	case TY_Car:
-		n = F_Car(list,node,n);
+	case TY_LParen:
+		n = F_LParen(list,node,n);
 		break;
-	case TY_Cdr:
-		CASE_CDR(node);
+	case TY_RParen:
+		CASE_RParen(node);
 		break;
 	case TY_Int:
 		n = F_Int(list,node,n);
 		break;
-	case TY_Float:
-		n = F_Float(list,node,n);
+	case TY_Double:
+		n = F_Double(list,node,n);
 		break;
 	case TY_Str:
 		n = F_Op(list,node,n);

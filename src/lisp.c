@@ -38,7 +38,7 @@ void lisp_repl()
 	HashTable_free(hash);
 }
 
-void lisp_main(char *file,size_t size)
+void lisp_main(char *file)
 {
 	FILE *fp;
 	if((fp=fopen(file,"r")) == NULL){
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 	if(argc == 1) {
 		lisp_repl();
 	}else if(argc == 2) {
-		lisp_main(argv[1],strlen(argv[1]));
+		lisp_main(argv[1]);
 	}else{
 		printf("Too many arguments.");
 	}

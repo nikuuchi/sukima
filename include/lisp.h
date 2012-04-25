@@ -13,7 +13,7 @@ extern void **tables;
 #define BUF_SIZE 1024
 
 typedef enum Type {
-	TY_Car, TY_Cdr, TY_Op, TY_Int, TY_Float, TY_Str, TY_Defun, TY_If, TY_Setq, TY_EOL
+	TY_LParen, TY_RParen, TY_Op, TY_Int, TY_Double, TY_Str, TY_Defun, TY_If, TY_Setq, TY_EOL
 } Type;
 
 typedef struct cons_t {

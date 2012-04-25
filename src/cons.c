@@ -14,7 +14,7 @@ void freeCons_t(cons_t * p)
 		;
 	}
 
-	if(p->car != NULL && p->type == TY_Car)
+	if(p->car != NULL && p->type == TY_LParen)
 		freeCons_t(p->car);
 	if(p->cdr != NULL)
 		freeCons_t(p->cdr);
@@ -26,7 +26,7 @@ void dumpCons_t(cons_t * p)
 {
 	if(p != NULL){
 		switch(p->type) {
-		case TY_Car:
+		case TY_LParen:
 			printf("( ");
 			dumpCons_t(p->car);
 			break;
@@ -37,10 +37,10 @@ void dumpCons_t(cons_t * p)
 		case TY_Int:
 			printf("%d ",p->ivalue);
 			break;
-		case TY_Float:
+		case TY_Double:
 			printf("%f ",p->fvalue);
 			break;
-		case TY_Cdr:
+		case TY_RParen:
 			printf(")");
 			break;
 		case TY_If:
