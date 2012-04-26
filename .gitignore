@@ -5,3 +5,5 @@ GRTAGS
 GTAGS
 Release
 Debug
+.project
+.cproject

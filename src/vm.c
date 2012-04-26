@@ -25,6 +25,16 @@ static void PrintBoolean(value_t *v)
 		printf("Nil\n");
 }
 
+static void PrintList(value_t *v)
+{
+	printf("List\n");
+}
+
+static void PrintString(value_t *v)
+{
+	printf("%s\n",String_Ptr(*v)->s);
+}
+
 
 //Plus
 static value_t PlusDD(value_t *v2,value_t *v1)
@@ -106,6 +116,26 @@ static value_t DivII(value_t *v2,value_t *v1)
 	return t;
 }
 
+//Mod
+static value_t ModDD(value_t *v2,value_t *v1)
+{
+	return (value_t)(fmod(v2->d,v1->d));
+}
+static value_t ModDI(value_t *v2,value_t *v1)
+{
+	return (value_t)(fmod(v2->d,v1->i));
+}
+static value_t ModID(value_t *v2,value_t *v1)
+{
+	return (value_t)(fmod(v2->i , v1->d));
+}
+static value_t ModII(value_t *v2,value_t *v1)
+{
+	value_t t;
+	Int_init(t,v2->i % v1->i);
+	return t;
+}
+
 //Lt
 static value_t LtDD(value_t *v2,value_t *v1)
 {
@@ -158,10 +188,38 @@ static value_t GtII(value_t *v2,value_t *v1)
 	return t;
 }
 
-static void(* Print[3])() = {
+//Eq
+static value_t EqDD(value_t *v2,value_t *v1)
+{
+	value_t t;
+	Boolean_init(t,v2->d == v1->d);
+	return t;
+}
+static value_t EqDI(value_t *v2,value_t *v1)
+{
+	value_t t;
+	Boolean_init(t,v2->d == v1->i);
+	return t;
+}
+static value_t EqID(value_t *v2,value_t *v1)
+{
+	value_t t;
+	Boolean_init(t,v2->i == v1->d);
+	return t;
+}
+static value_t EqII(value_t *v2,value_t *v1)
+{
+	value_t t;
+	Boolean_init(t,v2->i == v1->i);
+	return t;
+}
+
+static void(* Print[5])() = {
 	PrintDouble,
 	PrintInt,
 	PrintBoolean,
+	PrintList,
+	PrintString,
 };
 
 static value_t(* Plus[2][2])() = {
@@ -184,6 +242,11 @@ static value_t(* Div[2][2])() = {
 	{ DivID, DivII }
 };
 
+static value_t(* Mod[2][2])() = {
+	{ ModDD, ModDI },
+	{ ModID, ModII }
+};
+
 static value_t(* Lt[2][2])() = {
 	{ LtDD, LtDI },
 	{ LtID, LtII }
@@ -192,6 +255,11 @@ static value_t(* Lt[2][2])() = {
 static value_t(* Gt[2][2])() = {
 	{ GtDD, GtDI },
 	{ GtID, GtII }
+};
+
+static value_t(* Eq[2][2])() = {
+	{ EqDD, EqDI },
+	{ EqID, EqII }
 };
 
 
@@ -206,8 +274,10 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		&&Label_OpMinus,
 		&&Label_OpMul,
 		&&Label_OpDiv,
+		&&Label_OpMod,
 		&&Label_OpLt,
 		&&Label_OpGt,
+		&&Label_OpEq,
 		&&Label_Print,
 		&&Label_Call,
 		&&Label_TJump,
@@ -261,6 +331,14 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		p = p->next;
 		goto *p->iseq;
 	}
+  Label_OpMod: {
+		value_t *v1 = pop();
+		value_t *v2 = pop();
+		value_t ans = Mod[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
+		push(ans);
+		p = p->next;
+		goto *p->iseq;
+	}
   Label_Print: {
 		value_t *v = pop();
 		Print[Type_Check(*v)](v);
@@ -289,27 +367,35 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		p = p->next;
 		goto *p->iseq;
 	}
+  Label_OpEq: {
+		value_t *v1 = pop();
+		value_t *v2 = pop();
+		value_t ans = Eq[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
+		push(ans);
+		p = p->next;
+		goto *p->iseq;
+	}
   Label_SetHash: {
 		value_t *a = pop();
 		value_t *b = (value_t *)malloc(sizeof(value_t));
 		*b = *a;
-		HashTable_insert_Value(hash, p->data[0].string->s, p->data[0].string->len, b);
+		HashTable_insert_Value(hash, String_Ptr(p->data[0])->s, String_Ptr(p->data[0])->len, b);
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_LoadValue: {
-		value_t *b = HashTable_lookup_Value(hash, p->data[0].string->s, p->data[0].string->len);
+		value_t *b = HashTable_lookup_Value(hash, String_Ptr(p->data[0])->s,String_Ptr(p->data[0])->len);
 		push(*b);
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_Call: {
-		vm_exec( (command_t *)p->data[0].pointer, st, esp, hash, 0);
+		vm_exec( (command_t *)p->data[0].o, st, esp, hash, 0);
 		p = p->next;
 		goto *p->iseq;
 	}
   Label_TJump: {
-		p = (pop()->bytes == True)? (command_t *)p->data[0].pointer : p->next;
+		p = (pop()->bytes == True)? (command_t *)p->data[0].o : p->next;
 		goto *p->iseq;
 	}
   Label_Nop: {

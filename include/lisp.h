@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <stdint.h>
+#include <math.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -13,7 +14,10 @@ extern void **tables;
 #define BUF_SIZE 1024
 
 typedef enum Type {
-	TY_LParen, TY_RParen, TY_Op, TY_List, TY_Int, TY_Double, TY_Str, TY_Defun, TY_If, TY_Setq, TY_EOL
+	TY_LParen, TY_RParen, TY_Op,
+	TY_List,   TY_Int,    TY_Double,
+	TY_CStr,   TY_Str,    TY_Defun,
+	TY_If,     TY_Setq,   TY_EOL
 } Type;
 
 typedef struct cons_t {
@@ -40,7 +44,7 @@ typedef struct token_t {
 } token_t;
 
 typedef union value_t {
-	void *pointer;
+	void *o;
 	struct string *string;
 	uint64_t bytes;
 	double d;
@@ -48,7 +52,12 @@ typedef union value_t {
 } value_t;
 
 typedef enum Command {
-	C_Put, C_SetHash, C_LoadValue, C_OpPlus, C_OpMinus, C_OpMul, C_OpDiv, C_OpLt, C_OpGt, C_Print, C_Call, C_TJump,C_Nop, C_Args ,C_End
+	C_Put,    C_SetHash, C_LoadValue,
+	C_OpPlus, C_OpMinus, C_OpMul,
+	C_OpDiv,  C_OpMod,   C_OpLt,
+	C_OpGt,   C_OpEq,    C_Print,
+	C_Call,   C_TJump,   C_Nop, 
+	C_Args ,C_End
 } Command;
 
 typedef struct command_t {
@@ -80,6 +89,11 @@ typedef struct hash_table_t {
 	struct hash_entry_t **bins;
 	struct hash_table_t *next;
 } hash_table_t;
+
+typedef struct List_t {
+	value_t *container;
+	struct List_t *next;
+} List_t;
 
 #define Command_New() (command_t *)calloc(1,sizeof(command_t));
 
@@ -138,6 +152,7 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 #define False     (0xFFF2000000000000)
 
 #define ListTag   (0x0003000000000000) //Type List
+#define StringTag (0x0004000000000000) //Type String
 
 #define NaN_Check(t) (((t).bytes & NaN) == NaN)
 
@@ -150,9 +165,13 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 		(a).bytes = (False | (b)); \
 	} while(0);
 
+#define String_Ptr(a) ((struct string *)((a).bytes ^ (NaN |StringTag)))
+
 #define String_Copy(p,buf,size) \
 	do { \
-		(p) = (char *)malloc(sizeof(char) * ((size) + 1)); \
+		(p) = (char *)malloc((size) + 1); \
 		(p) = strncpy((p),(buf),(size)); \
-		(p)[size] = '\0'; \
+		(p)[(size)] = '\0'; \
 	}while(0);
+
+

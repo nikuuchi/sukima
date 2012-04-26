@@ -14,11 +14,19 @@
 		(c)->iseq = tables[C_Put]; \
 	} while(0);
 
+#define setCStr(c,f,e,arg) \
+	do { \
+		(c)->command = C_Put; \
+		String_Copy(String_Ptr((c)->data[(arg)])->s,(f),(e)); \
+		String_Ptr((c)->data[(arg)])->len = (e); \
+		(c)->iseq = tables[C_Put]; \
+	} while(0);
+
 #define setStr(c,d,e,arg) \
 	do { \
 		(c)->command = C_LoadValue; \
-		String_Copy((c)->data[(arg)].string->s,(d),(e)); \
-		(c)->data[(arg)].string->len = (e); \
+		String_Copy(String_Ptr((c)->data[(arg)])->s,(d),(e)); \
+		String_Ptr((c)->data[(arg)])->len = (e); \
 		(c)->iseq = tables[C_LoadValue]; \
 	} while(0);
 
@@ -47,12 +55,31 @@ command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons, hash_table_t *argu
 command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
 command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
 
+value_t String_init(){
+	struct string *str = (struct string *)calloc(1,sizeof(struct string));
+	value_t t;
+	t.string = str;
+	t.bytes |= NaN | StringTag;
+	return t;
+}
+
+value_t List_init(){
+	List_t *l = (List_t *)calloc(1,sizeof(List_t));
+	value_t t;
+	t.o = l;
+	t.bytes |= NaN | ListTag;
+	return t;
+}
+
 void Command_free(command_t *p)
 {
 	if(p != NULL) {
 		if(p->command != C_Nop) {
 			if(p->command == C_TJump) {
-				Command_free(p->data[0].pointer);
+				Command_free(p->data[0].o);
+			}else if(p->command == C_SetHash || p->command == C_LoadValue) {
+				free(String_Ptr(p->data[0])->s);
+				free(String_Ptr(p->data[0]));
 			}
 			Command_free(p->next);
 		}
@@ -76,6 +103,10 @@ void compile(cons_t *ast,command_t *root,hash_table_t *hash)
 			break;
 		case TY_Double:
 			setDouble(p,chain->fvalue,0);
+			break;
+		case TY_CStr:
+			p->data[0] = String_init();
+			setCStr(p,chain->string.s,chain->string.len,0);
 			break;
 		default:
 			printf("some error occured in compile().\n");
@@ -174,7 +205,7 @@ command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	list->command = C_TJump;
 	list->iseq = tables[C_TJump];
 	command_t *t_jump = Command_New();
-	list->data[0].pointer = t_jump;
+	list->data[0].o = t_jump;
 	
 	list->next = Command_New();
 	list = list->next;
@@ -232,6 +263,12 @@ command_t *asm_Setq(command_t *cmd,cons_t *cons, hash_table_t *hash)
 		list->next = Command_New();
 		list = list->next;
 		break;
+	case TY_CStr:
+		list->data[0] = String_init();
+		setCStr(list,p->string.s,p->string.len,0);
+		list->next = Command_New();
+		list = list->next;
+		break;
 	default:
 		printf("some error occonsred in asm_Setq().\n");
 		break;
@@ -240,8 +277,9 @@ command_t *asm_Setq(command_t *cmd,cons_t *cons, hash_table_t *hash)
 
 
 	list->command = C_SetHash;
-	String_Copy(list->data[0].string->s,cons->cdr->string.s,cons->cdr->string.len);
-	list->data[0].string->len = cons->cdr->string.len;
+	list->data[0] = String_init();
+	String_Copy(String_Ptr(list->data[0])->s,cons->cdr->string.s,cons->cdr->string.len);
+	String_Ptr(list->data[0])->len = cons->cdr->string.len;
 	list->iseq = tables[C_SetHash];
 
 	list->next = Command_New();
@@ -299,6 +337,13 @@ command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
 			case '>':
 				setOp(list,C_OpGt);
 				break;
+			case '=':
+			case 'e':
+				setOp(list,C_OpEq);
+				break;
+			case 'm':
+				setOp(list,C_OpMod);
+				break;
 			default:
 				printf("some error occonsred in asm_Op() 2. %s\n",cons->string.s);
 				break;
@@ -335,7 +380,14 @@ command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
 			list = list->next;
 			break;
 		case TY_Str:
+			list->data[0] = String_init();
 			setStr(list,p->string.s,p->string.len,0);
+			list->next = Command_New();
+			list = list->next;
+			break;
+		case TY_CStr:
+			list->data[0] = String_init();
+			setCStr(list,p->string.s,p->string.len,0);
 			list->next = Command_New();
 			list = list->next;
 			break;
@@ -353,7 +405,7 @@ command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	}else{
 		list->command = C_Call;
 		list->data[1].i = count;
-		list->data[0].pointer = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
+		list->data[0].o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
 	}
 
@@ -383,6 +435,12 @@ command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons,hash_table_t *argum
 			list->next = Command_New();
 			list = list->next;
 			break;
+		case TY_CStr:
+			list->data[0] = String_init();
+			setCStr(list,p->string.s,p->string.len,0);
+			list->next = Command_New();
+			list = list->next;
+			break;
 		case TY_Str: {
 			value_t *v = HashTable_lookup_Value(argument,p->string.s,p->string.len);
 			list->command = C_Args;
@@ -406,7 +464,7 @@ command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons,hash_table_t *argum
 	}else{
 		list->command = C_Call;
 		list->data[1].i = count;
-		list->data[0].pointer = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
+		list->data[0].o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
 	}
 
@@ -469,6 +527,13 @@ command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument, hash
 			case '>':
 				setOp(list,C_OpGt);
 				break;
+			case '=':
+			case 'e':
+				setOp(list,C_OpEq);
+				break;
+			case 'm':
+				setOp(list,C_OpMod);
+				break;
 			default:
 				printf("some error occonsred in asm_Op() 2. %s\n",cons->string.s);
 				break;
@@ -493,7 +558,7 @@ command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_
 	list->command = C_TJump;
 	list->iseq = tables[C_TJump];
 	command_t *t_jump = Command_New();
-	list->data[0].pointer = t_jump;
+	list->data[0].o = t_jump;
 	
 	list->next = Command_New();
 	list = list->next;
@@ -509,6 +574,11 @@ command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_
 		setDouble(t_jump,cons->cdr->cdr->fvalue,0);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
+	}else if(cons->cdr->cdr->type == TY_CStr) {
+		t_jump->data[0] = String_init();
+		setCStr(t_jump,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len,0);
+		t_jump->next = Command_New();
+		t_jump = t_jump->next;
 	}
 
 	//if false
@@ -520,6 +590,11 @@ command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_
 		list = list->next;
 	}else if(cons->cdr->cdr->cdr->type == TY_Double) {
 		setDouble(list,cons->cdr->cdr->cdr->fvalue,0);
+		list->next = Command_New();
+		list = list->next;
+	}else if(cons->cdr->cdr->cdr->type == TY_CStr) {
+		list->data[0] = String_init();
+		setCStr(list,cons->cdr->cdr->cdr->string.s,cons->cdr->cdr->cdr->string.len,0);
 		list->next = Command_New();
 		list = list->next;
 	}

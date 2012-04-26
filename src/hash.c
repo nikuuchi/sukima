@@ -2,7 +2,7 @@
 
 unsigned int getHashNumber(char * s, size_t len)
 {
-	int i = 0;
+	uint32_t i = 0;
 	unsigned int b = 0;
 	for(i=0;i<len;++i) {
 		b += s[i];

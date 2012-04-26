@@ -20,6 +20,10 @@ void token_init(token_t *p,char *buf,size_t size,Type t)
 			t = TY_If;
 		}else if(strcmp("setq",p->str) == 0) {
 			t = TY_Setq;
+		}else if(strcmp("mod",p->str) == 0) {
+			t = TY_Op;
+		}else if(strcmp("eq",p->str) == 0) {
+			t = TY_Op;
 		}
 	}
 	p->type = t;
@@ -115,6 +119,15 @@ token_t *lex(token_t *list,char * buf,int size)
 		case '`':
 			token_init(list,&buf[index],1,TY_List);
 			++index;
+			list->next = token_New();
+			list = list->next;
+			break;
+		case '\"':
+			next = 1;
+			while( buf[index+next] != '\"'){ ++next; }
+			++next;
+			token_init(list,&buf[index],next,TY_CStr);
+			index += next;
 			list->next = token_New();
 			list = list->next;
 			break;

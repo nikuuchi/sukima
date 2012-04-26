@@ -26,6 +26,7 @@ int F_LParen(token_t *list, cons_t *node,int n);
 int F_Op(token_t *list, cons_t *node, int n);
 int F_Int(token_t *list, cons_t *node,int n);
 int F_Double(token_t *list, cons_t *node,int n);
+int F_CStr(token_t *list, cons_t *node,int n);
 
 token_t *at(token_t *list,int n)
 {
@@ -49,6 +50,9 @@ void parse(token_t *list, cons_t *node)
 		break;
 	case TY_Double:
 		n = F_Double(list,node,n);
+		break;
+	case TY_CStr:
+		n = F_CStr(list,node,n);
 		break;
 	default:
 		DEFAULT(node);
@@ -104,6 +108,9 @@ int F_LParen(token_t *list, cons_t *node,int n)
 	case TY_Double:
 		n = F_Double(list,node->cdr,n);
 		break;
+	case TY_CStr:
+		n = F_CStr(list,node->cdr,n);
+		break;
 	case TY_EOL:
 		CASE_END(node->cdr);
 		break;
@@ -136,6 +143,9 @@ int F_Op(token_t *list, cons_t *node,int n)
 		break;
 	case TY_Double:
 		n = F_Double(list,node,n);
+		break;
+	case TY_CStr:
+		n = F_CStr(list,node,n);
 		break;
 	case TY_Str:
 		n = F_Op(list,node,n);
@@ -170,6 +180,9 @@ int F_Int(token_t *list, cons_t *node,int n)
 	case TY_Double:
 		n = F_Double(list,node,n);
 		break;
+	case TY_CStr:
+		n = F_CStr(list,node,n);
+		break;
 	case TY_Str:
 		n = F_Op(list,node,n);
 		break;
@@ -202,6 +215,47 @@ int F_Double(token_t *list, cons_t *node,int n)
 		break;
 	case TY_Double:
 		n = F_Double(list,node,n);
+		break;
+	case TY_CStr:
+		n = F_CStr(list,node,n);
+		break;
+	case TY_Str:
+		n = F_Op(list,node,n);
+		break;
+	case TY_EOL:
+		CASE_END(node);
+		break;
+	default:
+		DEFAULT(node);
+	}
+	return n;
+}
+
+int F_CStr(token_t *list, cons_t *node,int n)
+{
+	token_t *c = at(list,n);
+	node->type = TY_CStr;
+	String_Copy(node->string.s,c->str,c->size);
+	node->string.len = c->size;
+	node->cdr = Cons_New();
+	++n;
+	node = node->cdr;
+	//printf("value:type:%d:n:%d\n",at(list,n)->type,n);
+	switch(at(list,n)->type) {
+	case TY_LParen:
+		n = F_LParen(list,node,n);
+		break;
+	case TY_RParen:
+		CASE_RParen(node);
+		break;
+	case TY_Int:
+		n = F_Int(list,node,n);
+		break;
+	case TY_Double:
+		n = F_Double(list,node,n);
+		break;
+	case TY_CStr:
+		n = F_CStr(list,node,n);
 		break;
 	case TY_Str:
 		n = F_Op(list,node,n);

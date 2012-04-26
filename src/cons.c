@@ -34,6 +34,9 @@ void dumpCons_t(cons_t * p)
 		case TY_Str:
 			printf("%s ",p->string.s);
 			break;
+		case TY_CStr:
+			printf("%s ",p->string.s);
+			break;
 		case TY_Int:
 			printf("%d ",p->ivalue);
 			break;

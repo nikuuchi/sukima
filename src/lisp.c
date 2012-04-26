@@ -25,10 +25,9 @@ void lisp_repl()
 		printf("\n");
 
 		command_t *bytecode = Command_New();
-		value_t st[8192];
+		value_t st[128];
 		compile(root,bytecode,hash);
 		vm_exec(bytecode,st,esp,hash,0);
-
 		Command_free(bytecode);
 		token_free(lex_buf);
 		freeCons_t(root);
