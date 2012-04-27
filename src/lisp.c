@@ -10,12 +10,13 @@ void lisp_repl()
 	hash_table_t *hash = HashTable_init();
 	int esp = 1;
 
-	while((line = readline("Lisp> ")) != NULL) {
+	while((line = readline("Lisp>")) != NULL) {
 		add_history(line);
 		token_t *lex_buf =  (token_t *)malloc(sizeof(token_t));
 		token_t *lex_current = lex_buf;
 
 		lex_current = lex(lex_current,line,strlen(line));
+
 		lex_current->type = TY_EOL;
 		//dumpLexer(lex_buf);
 
@@ -24,17 +25,18 @@ void lisp_repl()
 		dumpCons_t(root); //debug
 		printf("\n");
 
-		command_t *bytecode = Command_New();
+		bytecode_t *bytecode = Bytecode_New();
 		value_t st[128];
 		compile(root,bytecode,hash);
 		vm_exec(bytecode,st,esp,hash,0);
-		Command_free(bytecode);
+		Bytecode_free(bytecode);
 		token_free(lex_buf);
 		freeCons_t(root);
 		free(line);
 	}
 
 	HashTable_free(hash);
+
 }
 
 void lisp_main(char *file)
@@ -61,7 +63,7 @@ void lisp_main(char *file)
 
 	//--run
 	printf("\n");
-	command_t *bytecode = Command_New();
+	bytecode_t *bytecode = Bytecode_New();
 	hash_table_t *hash = HashTable_init();
 	int esp = 1;
 	value_t st[8192];
@@ -70,7 +72,7 @@ void lisp_main(char *file)
 	vm_exec(bytecode,st,esp,hash,0);
 
 	HashTable_free(hash);
-	Command_free(bytecode);
+	Bytecode_free(bytecode);
 	token_free(lex_buf);
 	freeCons_t(root);
 	fclose(fp);

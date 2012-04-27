@@ -125,8 +125,8 @@ token_t *lex(token_t *list,char * buf,int size)
 		case '\"':
 			next = 1;
 			while( buf[index+next] != '\"'){ ++next; }
+			token_init(list,&buf[index+1],next-1,TY_CStr);
 			++next;
-			token_init(list,&buf[index+1],next-2,TY_CStr);
 			index += next;
 			list->next = token_New();
 			list = list->next;

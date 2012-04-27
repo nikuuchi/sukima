@@ -29,7 +29,7 @@ void HashTable_free(hash_table_t *self)
 			if(self->bins[i]->type == entryValue){
 				free(self->bins[i]->v);
 			}else{
-				Command_free(self->bins[i]->list);
+				Bytecode_free(self->bins[i]->list);
 			}
 			free(self->bins[i]);
 		}
@@ -62,7 +62,7 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 			}else{
 				point->next->hash = hash_number;
 				String_Copy(point->next->key,key,len);
-				point->next->list = (command_t *)p;
+				point->next->list = (bytecode_t *)p;
 				point->next->type = entryFunction;
 			}
 		}
@@ -76,7 +76,7 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 		}else{
 			self->bins[hash_number]->hash = hash_number;
 			String_Copy(self->bins[hash_number]->key,key,len);
-			self->bins[hash_number]->list = (command_t *)p;
+			self->bins[hash_number]->list = (bytecode_t *)p;
 			self->bins[hash_number]->type = entryFunction;
 		}
 	}
@@ -84,7 +84,7 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 	return;
 }
 
-void HashTable_insert_Function(hash_table_t *self,char *key, size_t len, command_t *list)
+void HashTable_insert_Function(hash_table_t *self,char *key, size_t len, bytecode_t *list)
 {
 	HashTable_insert(self,key,len,entryFunction,list);
 }
@@ -114,9 +114,9 @@ void *HashTable_lookup(hash_table_t *self, char *key, size_t len,entryType flag)
 	}
 }
 
-command_t *HashTable_lookup_Function(hash_table_t *self,char *key, size_t len)
+bytecode_t *HashTable_lookup_Function(hash_table_t *self,char *key, size_t len)
 {
-	return (command_t *)HashTable_lookup(self,key,len,entryFunction);
+	return (bytecode_t *)HashTable_lookup(self,key,len,entryFunction);
 }
 
 value_t *HashTable_lookup_Value(hash_table_t *self,char *key, size_t len)

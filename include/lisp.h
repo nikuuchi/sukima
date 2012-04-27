@@ -50,21 +50,24 @@ typedef union value_t {
 	int i;
 } value_t;
 
-typedef enum Command {
-	C_Put,    C_SetHash, C_LoadValue,
+typedef enum OpCode {
+	C_Put,    C_SetHash, C_LoadValue, C_Inc, C_Dec,
 	C_OpPlus, C_OpMinus, C_OpMul,
 	C_OpDiv,  C_OpMod,   C_OpLt,
-	C_OpGt,   C_OpEq,    C_Print,
+	C_OpGt,   C_OpEq,    C_OpCPlus,
+	C_OpCMinus, C_OpCMul, 
+	C_OpCDiv,  C_OpCMod,   C_OpCLt,
+	C_OpCGt,   C_OpCEq,    C_Print,
 	C_Call,   C_TJump,   C_Nop, 
-	C_Args ,C_End
-} Command;
+	C_Args ,C_Ret
+} OpCode;
 
-typedef struct command_t {
-	Command command;
+typedef struct bytecode_t {
+	OpCode code;
 	const void *iseq;
 	value_t data;
-	struct command_t *next;
-} command_t;
+	struct bytecode_t *next;
+} bytecode_t;
 
 #define BINS 16
 typedef enum entryType {
@@ -76,7 +79,7 @@ typedef struct hash_entry_t {
 	char *key;
 	entryType type;
 	union {
-		command_t *list;
+		bytecode_t *list;
 		value_t *v;
 	};
 	struct hash_entry_t *next;
@@ -94,13 +97,13 @@ typedef struct List_t {
 	struct List_t *next;
 } List_t;
 
-#define Command_New() (command_t *)calloc(1,sizeof(command_t));
+#define Bytecode_New() (bytecode_t *)calloc(1,sizeof(bytecode_t));
 
 extern void token_free(token_t *p);
 
 extern void parse(token_t *list, cons_t *node);
 
-extern const void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash, int table_flag);
+extern const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash, int table_flag);
 
 //eval.c
 extern int eval(cons_t *p);
@@ -120,18 +123,18 @@ extern void startLex(token_t *p,FILE *fp);
 extern token_t *lex(token_t *list,char * buf,int size);
 
 //codegen.c
-extern void compile(cons_t *ast,command_t *root,hash_table_t *hash);
+extern void compile(cons_t *ast,bytecode_t *root,hash_table_t *hash);
 
-extern void Command_free(command_t *p);
+extern void Bytecode_free(bytecode_t *p);
 
 //hash.c
 extern hash_table_t *HashTable_init();
 
-extern command_t *HashTable_lookup_Function(hash_table_t *self,char *key, size_t len);
+extern bytecode_t *HashTable_lookup_Function(hash_table_t *self,char *key, size_t len);
 
 extern value_t *HashTable_lookup_Value(hash_table_t *self,char *key, size_t len);
 
-extern void HashTable_insert_Function(hash_table_t *self,char *key, size_t len, command_t *list);
+extern void HashTable_insert_Function(hash_table_t *self,char *key, size_t len, bytecode_t *list);
 
 extern void HashTable_insert_Value(hash_table_t *self,char *key, size_t len, value_t *v);
 
@@ -153,14 +156,9 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 #define ListTag   (0x0003000000000000) //Type List
 #define StringTag (0x0004000000000000) //Type String
 
-#define NaN_Check(t) (((t).bytes & NaN) == NaN)
-
 static inline value_t Int_init(int b)
 {
-	value_t a;
-	a.i = b;
-	a.bytes |= NaN | IntTag;
-	return a;
+	return (value_t)((b) | NaN | IntTag);
 }
 
 #define Boolean_init(a,b) (a).bytes = (False | (b))
