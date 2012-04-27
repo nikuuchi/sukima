@@ -72,7 +72,7 @@ void parse(token_t *list, cons_t *node)
 	default:
 		DEFAULT(node);
 	}
-	
+	free(array);
 }
 
 int F_LParen(token_t array[], cons_t *node,int n)
