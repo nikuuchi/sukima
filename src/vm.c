@@ -289,7 +289,7 @@ const void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int
 		return tables;
 	}
 
-	int bsp = esp;
+	int ebp = esp;
 	command_t *p = root;
 
 	goto *p->iseq;
@@ -353,8 +353,8 @@ const void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int
 	}
   Label_End: {
 		value_t *v = pop();
-		if(bsp != 0)
-			st[bsp-1] = *v;
+		if(ebp != 0)
+			st[ebp-1] = *v;
 //		printf("End\n");
 		return NULL;
 	}
@@ -418,7 +418,7 @@ const void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int
 		goto *p->iseq;
 	}
   Label_Args: {
-		value_t v = st[bsp - p->data[0].i];
+		value_t v = st[ebp - p->data[0].i];
 		push(v);
 		p = p->next;
 //		printf("Args\n");
