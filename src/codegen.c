@@ -43,19 +43,19 @@
 		(c)->iseq = tables[(d)]; \
 	} while(0);
 
-void **tables;
-command_t *asm_LParen(command_t *cmd,cons_t *cons,hash_table_t *hash);
-command_t *asm_Setq(command_t *cmd,cons_t *cons,hash_table_t *hash);
-command_t *asm_If(command_t *cmd,cons_t *cons,hash_table_t *hash);
-command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash);
-command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash);
-command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash);
-command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash);
-command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
-command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
-command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
+const void **tables;
+static command_t *asm_LParen(command_t *cmd,cons_t *cons,hash_table_t *hash);
+static command_t *asm_Setq(command_t *cmd,cons_t *cons,hash_table_t *hash);
+static command_t *asm_If(command_t *cmd,cons_t *cons,hash_table_t *hash);
+static command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash);
+static command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash);
+static command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash);
+static command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash);
+static command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
+static command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
+static command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
 
-value_t String_init(){
+static value_t String_init(){
 	struct string *str = (struct string *)calloc(1,sizeof(struct string));
 	value_t t;
 	t.string = str;
@@ -63,7 +63,7 @@ value_t String_init(){
 	return t;
 }
 
-value_t List_init(){
+static value_t List_init(){
 	List_t *l = (List_t *)calloc(1,sizeof(List_t));
 	value_t t;
 	t.o = l;
@@ -118,7 +118,7 @@ void compile(cons_t *ast,command_t *root,hash_table_t *hash)
 	p->iseq = tables[C_End];
 }
 
-command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash)
+static command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash)
 {
 	switch(cons->type) {
 	case TY_RParen:
@@ -149,7 +149,7 @@ command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash)
 	return p;
 }
 
-command_t *asm_LParen(command_t *cmd,cons_t *cons,hash_table_t *hash)
+static command_t *asm_LParen(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
 	if(cons->car->type == TY_Str) {
 		return asm_CallFunction(cmd,cons->car,hash);
@@ -159,7 +159,7 @@ command_t *asm_LParen(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	return asm_Op(cmd,cons->car,hash);
 }
 
-command_t *asm_DefunLParen(command_t *cmd,cons_t *cons,hash_table_t *argument,hash_table_t *hash)
+static command_t *asm_DefunLParen(command_t *cmd,cons_t *cons,hash_table_t *argument,hash_table_t *hash)
 {
 	if(cons->car->type == TY_Str) {
 		return asm_DefunCallFunction(cmd,cons->car,argument,hash);
@@ -169,7 +169,7 @@ command_t *asm_DefunLParen(command_t *cmd,cons_t *cons,hash_table_t *argument,ha
 	return asm_DefunOp(cmd,cons->car,argument,hash);
 }
 
-command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash)
+static command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
 	command_t *func = Command_New();
 	HashTable_insert_Function(hash,cons->cdr->string.s,cons->cdr->string.len,func);
@@ -194,7 +194,7 @@ command_t *asm_Defun(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	return cmd;
 }
 
-command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
+static command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 {
 	command_t *list = cmd;
 	
@@ -244,7 +244,7 @@ command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	return list;
 }
 
-command_t *asm_Setq(command_t *cmd,cons_t *cons, hash_table_t *hash)
+static command_t *asm_Setq(command_t *cmd,cons_t *cons, hash_table_t *hash)
 {
 	cons_t *p = cons->cdr->cdr;
 	command_t *list = cmd;
@@ -287,7 +287,7 @@ command_t *asm_Setq(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	return list;
 }
 
-command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
+static command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
 	int count = 0;
 	cons_t *p = cons->cdr;
@@ -358,7 +358,7 @@ command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	return list;
 }
 
-command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
+static command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
 {
 	int count = 0;
 	cons_t *p = cons->cdr;
@@ -414,7 +414,7 @@ command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *hash)
 	return list;
 }
 
-command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons,hash_table_t *argument, hash_table_t *hash)
+static command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons,hash_table_t *argument, hash_table_t *hash)
 {
 	int count = 0;
 	cons_t *p = cons->cdr;
@@ -473,7 +473,7 @@ command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons,hash_table_t *argum
 	return list;
 }
 
-command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument, hash_table_t *hash)
+static command_t *asm_DefunOp(command_t *cmd, cons_t *cons, hash_table_t *argument, hash_table_t *hash)
 {
 	int count = 0;
 	cons_t *p = cons->cdr;
@@ -547,7 +547,7 @@ command_t *asm_DefunOp(command_t *cmd,cons_t *cons, hash_table_t *argument, hash
 	return list;
 }
 
-command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash)
+static command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argument,hash_table_t *hash)
 {
 	command_t *list = cmd;
 	

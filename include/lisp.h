@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <stdbool.h>
 #include <time.h>
 #include <stdint.h>
@@ -9,7 +8,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-extern void **tables;
+extern const void **tables;
 
 #define BUF_SIZE 1024
 
@@ -101,7 +100,7 @@ extern void token_free(token_t *p);
 
 extern void parse(token_t *list, cons_t *node);
 
-extern void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash, int table_flag);
+extern const void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash, int table_flag);
 
 //eval.c
 extern int eval(cons_t *p);

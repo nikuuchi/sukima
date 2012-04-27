@@ -263,10 +263,10 @@ static value_t(* Eq[2][2])() = {
 };
 
 
-void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table_flag)
+const void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table_flag)
 {
 
-	static void *tables[] = {
+	static const void *tables[] = {
 		&&Label_Put,
 		&&Label_SetHash,
 		&&Label_LoadValue,
@@ -297,6 +297,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
   Label_Put: {
 		push(p->data[0]);
 		p = p->next;
+//		printf("Put\n");
 		goto *p->iseq;
 	}
   Label_OpPlus: {
@@ -305,6 +306,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		value_t ans = Plus[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
+//		printf("+\n");
 		goto *p->iseq;
 	}
   Label_OpMinus: {
@@ -313,6 +315,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		value_t ans = Minus[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
+//		printf("-\n");
 		goto *p->iseq;
 	}
   Label_OpMul: {
@@ -321,6 +324,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		value_t ans = Mul[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
+//		printf("*\n");
 		goto *p->iseq;
 	}
   Label_OpDiv: {
@@ -329,6 +333,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		value_t ans = Div[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
+//		printf("/\n");
 		goto *p->iseq;
 	}
   Label_OpMod: {
@@ -337,6 +342,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		value_t ans = Mod[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
+//		printf("mod\n");
 		goto *p->iseq;
 	}
   Label_Print: {
@@ -347,8 +353,9 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 	}
   Label_End: {
 		value_t *v = pop();
-		st[bsp-1] = *v;
-		//printf("End\n");
+		if(bsp != 0)
+			st[bsp-1] = *v;
+//		printf("End\n");
 		return NULL;
 	}
   Label_OpLt: {
@@ -357,6 +364,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		value_t ans = Lt[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
+//		printf("<\n");
 		goto *p->iseq;
 	}
   Label_OpGt: {
@@ -365,6 +373,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		value_t ans = Gt[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
+//		printf(">\n");
 		goto *p->iseq;
 	}
   Label_OpEq: {
@@ -373,6 +382,7 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		value_t ans = Eq[Type_Check(*v2)][Type_Check(*v1)](v2,v1);
 		push(ans);
 		p = p->next;
+//		printf("=\n");
 		goto *p->iseq;
 	}
   Label_SetHash: {
@@ -381,31 +391,37 @@ void **vm_exec(command_t *root,value_t st[],int esp,hash_table_t *hash,int table
 		*b = *a;
 		HashTable_insert_Value(hash, String_Ptr(p->data[0])->s, String_Ptr(p->data[0])->len, b);
 		p = p->next;
+//		printf("sethash\n");
 		goto *p->iseq;
 	}
   Label_LoadValue: {
 		value_t *b = HashTable_lookup_Value(hash, String_Ptr(p->data[0])->s,String_Ptr(p->data[0])->len);
 		push(*b);
 		p = p->next;
+//		printf("LoadValue\n");
 		goto *p->iseq;
 	}
   Label_Call: {
 		vm_exec( (command_t *)p->data[0].o, st, esp, hash, 0);
 		p = p->next;
+//		printf("Call\n");
 		goto *p->iseq;
 	}
   Label_TJump: {
 		p = (pop()->bytes == True)? (command_t *)p->data[0].o : p->next;
+//		printf("TJump\n");
 		goto *p->iseq;
 	}
   Label_Nop: {
 		p = p->next;
+//		printf("Nop\n");
 		goto *p->iseq;
 	}
   Label_Args: {
 		value_t v = st[bsp - p->data[0].i];
 		push(v);
 		p = p->next;
+//		printf("Args\n");
 		goto *p->iseq;
 	}
 	return NULL;
