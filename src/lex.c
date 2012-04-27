@@ -126,7 +126,7 @@ token_t *lex(token_t *list,char * buf,int size)
 			next = 1;
 			while( buf[index+next] != '\"'){ ++next; }
 			++next;
-			token_init(list,&buf[index],next,TY_CStr);
+			token_init(list,&buf[index+1],next-2,TY_CStr);
 			index += next;
 			list->next = token_New();
 			list = list->next;
@@ -163,6 +163,5 @@ void startLex(token_t *p,FILE *fp)
 		lex_current = lex(lex_current,buf,strlen(buf));
 	}
 	lex_current->type = TY_EOL;
-
 	free(buf);
 }

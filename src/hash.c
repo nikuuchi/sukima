@@ -104,9 +104,9 @@ void *HashTable_lookup(hash_table_t *self, char *key, size_t len,entryType flag)
 		}
 			stet = stet->next;
 	}
-	if(stet == NULL){
+	if(stet == NULL) {
 		return HashTable_lookup(self->next,key,len,flag);
-	}else{
+	}else {
 		if(flag == entryFunction){
 			return stet->list;
 		}
