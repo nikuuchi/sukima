@@ -1,47 +1,40 @@
 #include "lisp.h"
 
-#define setInt(c,d,arg) \
-	do { \
-		(c)->command = C_Put; \
-		Int_init((c)->data[(arg)],(d)); \
-		(c)->iseq = tables[C_Put]; \
-	} while(0);
+static void setInt(command_t *c,int d)
+{
+	c->command = C_Put;
+	c->data = Int_init(d);
+	c->iseq = tables[C_Put];
+}
 
-#define setDouble(c,f,arg) \
-	do { \
-		(c)->command = C_Put; \
-		(c)->data[(arg)].d = (f);	   \
-		(c)->iseq = tables[C_Put]; \
-	} while(0);
+static void setDouble(command_t *c,double d)
+{
+	c->command = C_Put;
+	c->data.d = d;
+	c->iseq = tables[C_Put];
+}
 
-#define setCStr(c,f,e,arg) \
-	do { \
-		(c)->command = C_Put; \
-		String_Copy(String_Ptr((c)->data[(arg)])->s,(f),(e)); \
-		String_Ptr((c)->data[(arg)])->len = (e); \
-		(c)->iseq = tables[C_Put]; \
-	} while(0);
+static void setCStr(command_t *c,char *d,int len)
+{
+	c->command = C_Put;
+	String_Copy(String_Ptr(c->data)->s,d,len);
+	String_Ptr(c->data)->len = len;
+	c->iseq = tables[C_Put];
+}
 
-#define setStr(c,d,e,arg) \
-	do { \
-		(c)->command = C_LoadValue; \
-		String_Copy(String_Ptr((c)->data[(arg)])->s,(d),(e)); \
-		String_Ptr((c)->data[(arg)])->len = (e); \
-		(c)->iseq = tables[C_LoadValue]; \
-	} while(0);
+static void setStr(command_t *c,char *d,int len)
+{
+	c->command = C_LoadValue;
+	String_Copy(String_Ptr(c->data)->s,d,len);
+	String_Ptr(c->data)->len = len;
+	c->iseq = tables[C_LoadValue];
+}
 
-#define setBoolean(c,d,arg) \
-	do { \
-		(c)->command = C_Put; \
-		(c)->data[(arg)].string->s = (d); \
-		(c)->iseq = tables[C_Put]; \
-	} while(0);
-
-#define setOp(c,d) \
-	do { \
-		(c)->command = (d); \
-		(c)->iseq = tables[(d)]; \
-	} while(0);
+static void setOp(command_t *c,Command d)
+{
+	c->command = d;
+	c->iseq = tables[d];
+}
 
 const void **tables;
 static command_t *asm_LParen(command_t *cmd,cons_t *cons,hash_table_t *hash);
@@ -76,10 +69,10 @@ void Command_free(command_t *p)
 	if(p != NULL) {
 		if(p->command != C_Nop) {
 			if(p->command == C_TJump) {
-				Command_free(p->data[0].o);
+				Command_free(p->data.o);
 			}else if(p->command == C_SetHash || p->command == C_LoadValue) {
-				free(String_Ptr(p->data[0])->s);
-				free(String_Ptr(p->data[0]));
+				free(String_Ptr(p->data)->s);
+				free(String_Ptr(p->data));
 			}
 			Command_free(p->next);
 		}
@@ -99,14 +92,14 @@ void compile(cons_t *ast,command_t *root,hash_table_t *hash)
 			p = assemble(p,chain->car,hash);
 			break;
 		case TY_Int:
-			setInt(p,chain->ivalue,0);
+			setInt(p,chain->ivalue);
 			break;
 		case TY_Double:
-			setDouble(p,chain->fvalue,0);
+			setDouble(p,chain->fvalue);
 			break;
 		case TY_CStr:
-			p->data[0] = String_init();
-			setCStr(p,chain->string.s,chain->string.len,0);
+			p->data = String_init();
+			setCStr(p,chain->string.s,chain->string.len);
 			break;
 		default:
 			printf("some error occured in compile().\n");
@@ -122,7 +115,6 @@ static command_t *assemble(command_t *p,cons_t *cons,hash_table_t *hash)
 {
 	switch(cons->type) {
 	case TY_RParen:
-		setBoolean(p,"Nil",0);
 		break;
 	case TY_Op:
 		p = asm_Op(p,cons,hash);
@@ -205,7 +197,7 @@ static command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	list->command = C_TJump;
 	list->iseq = tables[C_TJump];
 	command_t *t_jump = Command_New();
-	list->data[0].o = t_jump;
+	list->data.o = t_jump;
 	
 	list->next = Command_New();
 	list = list->next;
@@ -214,11 +206,11 @@ static command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	if(cons->cdr->cdr->type == TY_LParen) {
 		t_jump = asm_LParen(t_jump,cons->cdr->cdr,hash);
 	}else if(cons->cdr->cdr->type == TY_Int) {
-		setInt(t_jump,cons->cdr->cdr->ivalue,0);
+		setInt(t_jump,cons->cdr->cdr->ivalue);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
 	}else if(cons->cdr->cdr->type == TY_Double) {
-		setDouble(t_jump,cons->cdr->cdr->fvalue,0);
+		setDouble(t_jump,cons->cdr->cdr->fvalue);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
 	}
@@ -227,11 +219,11 @@ static command_t *asm_If(command_t *cmd,cons_t *cons, hash_table_t *hash)
 	if(cons->cdr->cdr->cdr->type == TY_LParen) {
 		list = asm_LParen(list,cons->cdr->cdr->cdr,hash);
 	}else if(cons->cdr->cdr->cdr->type == TY_Int) {
-		setInt(list,cons->cdr->cdr->cdr->ivalue,0);
+		setInt(list,cons->cdr->cdr->cdr->ivalue);
 		list->next = Command_New();
 		list = list->next;
 	}else if(cons->cdr->cdr->cdr->type == TY_Double) {
-		setInt(list,cons->cdr->cdr->cdr->fvalue,0);
+		setInt(list,cons->cdr->cdr->cdr->fvalue);
 		list->next = Command_New();
 		list = list->next;
 	}
@@ -254,18 +246,18 @@ static command_t *asm_Setq(command_t *cmd,cons_t *cons, hash_table_t *hash)
 		list = asm_LParen(list,p,hash);
 		break;
 	case TY_Int:
-		setInt(list,p->ivalue,0);
+		setInt(list,p->ivalue);
 		list->next = Command_New();
 		list = list->next;
 		break;
 	case TY_Double:
-		setDouble(list,p->fvalue,0);
+		setDouble(list,p->fvalue);
 		list->next = Command_New();
 		list = list->next;
 		break;
 	case TY_CStr:
-		list->data[0] = String_init();
-		setCStr(list,p->string.s,p->string.len,0);
+		list->data = String_init();
+		setCStr(list,p->string.s,p->string.len);
 		list->next = Command_New();
 		list = list->next;
 		break;
@@ -277,9 +269,9 @@ static command_t *asm_Setq(command_t *cmd,cons_t *cons, hash_table_t *hash)
 
 
 	list->command = C_SetHash;
-	list->data[0] = String_init();
-	String_Copy(String_Ptr(list->data[0])->s,cons->cdr->string.s,cons->cdr->string.len);
-	String_Ptr(list->data[0])->len = cons->cdr->string.len;
+	list->data = String_init();
+	String_Copy(String_Ptr(list->data)->s,cons->cdr->string.s,cons->cdr->string.len);
+	String_Ptr(list->data)->len = cons->cdr->string.len;
 	list->iseq = tables[C_SetHash];
 
 	list->next = Command_New();
@@ -299,17 +291,17 @@ static command_t *asm_Op(command_t *cmd,cons_t *cons,hash_table_t *hash)
 			list = asm_LParen(list,p,hash);
 			break;
 		case TY_Int:
-			setInt(list,p->ivalue,0);
+			setInt(list,p->ivalue);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_Double:
-			setDouble(list,p->fvalue,0);
+			setDouble(list,p->fvalue);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_Str:
-			setStr(list,p->string.s,p->string.len,0);
+			setStr(list,p->string.s,p->string.len);
 			list->next = Command_New();
 			list = list->next;
 			break;
@@ -370,24 +362,24 @@ static command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *has
 			list = asm_LParen(list,p,hash);
 			break;
 		case TY_Int:
-			setInt(list,p->ivalue,0);
+			setInt(list,p->ivalue);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_Double:
-			setDouble(list,p->fvalue,0);
+			setDouble(list,p->fvalue);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_Str:
-			list->data[0] = String_init();
-			setStr(list,p->string.s,p->string.len,0);
+			list->data = String_init();
+			setStr(list,p->string.s,p->string.len);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_CStr:
-			list->data[0] = String_init();
-			setCStr(list,p->string.s,p->string.len,0);
+			list->data = String_init();
+			setCStr(list,p->string.s,p->string.len);
 			list->next = Command_New();
 			list = list->next;
 			break;
@@ -404,8 +396,7 @@ static command_t *asm_CallFunction(command_t *cmd,cons_t *cons,hash_table_t *has
 		list->iseq = tables[C_Print];
 	}else{
 		list->command = C_Call;
-		list->data[1].i = count;
-		list->data[0].o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
+		list->data.o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
 	}
 
@@ -426,25 +417,25 @@ static command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons,hash_table_t
 			list = asm_DefunLParen(list,p,argument,hash);
 			break;
 		case TY_Int:
-			setInt(list,p->ivalue,0);
+			setInt(list,p->ivalue);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_Double:
-			setDouble(list,p->fvalue,0);
+			setDouble(list,p->fvalue);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_CStr:
-			list->data[0] = String_init();
-			setCStr(list,p->string.s,p->string.len,0);
+			list->data = String_init();
+			setCStr(list,p->string.s,p->string.len);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_Str: {
 			value_t *v = HashTable_lookup_Value(argument,p->string.s,p->string.len);
 			list->command = C_Args;
-			list->data[0] = *v;
+			list->data = *v;
 			list->iseq = tables[C_Args];
 			list->next = Command_New();
 			list = list->next;
@@ -463,8 +454,7 @@ static command_t *asm_DefunCallFunction(command_t *cmd,cons_t *cons,hash_table_t
 		list->iseq = tables[C_Print];
 	}else{
 		list->command = C_Call;
-		list->data[1].i = count;
-		list->data[0].o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
+		list->data.o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
 	}
 
@@ -485,19 +475,19 @@ static command_t *asm_DefunOp(command_t *cmd, cons_t *cons, hash_table_t *argume
 			list = asm_DefunLParen(list,p,argument,hash);
 			break;
 		case TY_Int:
-			setInt(list,p->ivalue,0);
+			setInt(list,p->ivalue);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_Double:
-			setDouble(list,p->fvalue,0);
+			setDouble(list,p->fvalue);
 			list->next = Command_New();
 			list = list->next;
 			break;
 		case TY_Str:{
 			value_t *v = HashTable_lookup_Value(argument,p->string.s,p->string.len);
 			list->command = C_Args;
-			list->data[0] = *v;
+			list->data = *v;
 			list->iseq = tables[C_Args];
 			list->next = Command_New();
 			list = list->next;
@@ -558,7 +548,7 @@ static command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argumen
 	list->command = C_TJump;
 	list->iseq = tables[C_TJump];
 	command_t *t_jump = Command_New();
-	list->data[0].o = t_jump;
+	list->data.o = t_jump;
 	
 	list->next = Command_New();
 	list = list->next;
@@ -567,16 +557,16 @@ static command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argumen
 	if(cons->cdr->cdr->type == TY_LParen) {
 		t_jump = asm_DefunLParen(t_jump,cons->cdr->cdr,argument,hash);
 	}else if(cons->cdr->cdr->type == TY_Int) {
-		setInt(t_jump,cons->cdr->cdr->ivalue,0);
+		setInt(t_jump,cons->cdr->cdr->ivalue);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
 	}else if(cons->cdr->cdr->type == TY_Double) {
-		setDouble(t_jump,cons->cdr->cdr->fvalue,0);
+		setDouble(t_jump,cons->cdr->cdr->fvalue);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
 	}else if(cons->cdr->cdr->type == TY_CStr) {
-		t_jump->data[0] = String_init();
-		setCStr(t_jump,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len,0);
+		t_jump->data = String_init();
+		setCStr(t_jump,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len);
 		t_jump->next = Command_New();
 		t_jump = t_jump->next;
 	}
@@ -585,16 +575,16 @@ static command_t *asm_DefunIf(command_t *cmd,cons_t *cons, hash_table_t *argumen
 	if(cons->cdr->cdr->cdr->type == TY_LParen) {
 		list = asm_DefunLParen(list,cons->cdr->cdr->cdr,argument,hash);
 	}else if(cons->cdr->cdr->cdr->type == TY_Int) {
-		setInt(list,cons->cdr->cdr->cdr->ivalue,0);
+		setInt(list,cons->cdr->cdr->cdr->ivalue);
 		list->next = Command_New();
 		list = list->next;
 	}else if(cons->cdr->cdr->cdr->type == TY_Double) {
-		setDouble(list,cons->cdr->cdr->cdr->fvalue,0);
+		setDouble(list,cons->cdr->cdr->cdr->fvalue);
 		list->next = Command_New();
 		list = list->next;
 	}else if(cons->cdr->cdr->cdr->type == TY_CStr) {
-		list->data[0] = String_init();
-		setCStr(list,cons->cdr->cdr->cdr->string.s,cons->cdr->cdr->cdr->string.len,0);
+		list->data = String_init();
+		setCStr(list,cons->cdr->cdr->cdr->string.s,cons->cdr->cdr->cdr->string.len);
 		list->next = Command_New();
 		list = list->next;
 	}

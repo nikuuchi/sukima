@@ -61,8 +61,8 @@ typedef enum Command {
 
 typedef struct command_t {
 	Command command;
-	value_t data[2];
 	const void *iseq;
+	value_t data;
 	struct command_t *next;
 } command_t;
 
@@ -155,22 +155,22 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 
 #define NaN_Check(t) (((t).bytes & NaN) == NaN)
 
-#define Int_init(a,b) do { \
-		(a).i = (b); \
-		(a).bytes |= NaN | IntTag; \
-	} while(0);
+static inline value_t Int_init(int b)
+{
+	value_t a;
+	a.i = b;
+	a.bytes |= NaN | IntTag;
+	return a;
+}
 
-#define Boolean_init(a,b) do { \
-		(a).bytes = (False | (b)); \
-	} while(0);
+#define Boolean_init(a,b) (a).bytes = (False | (b))
 
 #define String_Ptr(a) ((struct string *)((a).bytes ^ (NaN |StringTag)))
 
 #define String_Copy(p,buf,size) \
-	do { \
-		(p) = (char *)malloc((size) + 1); \
-		(p) = strncpy((p),(buf),(size)); \
-		(p)[(size)] = '\0'; \
-	}while(0);
-
+do { \
+	(p) = (char *)malloc((size) + 1); \
+	(p) = strncpy((p),(buf),(size)); \
+	(p)[(size)] = '\0'; \
+}while(0);
 

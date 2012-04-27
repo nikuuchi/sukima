@@ -8,7 +8,7 @@ void lisp_repl()
 	using_history();
 
 	hash_table_t *hash = HashTable_init();
-	int esp = 0;
+	int esp = 1;
 
 	while((line = readline("Lisp> ")) != NULL) {
 		add_history(line);
@@ -63,7 +63,7 @@ void lisp_main(char *file)
 	printf("\n");
 	command_t *bytecode = Command_New();
 	hash_table_t *hash = HashTable_init();
-	int esp = 0;
+	int esp = 1;
 	value_t st[8192];
 
 	compile(root,bytecode,hash);
