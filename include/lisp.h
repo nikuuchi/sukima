@@ -159,7 +159,7 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 
 #define Int_init(b) (value_t)(((b) & Mask) | NaN | IntTag);
 
-#define Boolean_init(a,b) (a).bytes = (False | (b))
+#define Boolean_init(b) (value_t)(False | (b))
 
 #define String_Ptr(a) ((struct string *)((a).bytes ^ (NaN |StringTag)))
 

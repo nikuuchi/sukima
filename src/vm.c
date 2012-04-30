@@ -145,133 +145,92 @@ static value_t ModII(value_t v2,value_t v1)
 //Lt
 static value_t LtDD(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d < v1.d);
-	return t;
+	return Boolean_init(v2.d < v1.d);
 }
 static value_t LtDI(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d < v1.i);
-	return t;
+	return Boolean_init(v2.d < v1.i);
 }
 static value_t LtID(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i < v1.d);
-	return t;
+	return Boolean_init(v2.i < v1.d);
 }
 static value_t LtII(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i < v1.i);
-	return t;
+	return Boolean_init(v2.i < v1.i);
 }
 
 //Gt
 static value_t GtDD(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d > v1.d);
-	return t;
+	return Boolean_init(v2.d > v1.d);
 }
 static value_t GtDI(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d > v1.i);
-	return t;
+	return Boolean_init(v2.d > v1.i);
 }
 static value_t GtID(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i > v1.d);
-	return t;
+	return Boolean_init(v2.i > v1.d);
 }
 static value_t GtII(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i > v1.i);
-	return t;
+	return Boolean_init(v2.i > v1.i);
 }
 
 //Eq
 static value_t EqDD(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d == v1.d);
-	return t;
+	return Boolean_init(v2.d == v1.d);
 }
 static value_t EqDI(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d == v1.i);
-	return t;
+	return Boolean_init(v2.d == v1.i);
 }
 static value_t EqID(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i == v1.d);
-	return t;
+	return Boolean_init(v2.i == v1.d);
 }
 static value_t EqII(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i == v1.i);
-	return t;
+	return Boolean_init(v2.i == v1.i);
 }
 
 //EqLt
 static value_t EqLtDD(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d <= v1.d);
-	return t;
+	return Boolean_init(v2.d <= v1.d);
 }
 static value_t EqLtDI(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d <= v1.i);
-	return t;
+	return Boolean_init(v2.d <= v1.i);
 }
 static value_t EqLtID(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i <= v1.d);
-	return t;
+	return Boolean_init(v2.i <= v1.d);
 }
 static value_t EqLtII(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i <= v1.i);
-	return t;
+	return Boolean_init(v2.i <= v1.i);
 }
 
 //EqGt
 static value_t EqGtDD(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d >= v1.d);
-	return t;
+	return Boolean_init(v2.d >= v1.d);
 }
 static value_t EqGtDI(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.d >= v1.i);
-	return t;
+	return Boolean_init(v2.d >= v1.i);
 }
 static value_t EqGtID(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i >= v1.d);
-	return t;
+	return Boolean_init(v2.i >= v1.d);
 }
 static value_t EqGtII(value_t v2,value_t v1)
 {
-	value_t t;
-	Boolean_init(t,v2.i >= v1.i);
-	return t;
+	return Boolean_init(v2.i >= v1.i);
 }
-
 
 static void(* Print[5])() = {
 	PrintDouble,
