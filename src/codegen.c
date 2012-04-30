@@ -193,20 +193,28 @@ static bytecode_t *asm_Defun(bytecode_t *opcode,cons_t *cons,hash_table_t *hash)
 	cons_t *tmp = cons->cdr->cdr->car;
 	cons_t *count = cons->cdr->cdr->car;
 	int i = 0;
-	int args = 0;
+	int argc = 0;
 	while(count->type != TY_RParen) {
 		count = count->cdr;
-		++args;
+		++argc;
 	}
+	//args
+	list->code = C_Put;
+	list->data.i = argc;
+	list->next = Bytecode_New();
+	list->iseq = tables[C_Put];
+	list = list->next;
+
 	while(tmp->type != TY_RParen) {
 		value_t *v = (value_t *)malloc(sizeof(value_t));
-		v->i = args - i;
+		v->i = argc - i;
 		HashTable_insert_Value(argument,tmp->string.s,tmp->string.len,v);
 		tmp = tmp->cdr;
 		++i;
 	}
 	list = asm_DefunLParen(list,cons->cdr->cdr->cdr,argument,hash);
 	list->code = C_Ret;
+	list->data.i = argc;
 	list->iseq = tables[C_Ret];
 
 	HashTable_free(argument);
@@ -462,14 +470,14 @@ static bytecode_t *asm_CallFunction(bytecode_t *opcode,cons_t *cons,hash_table_t
 	if(strcmp(cons->string.s,"print") == 0) {
 		list->code = C_Print;
 		list->iseq = tables[C_Print];
-	}else{
+	}else {
 		list->code = C_Call;
 		list->data.o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
-		//list->next = Bytecode_New();
-		//list = list->next;
-		//list->code = C_Print;
-		//list->iseq = tables[C_Print];
+		list->next = Bytecode_New();
+		list = list->next;
+		list->code = C_Print;
+		list->iseq = tables[C_Print];
 	}
 
 	list->next = Bytecode_New();

@@ -66,7 +66,7 @@ void lisp_main(char *file)
 	bytecode_t *bytecode = Bytecode_New();
 	hash_table_t *hash = HashTable_init();
 	int esp = 1;
-	value_t st[256];
+	value_t st[1024];
 
 	compile(root,bytecode,hash);
 	vm_exec(bytecode,st,esp,hash,0);
