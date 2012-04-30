@@ -54,10 +54,10 @@ typedef enum OpCode {
 	C_Put,    C_SetHash, C_LoadValue, C_Inc, C_Dec,
 	C_OpPlus, C_OpMinus, C_OpMul,
 	C_OpDiv,  C_OpMod,   C_OpLt,
-	C_OpGt,   C_OpEq,    C_OpCPlus,
+	C_OpGt,   C_OpEq, C_OpEqLt, C_OpEqGt ,C_OpCPlus,
 	C_OpCMinus, C_OpCMul, 
 	C_OpCDiv,  C_OpCMod,   C_OpCLt,
-	C_OpCGt,   C_OpCEq,    C_Print,
+	C_OpCGt,   C_OpCEq, C_OpCEqLt, C_OpCEqGt, C_Print,
 	C_Call,   C_TJump,   C_Nop, 
 	C_Args ,C_Ret
 } OpCode;
@@ -147,6 +147,7 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 //boxing
 
 #define NaN       (0xFFF0000000000000)
+#define Mask      (0x00000000FFFFFFFF)
 #define TYPE      (0x000F000000000000) // for typecheck
 
 #define IntTag    (0x0001000000000000) //Type int
@@ -156,7 +157,7 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 #define ListTag   (0x0003000000000000) //Type List
 #define StringTag (0x0004000000000000) //Type String
 
-#define Int_init(b) (value_t)((b) | NaN | IntTag);
+#define Int_init(b) (value_t)(((b) & Mask) | NaN | IntTag);
 
 #define Boolean_init(a,b) (a).bytes = (False | (b))
 

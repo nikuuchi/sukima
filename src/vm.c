@@ -220,6 +220,59 @@ static value_t EqII(value_t v2,value_t v1)
 	return t;
 }
 
+//EqLt
+static value_t EqLtDD(value_t v2,value_t v1)
+{
+	value_t t;
+	Boolean_init(t,v2.d <= v1.d);
+	return t;
+}
+static value_t EqLtDI(value_t v2,value_t v1)
+{
+	value_t t;
+	Boolean_init(t,v2.d <= v1.i);
+	return t;
+}
+static value_t EqLtID(value_t v2,value_t v1)
+{
+	value_t t;
+	Boolean_init(t,v2.i <= v1.d);
+	return t;
+}
+static value_t EqLtII(value_t v2,value_t v1)
+{
+	value_t t;
+	Boolean_init(t,v2.i <= v1.i);
+	return t;
+}
+
+//EqGt
+static value_t EqGtDD(value_t v2,value_t v1)
+{
+	value_t t;
+	Boolean_init(t,v2.d >= v1.d);
+	return t;
+}
+static value_t EqGtDI(value_t v2,value_t v1)
+{
+	value_t t;
+	Boolean_init(t,v2.d >= v1.i);
+	return t;
+}
+static value_t EqGtID(value_t v2,value_t v1)
+{
+	value_t t;
+	Boolean_init(t,v2.i >= v1.d);
+	return t;
+}
+static value_t EqGtII(value_t v2,value_t v1)
+{
+	value_t t;
+	Boolean_init(t,v2.i >= v1.i);
+	return t;
+}
+
+
 static void(* Print[5])() = {
 	PrintDouble,
 	PrintInt,
@@ -271,6 +324,16 @@ static value_t(* Eq[2][2])() = {
 	{ EqID, EqII }
 };
 
+static value_t(* EqLt[2][2])() = {
+	{ EqLtDD, EqLtDI },
+	{ EqLtID, EqLtII }
+};
+
+static value_t(* EqGt[2][2])() = {
+	{ EqGtDD, EqGtDI },
+	{ EqGtID, EqGtII }
+};
+
 const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,int table_flag)
 {
 
@@ -288,6 +351,8 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 		&&Label_OpLt,
 		&&Label_OpGt,
 		&&Label_OpEq,
+		&&Label_OpEqLt,
+		&&Label_OpEqGt,
 		&&Label_OpCPlus,
 		&&Label_OpCMinus,
 		&&Label_OpCMul,
@@ -296,6 +361,8 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 		&&Label_OpCLt,
 		&&Label_OpCGt,
 		&&Label_OpCEq,
+		&&Label_OpCEqLt,
+		&&Label_OpCEqGt,
 		&&Label_Print,
 		&&Label_Call,
 		&&Label_TJump,
@@ -451,6 +518,24 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 //		printf("=\n");
 		goto *p->iseq;
 	}
+  Label_OpEqLt: {
+		value_t v1 = pop();
+		value_t v2= pop();
+		value_t ans = EqLt[Type_Check(v2)][Type_Check(v1)](v2,v1);
+		push(ans);
+		p = p->next;
+//		printf("<=\n");
+		goto *p->iseq;
+	}
+  Label_OpEqGt: {
+		value_t v1 = pop();
+		value_t v2 = pop();
+		value_t ans = EqGt[Type_Check(v2)][Type_Check(v1)](v2,v1);
+		push(ans);
+		p = p->next;
+//		printf(">\n");
+		goto *p->iseq;
+	}
   Label_OpCLt: {
 		value_t v = pop();
 		value_t ans = Lt[Type_Check(v)][Type_Check(p->data)](v,p->data);
@@ -475,6 +560,22 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 //		printf("=\n");
 		goto *p->iseq;
 	}
+  Label_OpCEqLt: {
+		value_t v = pop();
+		value_t ans = EqLt[Type_Check(v)][Type_Check(p->data)](v,p->data);
+		push(ans);
+		p = p->next;
+//		printf("<=c\n");
+		goto *p->iseq;
+	}
+  Label_OpCEqGt: {
+		value_t v = pop();
+		value_t ans = EqGt[Type_Check(v)][Type_Check(p->data)](v,p->data);
+		push(ans);
+		p = p->next;
+//		printf(">=\n");
+		goto *p->iseq;
+	}
   Label_SetHash: {
 		value_t a = pop();
 		HashTable_insert_Value(hash, String_Ptr(p->data)->s, String_Ptr(p->data)->len, &a);
@@ -490,14 +591,15 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 		goto *p->iseq;
 	}
   Label_Call: {
+//		printf("Call\n");
 		vm_exec( (bytecode_t *)p->data.o, st,esp, hash, 0);
 		p = p->next;
-//		printf("Call\n");
 		goto *p->iseq;
 	}
   Label_TJump: {
-		p = (pop().bytes == True)? (bytecode_t *)p->data.o : p->next;
-//		printf("TJump\n");
+		value_t t = pop();
+		p = (t.bytes == True)? (bytecode_t *)p->data.o : p->next;
+//		printf("TJump %d \n",(t.bytes == True));
 		goto *p->iseq;
 	}
   Label_Nop: {

@@ -69,12 +69,19 @@ token_t *lex(token_t *list,char * buf,int size)
 			list = list->next;
 //			}
 			break;
+		case '<':
+		case '>':
+			if(buf[index+1] == '='){
+				token_init(list,&buf[index],2,TY_Op);
+				index += 2;
+				list->next = token_New();
+				list = list->next;
+				break;
+			}
 		case '/':
 		case '+':
 		case '*':
 		case '=':
-		case '<':
-		case '>':
 			token_init(list,&buf[index],1,TY_Op);
 			++index;
 			if(index < size){

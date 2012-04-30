@@ -191,10 +191,16 @@ static bytecode_t *asm_Defun(bytecode_t *opcode,cons_t *cons,hash_table_t *hash)
 	hash_table_t *argument = HashTable_init();
 
 	cons_t *tmp = cons->cdr->cdr->car;
-	int i = 1;
+	cons_t *count = cons->cdr->cdr->car;
+	int i = 0;
+	int args = 0;
+	while(count->type != TY_RParen) {
+		count = count->cdr;
+		++args;
+	}
 	while(tmp->type != TY_RParen) {
 		value_t *v = (value_t *)malloc(sizeof(value_t));
-		v->i = i;
+		v->i = args - i;
 		HashTable_insert_Value(argument,tmp->string.s,tmp->string.len,v);
 		tmp = tmp->cdr;
 		++i;
@@ -326,12 +332,22 @@ static bytecode_t *asm_Op(bytecode_t *opcode,cons_t *cons,hash_table_t *hash)
 		op  = C_OpDiv;
 		break;
 	case '<':
-		opc = C_OpCLt;
-		op  = C_OpLt;
+		if(cons->string.len == 2) {
+			opc = C_OpCEqLt;
+			op  = C_OpEqLt;
+		}else {
+			opc = C_OpCLt;
+			op  = C_OpLt;
+		}
 		break;
 	case '>':
-		opc = C_OpCGt;
-		op  = C_OpGt;
+		if(cons->string.len == 2) {
+			opc = C_OpCEqGt;
+			op  = C_OpEqGt;
+		}else {
+			opc = C_OpCGt;
+			op  = C_OpGt;
+		}
 		break;
 	case '=':
 	case 'e':
@@ -450,10 +466,10 @@ static bytecode_t *asm_CallFunction(bytecode_t *opcode,cons_t *cons,hash_table_t
 		list->code = C_Call;
 		list->data.o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
-		list->next = Bytecode_New();
-		list = list->next;
-		list->code = C_Print;
-		list->iseq = tables[C_Print];
+		//list->next = Bytecode_New();
+		//list = list->next;
+		//list->code = C_Print;
+		//list->iseq = tables[C_Print];
 	}
 
 	list->next = Bytecode_New();
@@ -545,10 +561,22 @@ static bytecode_t *asm_DefunOp(bytecode_t *opcode, cons_t *cons, hash_table_t *a
 		op  = C_OpDiv;
 		break;
 	case '<':
-		opc = C_OpCLt;
-		op  = C_OpLt;
+		if(cons->string.len == 2) {
+			opc = C_OpCEqLt;
+			op  = C_OpEqLt;
+		}else {
+			opc = C_OpCLt;
+			op  = C_OpLt;
+		}
 		break;
 	case '>':
+		if(cons->string.len == 2) {
+			opc = C_OpCEqGt;
+			op  = C_OpEqGt;
+		}else {
+			opc = C_OpCGt;
+			op  = C_OpGt;
+		}
 		opc = C_OpCGt;
 		op  = C_OpGt;
 		break;
@@ -659,6 +687,13 @@ static bytecode_t *asm_DefunIf(bytecode_t *opcode,cons_t *cons, hash_table_t *ar
 		setCStr(t_jump,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len);
 		t_jump->next = Bytecode_New();
 		t_jump = t_jump->next;
+	}else if(cons->cdr->cdr->type == TY_Str) {
+		value_t *v = HashTable_lookup_Value(argument,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len);
+		t_jump->code = C_Args;
+		t_jump->data = *v;
+		t_jump->iseq = tables[C_Args];
+		t_jump->next = Bytecode_New();
+		t_jump = t_jump->next;
 	}
 
 	//if false
@@ -677,7 +712,15 @@ static bytecode_t *asm_DefunIf(bytecode_t *opcode,cons_t *cons, hash_table_t *ar
 		setCStr(list,cons->cdr->cdr->cdr->string.s,cons->cdr->cdr->cdr->string.len);
 		list->next = Bytecode_New();
 		list = list->next;
+	}else if(cons->cdr->cdr->cdr->type == TY_Str) {
+		value_t *v = HashTable_lookup_Value(argument,cons->cdr->cdr->cdr->string.s,cons->cdr->cdr->cdr->string.len);
+		list->code = C_Args;
+		list->data = *v;
+		list->iseq = tables[C_Args];
+		list->next = Bytecode_New();
+		list = list->next;
 	}
+
 	//end_tag
 
 	t_jump->code = C_Nop;

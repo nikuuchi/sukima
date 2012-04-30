@@ -44,7 +44,7 @@ void dumpCons_t(cons_t * p)
 			printf("%f ",p->fvalue);
 			break;
 		case TY_RParen:
-			printf(")");
+			printf(") ");
 			break;
 		case TY_If:
 			printf("if ");
