@@ -133,7 +133,7 @@ token_t *lex(token_t *list,char * buf,int size)
 			break;
 		default:
 			next = 1;
-			while( isalpha(buf[index+next]) ) { ++next; }
+			while( isalpha(buf[index+next]) || isdigit(buf[index+next]) ) { ++next; }
 			token_init(list,&buf[index],next,TY_Str);
 			index += next;
 			list->next = token_New();

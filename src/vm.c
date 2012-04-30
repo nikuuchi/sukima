@@ -490,7 +490,7 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 		goto *p->iseq;
 	}
   Label_Call: {
-		vm_exec( (bytecode_t *)p->data.o, st, esp, hash, 0);
+		vm_exec( (bytecode_t *)p->data.o, st,esp, hash, 0);
 		p = p->next;
 //		printf("Call\n");
 		goto *p->iseq;

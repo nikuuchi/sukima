@@ -10,7 +10,7 @@
 
 extern const void **tables;
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 4096
 
 typedef enum Type {
 	TY_LParen, TY_RParen, TY_Op,
@@ -79,8 +79,8 @@ typedef struct hash_entry_t {
 	char *key;
 	entryType type;
 	union {
-		bytecode_t *list;
 		value_t *v;
+		bytecode_t *list;
 	};
 	struct hash_entry_t *next;
 } hash_entry_t;
@@ -156,10 +156,7 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 #define ListTag   (0x0003000000000000) //Type List
 #define StringTag (0x0004000000000000) //Type String
 
-static inline value_t Int_init(int b)
-{
-	return (value_t)((b) | NaN | IntTag);
-}
+#define Int_init(b) (value_t)((b) | NaN | IntTag);
 
 #define Boolean_init(a,b) (a).bytes = (False | (b))
 

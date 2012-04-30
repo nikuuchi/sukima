@@ -87,17 +87,16 @@ static value_t List_init(){
 
 void Bytecode_free(bytecode_t *p)
 {
-	if(p != NULL) {
-		if(p->code != C_Nop) {
-			if(p->code == C_TJump) {
-				Bytecode_free(p->data.o);
-			}else if(p->code == C_SetHash || p->code == C_LoadValue) {
-				free(String_Ptr(p->data)->s);
-				free(String_Ptr(p->data));
-			}
-			Bytecode_free(p->next);
+	if(p->code != C_Nop) {
+		if(p->code == C_TJump) {
+			Bytecode_free(p->data.o);
+		}else if(p->code == C_SetHash || p->code == C_LoadValue) {
+			free(String_Ptr(p->data)->s);
+			free(String_Ptr(p->data));
 		}
 	}
+	if(p->next != NULL)
+		Bytecode_free(p->next);
 	free(p);
 }
 
@@ -105,7 +104,7 @@ void compile(cons_t *ast,bytecode_t *root,hash_table_t *hash)
 {
 	cons_t *chain = ast;
 	bytecode_t *p = root;
-	value_t st[2];
+	value_t st[1];
 	tables = vm_exec(root,st,0,hash,1);
 	while(chain->cdr != NULL){
 		switch(chain->type){
@@ -451,6 +450,10 @@ static bytecode_t *asm_CallFunction(bytecode_t *opcode,cons_t *cons,hash_table_t
 		list->code = C_Call;
 		list->data.o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
+		list->next = Bytecode_New();
+		list = list->next;
+		list->code = C_Print;
+		list->iseq = tables[C_Print];
 	}
 
 	list->next = Bytecode_New();

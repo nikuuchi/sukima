@@ -19,18 +19,24 @@ hash_table_t  *HashTable_init()
 	return table;
 }
 
+void bins_free(hash_entry_t *t)
+{
+	if(t->next != NULL)
+		bins_free(t->next);
+	free(t->key);
+	if(t->type == entryValue) {
+		free(t->v);
+	}else {
+		Bytecode_free(t->list);
+	}
+}
+
 void HashTable_free(hash_table_t *self)
 {
-
 	int i = 0;
-	for(i=0;i<BINS;++i) {
-		if(self->bins[i] != NULL){
-			free(self->bins[i]->key);
-			if(self->bins[i]->type == entryValue){
-				free(self->bins[i]->v);
-			}else{
-				Bytecode_free(self->bins[i]->list);
-			}
+	for(;i<BINS;++i) {
+		if(self->bins[i] != NULL) {
+			bins_free(self->bins[i]);
 			free(self->bins[i]);
 		}
 	}
@@ -45,29 +51,32 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 		hash_entry_t *point = self->bins[hash_number];
 		while(point->next != NULL) {
 			if(strcmp(point->key,key) == 0) {
-				point->v = (value_t *)p;
-				goto end;
+				if(flag == entryValue)
+					point->v = (value_t *)p;
+				else
+					point->list = (bytecode_t *)p;
+				return;
 			}
 			point = point->next;
 		}
 		if(strcmp(point->key,key) == 0) {
-			point->v = (value_t *)p;
-		}else{
-			point->next = (hash_entry_t *)malloc(sizeof(hash_entry_t));
+			if(flag == entryValue)
+				point->v = (value_t *)p;
+			else
+				point->list = (bytecode_t *)p;
+		}else {
+			point->next = (hash_entry_t *)calloc(1,sizeof(hash_entry_t));
+			point->next->hash = hash_number;
+			String_Copy(point->next->key,key,len);
+			point->next->type = flag;
 			if(flag == entryValue) {
-				point->next->hash = hash_number;
-				String_Copy(point->next->key,key,len);
 				point->next->v = (value_t *)p;
-				point->next->type = entryValue;
 			}else{
-				point->next->hash = hash_number;
-				String_Copy(point->next->key,key,len);
 				point->next->list = (bytecode_t *)p;
-				point->next->type = entryFunction;
 			}
 		}
 	}else{
-		self->bins[hash_number] = (hash_entry_t *)malloc(sizeof(hash_entry_t));
+		self->bins[hash_number] = (hash_entry_t *)calloc(1,sizeof(hash_entry_t));
 		if(flag == entryValue) {
 			self->bins[hash_number]->hash = hash_number;
 			String_Copy(self->bins[hash_number]->key,key,len);
@@ -80,8 +89,6 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 			self->bins[hash_number]->type = entryFunction;
 		}
 	}
-  end:
-	return;
 }
 
 void HashTable_insert_Function(hash_table_t *self,char *key, size_t len, bytecode_t *list)
