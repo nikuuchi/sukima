@@ -474,10 +474,10 @@ static bytecode_t *asm_CallFunction(bytecode_t *opcode,cons_t *cons,hash_table_t
 		list->code = C_Call;
 		list->data.o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
 		list->iseq = tables[C_Call];
-		list->next = Bytecode_New();
+/*		list->next = Bytecode_New();
 		list = list->next;
 		list->code = C_Print;
-		list->iseq = tables[C_Print];
+		list->iseq = tables[C_Print];*/
 	}
 
 	list->next = Bytecode_New();
