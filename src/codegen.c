@@ -464,6 +464,20 @@ static bytecode_t *asm_Op(bytecode_t *opcode, cons_t *cons, hash_table_t *argume
 		Bytecode_next(list);
 		break;
 	}
+	case TY_RParen:
+		if(op == C_OpPlus) {
+			setInt(list,0);
+			Bytecode_next(list);
+			return list;
+		}else if(op == C_OpMul) {
+			setInt(list,1);
+			Bytecode_next(list);
+			return list;
+		}else {
+			printf("some error occured in asm_Op().\n");
+			exit(1);
+		}
+		break;
 	default:
 		printf("some error occured in asm_Op() 1.\n");
 		break;
@@ -651,6 +665,10 @@ static bytecode_t *asm_If(bytecode_t *opcode,cons_t *cons, hash_table_t *argumen
 		Bytecode_next(list);
 		break;
 	}
+	case TY_RParen:
+		setBoolean(list,0);
+		Bytecode_next(list);
+		break;
 	default:
 		printf("ERROR\n");
 	}

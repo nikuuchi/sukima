@@ -56,12 +56,15 @@ token_t *lex(token_t *list,char * buf,int size)
 			++index;
 			break;
 		case '(':
-			token_init(list,&buf[index],1,TY_LParen);
-			++index;
-			if(index < size){
-				list->next = token_New();
-				list = list->next;
+			if(buf[index+1] == ')') {
+				++index;
+				token_init(list,"NIL",sizeof("NIL"),TY_Str);
+			}else {
+				token_init(list,&buf[index],1,TY_LParen);
 			}
+			++index;
+			list->next = token_New();
+			list = list->next;
 			break;
 		case ')':
 			token_init(list,&buf[index],1,TY_RParen);

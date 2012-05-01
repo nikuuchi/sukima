@@ -93,7 +93,7 @@ int F_LParen(array_token_t *array, cons_t *node,int n)
 		n = F_LParen(array,node->car,n);
 		break;
 	case TY_RParen:
-		n = CASE_RParen(node,n); //Need check
+		n = CASE_RParen(node->car,n); //Need check
 		break;
 	case TY_Op:
 	case TY_Str:
