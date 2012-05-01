@@ -254,9 +254,8 @@ static bytecode_t *asm_Defun(bytecode_t *opcode,cons_t *cons,hash_table_t *hash)
 	//args
 	list->code = C_Put;
 	list->data.i = argc;
-	list->next = Bytecode_New();
 	list->iseq = tables[C_Put];
-	list = list->next;
+	Bytecode_next(list);
 
 	while(tmp->type != TY_RParen) {
 		value_t v;
@@ -285,13 +284,11 @@ static bytecode_t *asm_If(bytecode_t *opcode,cons_t *cons, hash_table_t *hash)
 		break;
 	case TY_Int:
 		setInt(list,cons->cdr->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Boolean:
 		setBoolean(list,cons->cdr->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	default:
 		printf("ERROR\n");
@@ -302,9 +299,7 @@ static bytecode_t *asm_If(bytecode_t *opcode,cons_t *cons, hash_table_t *hash)
 	list->iseq = tables[C_TJump];
 	bytecode_t *t_jump = Bytecode_New();
 	list->data.o = t_jump;
-	
-	list->next = Bytecode_New();
-	list = list->next;
+	Bytecode_next(list);
 
 	//if true
 	switch(cons->cdr->cdr->type) {
@@ -313,24 +308,20 @@ static bytecode_t *asm_If(bytecode_t *opcode,cons_t *cons, hash_table_t *hash)
 		break;
 	case TY_Int:
 		setInt(t_jump,cons->cdr->cdr->ivalue);
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		Bytecode_next(t_jump);
 		break;
 	case TY_Double:
 		setDouble(t_jump,cons->cdr->cdr->fvalue);
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		Bytecode_next(t_jump);
 		break;
 	case TY_Boolean:
 		setBoolean(t_jump,cons->cdr->cdr->ivalue);
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		Bytecode_next(t_jump);
 		break;
 	case TY_CStr:
 		t_jump->data = String_init();
 		setCStr(t_jump,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len);
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		Bytecode_next(t_jump);
 		break;
 	default:
 		printf("ERROR\n");
@@ -343,24 +334,20 @@ static bytecode_t *asm_If(bytecode_t *opcode,cons_t *cons, hash_table_t *hash)
 		break;
 	case TY_Int:
 		setInt(list,cons->cdr->cdr->cdr->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Double:
 		setDouble(list,cons->cdr->cdr->cdr->fvalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Boolean:
 		setBoolean(list,cons->cdr->cdr->cdr->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_CStr:
-		t_jump->data = String_init();
-		setCStr(t_jump,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len);
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		list->data = String_init();
+		setCStr(list,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len);
+		Bytecode_next(list);
 		break;
 	default:
 		printf("ERROR\n");
@@ -386,30 +373,25 @@ static bytecode_t *asm_Setq(bytecode_t *opcode,cons_t *cons, hash_table_t *hash)
 		break;
 	case TY_Int:
 		setInt(list,p->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Double:
 		setDouble(list,p->fvalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Boolean:
 		setBoolean(list,p->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Str:
 		list->data = String_init();
 		setStr(list,p->string.s,p->string.len);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_CStr:
 		list->data = String_init();
 		setCStr(list,p->string.s,p->string.len);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	default:
 		printf("some error occonsred in asm_Setq().\n");
@@ -424,8 +406,7 @@ static bytecode_t *asm_Setq(bytecode_t *opcode,cons_t *cons, hash_table_t *hash)
 	String_Ptr(list->data)->len = cons->cdr->string.len;
 	list->iseq = tables[C_SetHash];
 
-	list->next = Bytecode_New();
-	list = list->next;
+	Bytecode_next(list);
 	return list;
 }
 
@@ -492,24 +473,20 @@ static bytecode_t *asm_Op(bytecode_t *opcode,cons_t *cons,hash_table_t *hash)
 		break;
 	case TY_Int:
 		setInt(list,p->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Double:
 		setDouble(list,p->fvalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Boolean:
 		setBoolean(list,p->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Str:
 		list->data = String_init();
 		setStr(list,p->string.s,p->string.len);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	default:
 		printf("some error occured in asm_Op() 1.\n");
@@ -531,29 +508,25 @@ static bytecode_t *asm_Op(bytecode_t *opcode,cons_t *cons,hash_table_t *hash)
 				break;
 			case TY_Boolean:
 				setBoolean(list,p->ivalue);
-				list->next = Bytecode_New();
-				list = list->next;
+				Bytecode_next(list);
 				setOp(list,op);
 				break;
 			case TY_Str:
 				setStr(list,p->string.s,p->string.len);
-				list->next = Bytecode_New();
-				list = list->next;
+				Bytecode_next(list);
 				setOp(list,op);
 				break;
 			default:
 				printf("some error occured in asm_Op() 1.\n");
 				break;
 			}
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			++count;
 			p = p->cdr;
 		}
 	}else {
 		setUnOp(list,op);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 	}
 	return list;
 }
@@ -571,30 +544,25 @@ static bytecode_t *asm_CallFunction(bytecode_t *opcode,cons_t *cons,hash_table_t
 			break;
 		case TY_Int:
 			setInt(list,p->ivalue);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		case TY_Double:
 			setDouble(list,p->fvalue);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		case TY_Boolean:
 			setBoolean(list,p->ivalue);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		case TY_Str:
 			list->data = String_init();
 			setStr(list,p->string.s,p->string.len);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		case TY_CStr:
 			list->data = String_init();
 			setCStr(list,p->string.s,p->string.len);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		default:
 			printf("some error occonsred in asm_CallFunction().\n");
@@ -613,8 +581,7 @@ static bytecode_t *asm_CallFunction(bytecode_t *opcode,cons_t *cons,hash_table_t
 		list->iseq = tables[C_Call];
 	}
 
-	list->next = Bytecode_New();
-	list = list->next;
+	Bytecode_next(list);
 	return list;
 }
 
@@ -631,32 +598,27 @@ static bytecode_t *asm_DefunCallFunction(bytecode_t *opcode,cons_t *cons,hash_ta
 			break;
 		case TY_Int:
 			setInt(list,p->ivalue);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		case TY_Double:
 			setDouble(list,p->fvalue);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		case TY_Boolean:
 			setBoolean(list,p->ivalue);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		case TY_CStr:
 			list->data = String_init();
 			setCStr(list,p->string.s,p->string.len);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		case TY_Str: {
 			value_t v = HashTable_lookup_Value(argument,p->string.s,p->string.len);
 			list->code = C_Args;
 			list->data = v;
 			list->iseq = tables[C_Args];
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			break;
 		}
 		default:
@@ -676,8 +638,7 @@ static bytecode_t *asm_DefunCallFunction(bytecode_t *opcode,cons_t *cons,hash_ta
 		list->iseq = tables[C_Call];
 	}
 
-	list->next = Bytecode_New();
-	list = list->next;
+	Bytecode_next(list);
 	return list;
 }
 
@@ -745,26 +706,22 @@ static bytecode_t *asm_DefunOp(bytecode_t *opcode, cons_t *cons, hash_table_t *a
 		break;
 	case TY_Int:
 		setInt(list,p->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Double:
 		setDouble(list,p->fvalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Boolean:
 		setBoolean(list,p->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Str:{
 		value_t v = HashTable_lookup_Value(argument,p->string.s,p->string.len);
 		list->code = C_Args;
 		list->data = v;
 		list->iseq = tables[C_Args];
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	}
 	default:
@@ -787,8 +744,7 @@ static bytecode_t *asm_DefunOp(bytecode_t *opcode, cons_t *cons, hash_table_t *a
 			break;
 		case TY_Boolean:
 			setBoolean(list,p->ivalue);
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			setOp(list,op);
 			break;
 		case TY_Str:{
@@ -796,8 +752,7 @@ static bytecode_t *asm_DefunOp(bytecode_t *opcode, cons_t *cons, hash_table_t *a
 			list->code = C_Args;
 			list->data = v;
 			list->iseq = tables[C_Args];
-			list->next = Bytecode_New();
-			list = list->next;
+			Bytecode_next(list);
 			setOp(list,op);
 			break;
 		default:
@@ -805,15 +760,13 @@ static bytecode_t *asm_DefunOp(bytecode_t *opcode, cons_t *cons, hash_table_t *a
 			break;
 		}
 		}
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		++count;
 		p = p->cdr;
 	}
 	}else {
 		setUnOp(list,op);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 	}
 
 	return list;
@@ -829,13 +782,11 @@ static bytecode_t *asm_DefunIf(bytecode_t *opcode,cons_t *cons, hash_table_t *ar
 		break;
 	case TY_Int:
 		setInt(list,cons->cdr->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Boolean:
 		setBoolean(list,cons->cdr->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	default:
 		printf("ERROR\n");
@@ -846,9 +797,8 @@ static bytecode_t *asm_DefunIf(bytecode_t *opcode,cons_t *cons, hash_table_t *ar
 	list->iseq = tables[C_TJump];
 	bytecode_t *t_jump = Bytecode_New();
 	list->data.o = t_jump;
-	
-	list->next = Bytecode_New();
-	list = list->next;
+
+	Bytecode_next(list);
 
 	//if true
 	switch(cons->cdr->cdr->type) {
@@ -857,32 +807,27 @@ static bytecode_t *asm_DefunIf(bytecode_t *opcode,cons_t *cons, hash_table_t *ar
 		break;
 	case TY_Int:
 		setInt(t_jump,cons->cdr->cdr->ivalue);
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		Bytecode_next(t_jump);
 		break;
 	case TY_Double:
 		setDouble(t_jump,cons->cdr->cdr->fvalue);
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		Bytecode_next(t_jump);
 		break;
 	case TY_Boolean:
 		setBoolean(t_jump,cons->cdr->cdr->ivalue);
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		Bytecode_next(t_jump);
 		break;
 	case TY_CStr:
 		t_jump->data = String_init();
 		setCStr(t_jump,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len);
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		Bytecode_next(t_jump);
 		break;
 	case TY_Str:{
 		value_t v = HashTable_lookup_Value(argument,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len);
 		t_jump->code = C_Args;
 		t_jump->data = v;
 		t_jump->iseq = tables[C_Args];
-		t_jump->next = Bytecode_New();
-		t_jump = t_jump->next;
+		Bytecode_next(t_jump);
 		break;
 	}
 	default:
@@ -896,32 +841,27 @@ static bytecode_t *asm_DefunIf(bytecode_t *opcode,cons_t *cons, hash_table_t *ar
 		break;
 	case TY_Int:
 		setInt(list,cons->cdr->cdr->cdr->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Double:
 		setDouble(list,cons->cdr->cdr->cdr->fvalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Boolean:
 		setBoolean(list,cons->cdr->cdr->cdr->ivalue);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_CStr:
 		list->data = String_init();
 		setCStr(list,cons->cdr->cdr->cdr->string.s,cons->cdr->cdr->cdr->string.len);
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	case TY_Str: {
 		value_t v = HashTable_lookup_Value(argument,cons->cdr->cdr->cdr->string.s,cons->cdr->cdr->cdr->string.len);
 		list->code = C_Args;
 		list->data = v;
 		list->iseq = tables[C_Args];
-		list->next = Bytecode_New();
-		list = list->next;
+		Bytecode_next(list);
 		break;
 	}
 	default:
