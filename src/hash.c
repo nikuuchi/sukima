@@ -66,15 +66,12 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 		}
 	}else{
 		self->bins[hash_number] = (hash_entry_t *)calloc(1,sizeof(hash_entry_t));
-		if(flag == entryValue) {
 			self->bins[hash_number]->hash = hash_number;
 			String_Copy(self->bins[hash_number]->key,key,len);
 			self->bins[hash_number]->v = p;
+		if(flag == entryValue) {
 			self->bins[hash_number]->type = entryValue;
 		}else{
-			self->bins[hash_number]->hash = hash_number;
-			String_Copy(self->bins[hash_number]->key,key,len);
-			self->bins[hash_number]->v = p;
 			self->bins[hash_number]->type = entryFunction;
 		}
 	}
@@ -95,12 +92,16 @@ void HashTable_insert_Value(hash_table_t *self,char *key, size_t len, value_t v)
 value_t HashTable_lookup(hash_table_t *self, char *key, size_t len,entryType flag)
 {
 	unsigned int hash_number = getHashNumber(key, len);
+	if(self->bins[hash_number] == NULL)
+		return (value_t)NULL;
 	hash_entry_t *stet = self->bins[hash_number];
 	while(stet != NULL) {
 		if(strcmp(stet->key,key) == 0 && stet->type == flag) break;
 		stet = stet->next;
 	}
 	if(stet == NULL) {
+		if(self->next == NULL)
+			return (value_t)NULL;
 		return HashTable_lookup(self->next,key,len,flag);
 	}else {
 		return stet->v;

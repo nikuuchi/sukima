@@ -5,6 +5,7 @@ void freeCons_t(cons_t * p)
 	switch(p->type) {
 	case TY_Op:
 	case TY_Str:
+	case TY_CStr:
 	case TY_If:
 	case TY_Setq:
 	case TY_Defun:

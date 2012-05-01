@@ -3,10 +3,6 @@
 #define push(a) st[esp++] = (a)
 #define pop() (st[--esp])
 
-static int Type_Check(value_t t){
-	return (((t.bytes & NaN) == NaN) * ((t.bytes & TYPE) >> 48 ));
-}
-
 static void PrintInt(value_t v)
 {
 	printf("%d\n",v.i);
@@ -513,7 +509,7 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 		goto *p->iseq;
 	}
   Label_UnOpT: {
-		value_t v2 = pop();
+		--esp;
 		push(Boolean_init(1));
 		p = p->next;
 //		printf("=\n");

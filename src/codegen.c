@@ -125,7 +125,7 @@ void Bytecode_free(bytecode_t *p)
 	if(p->code != C_Nop) {
 		if(p->code == C_TJump) {
 			Bytecode_free(p->data.o);
-		}else if(p->code == C_SetHash || p->code == C_LoadValue) {
+		}else if(p->code == C_SetHash || p->code == C_LoadValue || (p->code == C_Put && Type_Check(p->data) == 4)) {
 			free(String_Ptr(p->data)->s);
 			free(String_Ptr(p->data));
 		}

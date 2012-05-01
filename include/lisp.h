@@ -158,6 +158,10 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 
 #define Boolean_init(b) (value_t)(False | (b))
 
+static inline int Type_Check(value_t t){
+	return (((t.bytes & NaN) == NaN) * ((t.bytes & TYPE) >> 48 ));
+}
+
 #define String_Ptr(a) ((struct string *)((a).bytes ^ (NaN |StringTag)))
 
 #define String_Copy(p,buf,size) \
