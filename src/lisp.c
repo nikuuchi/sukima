@@ -10,7 +10,7 @@ void lisp_repl()
 	hash_table_t *hash = HashTable_init();
 	int esp = 1;
 
-	while((line = readline("Lisp>")) != NULL) {
+	while((line = readline("Sukima>")) != NULL) {
 		add_history(line);
 		token_t *lex_buf =  (token_t *)malloc(sizeof(token_t));
 		token_t *lex_current = lex_buf;

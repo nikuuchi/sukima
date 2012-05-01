@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-PROJECT(lisp)
+PROJECT(sukima)
 
 set(CMAKE_C_FLAGS_RELEASE "-W -Wall -O2")
 set(CMAKE_C_FLAGS_DEBUG "-W -Wall -g ")
@@ -17,7 +17,7 @@ set(ExtraLibs ${ExtraLibs} ${READLINE_LIBRARY} ${MATH_LIBRARY})
 include_directories(${INCLUDE_DIRS})
 link_directories(${READLINE_INCLUDE_DIR})
 
-ADD_EXECUTABLE(lisp
+ADD_EXECUTABLE(sukima
 	src/cons.c
 	src/hash.c
 	src/lex.c
@@ -27,4 +27,4 @@ ADD_EXECUTABLE(lisp
 	src/vm.c
 )
 
-target_link_libraries(lisp ${ExtraLibs})
+target_link_libraries(sukima ${ExtraLibs})
