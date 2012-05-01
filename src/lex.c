@@ -16,6 +16,8 @@ void token_init(token_t *p,char *buf,size_t size,Type t)
 	if(t == TY_Str) {
 		if(strcmp("defun",p->str) == 0) {
 			t = TY_Defun;
+		}else if(strcmp("T",p->str) == 0 || strcmp("NIL",p->str) == 0) {
+			t = TY_Boolean;
 		}else if(strcmp("if",p->str) == 0) {
 			t = TY_If;
 		}else if(strcmp("setq",p->str) == 0) {
@@ -172,3 +174,4 @@ void startLex(token_t *p,FILE *fp)
 	lex_current->type = TY_EOL;
 	free(buf);
 }
+

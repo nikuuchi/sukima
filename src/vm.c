@@ -20,9 +20,9 @@ static void PrintDouble(value_t v)
 static void PrintBoolean(value_t v)
 {
 	if(v.i == 1)
-		printf("T\n");
+		printf("t\n");
 	else
-		printf("Nil\n");
+		printf("nil\n");
 }
 
 static void PrintList(value_t v)
@@ -537,14 +537,14 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 	}
   Label_SetHash: {
 		value_t a = pop();
-		HashTable_insert_Value(hash, String_Ptr(p->data)->s, String_Ptr(p->data)->len, &a);
+		HashTable_insert_Value(hash, String_Ptr(p->data)->s, String_Ptr(p->data)->len, a);
 		p = p->next;
 //		printf("sethash\n");
 		goto *p->iseq;
 	}
   Label_LoadValue: {
-		value_t *b = HashTable_lookup_Value(hash, String_Ptr(p->data)->s,String_Ptr(p->data)->len);
-		push(*b);
+		value_t b = HashTable_lookup_Value(hash, String_Ptr(p->data)->s,String_Ptr(p->data)->len);
+		push(b);
 		p = p->next;
 //		printf("LoadValue\n");
 		goto *p->iseq;
@@ -558,7 +558,7 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 	}
   Label_TJump: {
 		value_t t = pop();
-		p = (t.bytes == True)? (bytecode_t *)p->data.o : p->next;
+		p = (t.bytes != False)? (bytecode_t *)p->data.o : p->next;
 //		printf("TJump %d \n",(t.bytes == True));
 		goto *p->iseq;
 	}

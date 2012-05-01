@@ -25,9 +25,8 @@ void bins_free(hash_entry_t *t)
 		bins_free(t->next);
 	free(t->key);
 	if(t->type == entryValue) {
-		free(t->v);
 	}else {
-		Bytecode_free(t->list);
+		Bytecode_free((bytecode_t *)t->v.bytes);
 	}
 }
 
@@ -44,48 +43,38 @@ void HashTable_free(hash_table_t *self)
 	free(self);
 }
 
-void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,void *p)
+void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,value_t p)
 {
 	unsigned int hash_number = getHashNumber(key, len);
 	if(self->bins[hash_number] != NULL) {
 		hash_entry_t *point = self->bins[hash_number];
 		while(point->next != NULL) {
 			if(strcmp(point->key,key) == 0) {
-				if(flag == entryValue)
-					point->v = (value_t *)p;
-				else
-					point->list = (bytecode_t *)p;
+				point->v = p;
 				return;
 			}
 			point = point->next;
 		}
 		if(strcmp(point->key,key) == 0) {
-			if(flag == entryValue)
-				point->v = (value_t *)p;
-			else
-				point->list = (bytecode_t *)p;
+			point->v = p;
 		}else {
 			point->next = (hash_entry_t *)calloc(1,sizeof(hash_entry_t));
 			point->next->hash = hash_number;
 			String_Copy(point->next->key,key,len);
 			point->next->type = flag;
-			if(flag == entryValue) {
-				point->next->v = (value_t *)p;
-			}else{
-				point->next->list = (bytecode_t *)p;
-			}
+			point->next->v = p;
 		}
 	}else{
 		self->bins[hash_number] = (hash_entry_t *)calloc(1,sizeof(hash_entry_t));
 		if(flag == entryValue) {
 			self->bins[hash_number]->hash = hash_number;
 			String_Copy(self->bins[hash_number]->key,key,len);
-			self->bins[hash_number]->v = (value_t *)p;
+			self->bins[hash_number]->v = p;
 			self->bins[hash_number]->type = entryValue;
 		}else{
 			self->bins[hash_number]->hash = hash_number;
 			String_Copy(self->bins[hash_number]->key,key,len);
-			self->bins[hash_number]->list = (bytecode_t *)p;
+			self->bins[hash_number]->v = p;
 			self->bins[hash_number]->type = entryFunction;
 		}
 	}
@@ -93,15 +82,17 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 
 void HashTable_insert_Function(hash_table_t *self,char *key, size_t len, bytecode_t *list)
 {
-	HashTable_insert(self,key,len,entryFunction,list);
+	value_t t;
+	t.o = list;
+	HashTable_insert(self,key,len,entryFunction,t);
 }
-void HashTable_insert_Value(hash_table_t *self,char *key, size_t len, value_t *v)
+void HashTable_insert_Value(hash_table_t *self,char *key, size_t len, value_t v)
 {
 	HashTable_insert(self,key,len,entryValue,v);
 }
 
 
-void *HashTable_lookup(hash_table_t *self, char *key, size_t len,entryType flag)
+value_t HashTable_lookup(hash_table_t *self, char *key, size_t len,entryType flag)
 {
 	unsigned int hash_number = getHashNumber(key, len);
 	hash_entry_t *stet = self->bins[hash_number];
@@ -114,21 +105,18 @@ void *HashTable_lookup(hash_table_t *self, char *key, size_t len,entryType flag)
 	if(stet == NULL) {
 		return HashTable_lookup(self->next,key,len,flag);
 	}else {
-		if(flag == entryFunction){
-			return stet->list;
-		}
 		return stet->v;
 	}
 }
 
 bytecode_t *HashTable_lookup_Function(hash_table_t *self,char *key, size_t len)
 {
-	return (bytecode_t *)HashTable_lookup(self,key,len,entryFunction);
+	return (bytecode_t *)(HashTable_lookup(self,key,len,entryFunction)).bytes;
 }
 
-value_t *HashTable_lookup_Value(hash_table_t *self,char *key, size_t len)
+value_t HashTable_lookup_Value(hash_table_t *self,char *key, size_t len)
 {
-	return (value_t *)HashTable_lookup(self,key,len,entryValue);
+	return HashTable_lookup(self,key,len,entryValue);
 }
 
 

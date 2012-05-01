@@ -14,7 +14,7 @@ extern const void **tables;
 
 typedef enum Type {
 	TY_LParen, TY_RParen, TY_Op,
-	TY_List,   TY_Int,    TY_Double,
+	TY_List,   TY_Int,    TY_Double, TY_Boolean,
 	TY_CStr,   TY_Str,    TY_Defun,
 	TY_If,     TY_Setq,   TY_EOL
 } Type;
@@ -78,10 +78,7 @@ typedef struct hash_entry_t {
 	unsigned int hash;
 	char *key;
 	entryType type;
-	union {
-		value_t *v;
-		bytecode_t *list;
-	};
+	value_t v;
 	struct hash_entry_t *next;
 } hash_entry_t;
 
@@ -132,11 +129,11 @@ extern hash_table_t *HashTable_init();
 
 extern bytecode_t *HashTable_lookup_Function(hash_table_t *self,char *key, size_t len);
 
-extern value_t *HashTable_lookup_Value(hash_table_t *self,char *key, size_t len);
+extern value_t HashTable_lookup_Value(hash_table_t *self,char *key, size_t len);
 
 extern void HashTable_insert_Function(hash_table_t *self,char *key, size_t len, bytecode_t *list);
 
-extern void HashTable_insert_Value(hash_table_t *self,char *key, size_t len, value_t *v);
+extern void HashTable_insert_Value(hash_table_t *self,char *key, size_t len, value_t v);
 
 extern void HashTable_free(hash_table_t *self);
 
@@ -157,7 +154,7 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 #define ListTag   (0x0003000000000000) //Type List
 #define StringTag (0x0004000000000000) //Type String
 
-#define Int_init(b) (value_t)(((b) & Mask) | NaN | IntTag);
+#define Int_init(b) (value_t)(((b) & Mask) | NaN | IntTag)
 
 #define Boolean_init(b) (value_t)(False | (b))
 

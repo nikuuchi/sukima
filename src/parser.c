@@ -6,6 +6,7 @@ int F_LParen(array_token_t *array, cons_t *node,int n);
 int F_Op(array_token_t *array, cons_t *node, int n);
 int F_Int(array_token_t *array, cons_t *node,int n);
 int F_Double(array_token_t *array, cons_t *node,int n);
+int F_Boolean(array_token_t *array, cons_t *node,int n);
 int F_CStr(array_token_t *array, cons_t *node,int n);
 
 static int CASE_RParen(cons_t *c,int n)
@@ -68,6 +69,9 @@ void parse(token_t *list, cons_t *node)
 	case TY_Double:
 		n = F_Double(array,node,n);
 		break;
+	case TY_Boolean:
+		n = F_Boolean(array,node,n);
+		break;
 	case TY_CStr:
 		n = F_CStr(array,node,n);
 		break;
@@ -125,6 +129,9 @@ int F_LParen(array_token_t *array, cons_t *node,int n)
 	case TY_Double:
 		n = F_Double(array,node->cdr,n);
 		break;
+	case TY_Boolean:
+		n = F_Boolean(array,node,n);
+		break;
 	case TY_CStr:
 		n = F_CStr(array,node->cdr,n);
 		break;
@@ -159,6 +166,9 @@ int F_Op(array_token_t *array, cons_t *node,int n)
 		break;
 	case TY_Double:
 		n = F_Double(array,node,n);
+		break;
+	case TY_Boolean:
+		n = F_Boolean(array,node,n);
 		break;
 	case TY_CStr:
 		n = F_CStr(array,node,n);
@@ -196,6 +206,9 @@ int F_Int(array_token_t *array, cons_t *node,int n)
 	case TY_Double:
 		n = F_Double(array,node,n);
 		break;
+	case TY_Boolean:
+		n = F_Boolean(array,node,n);
+		break;
 	case TY_CStr:
 		n = F_CStr(array,node,n);
 		break;
@@ -231,6 +244,53 @@ int F_Double(array_token_t *array, cons_t *node,int n)
 		break;
 	case TY_Double:
 		n = F_Double(array,node,n);
+		break;
+	case TY_Boolean:
+		n = F_Boolean(array,node,n);
+		break;
+	case TY_CStr:
+		n = F_CStr(array,node,n);
+		break;
+	case TY_Str:
+		n = F_Op(array,node,n);
+		break;
+	case TY_EOL:
+		n = CASE_END(node,n);
+		break;
+	default:
+		DEFAULT(array,n);
+	}
+	return n;
+}
+
+int F_Boolean(array_token_t *array, cons_t *node,int n)
+{
+	node->type = TY_Boolean;
+	if(strcmp("T",array[n].str) == 0) {
+		node->ivalue = 1;
+	}else {
+		node->ivalue = 0;
+	}
+	node->cdr = Cons_New();
+	++n;
+	node = node->cdr;
+
+	//printf("value:type:%d:n:%d\n",at(array,n)->type,n);
+	switch(array[n].type) {
+	case TY_LParen:
+		n = F_LParen(array,node,n);
+		break;
+	case TY_RParen:
+		n = CASE_RParen(node,n);
+		break;
+	case TY_Int:
+		n = F_Int(array,node,n);
+		break;
+	case TY_Double:
+		n = F_Double(array,node,n);
+		break;
+	case TY_Boolean:
+		n = F_Boolean(array,node,n);
 		break;
 	case TY_CStr:
 		n = F_CStr(array,node,n);
@@ -268,6 +328,9 @@ int F_CStr(array_token_t *array, cons_t *node,int n)
 		break;
 	case TY_Double:
 		n = F_Double(array,node,n);
+		break;
+	case TY_Boolean:
+		n = F_Boolean(array,node,n);
 		break;
 	case TY_CStr:
 		n = F_CStr(array,node,n);

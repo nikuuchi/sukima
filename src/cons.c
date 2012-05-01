@@ -55,6 +55,12 @@ void dumpCons_t(cons_t * p)
 		case TY_Defun:
 			printf("defun ");
 			break;
+		case TY_Boolean:
+			if(p->ivalue)
+				printf("T ");
+			else
+				printf("NIL ");
+			break;
 		case TY_EOL:
 			printf(" EOL");
 			break;
