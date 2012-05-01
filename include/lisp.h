@@ -100,7 +100,7 @@ extern void token_free(token_t *p);
 
 extern void parse(token_t *list, cons_t *node);
 
-extern const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash, int table_flag);
+extern const void **vm_exec(bytecode_t *root,int esp,hash_table_t *hash, int table_flag);
 
 //eval.c
 extern int eval(cons_t *p);

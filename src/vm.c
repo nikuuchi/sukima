@@ -288,8 +288,9 @@ static value_t(* EqGt[2][2])() = {
 	{ EqGtDD, EqGtDI },
 	{ EqGtID, EqGtII }
 };
+static value_t st[1024];
 
-const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,int table_flag)
+const void **vm_exec(bytecode_t *root,int esp,hash_table_t *hash,int table_flag)
 {
 
 	static const void *tables[] = {
@@ -589,7 +590,7 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 	}
   Label_Call: {
 //		printf("Call\n");
-		vm_exec( ((bytecode_t *)p->data.o)->next, st,esp, hash, 0);
+		vm_exec( ((bytecode_t *)p->data.o)->next,esp, hash, 0);
 		esp = esp - ((bytecode_t *)p->data.o)->data.i + 1;
 		p = p->next;
 		goto *p->iseq;

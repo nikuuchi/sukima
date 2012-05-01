@@ -26,9 +26,9 @@ void lisp_repl()
 		printf("\n");
 
 		bytecode_t *bytecode = Bytecode_New();
-		value_t st[128];
+		//value_t st[128];
 		compile(root,bytecode,hash);
-		vm_exec(bytecode,st,esp,hash,0);
+		vm_exec(bytecode,esp,hash,0);
 		Bytecode_free(bytecode);
 		token_free(lex_buf);
 		freeCons_t(root);
@@ -66,10 +66,10 @@ void lisp_main(char *file)
 	bytecode_t *bytecode = Bytecode_New();
 	hash_table_t *hash = HashTable_init();
 	int esp = 1;
-	value_t st[1024];
+	//value_t st[1024];
 
 	compile(root,bytecode,hash);
-	vm_exec(bytecode,st,esp,hash,0);
+	vm_exec(bytecode,esp,hash,0);
 
 	HashTable_free(hash);
 	Bytecode_free(bytecode);

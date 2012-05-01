@@ -1,15 +1,21 @@
 #include "lisp.h"
 
-static bytecode_t *asm_LParen(bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
-static bytecode_t *asm_Setq(bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
-static bytecode_t *asm_If(bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
-static bytecode_t *asm_Defun(bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
-static bytecode_t *asm_Op(bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
-static bytecode_t *asm_CallFunction(bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
-static bytecode_t *assemble(bytecode_t *p,cons_t *cons,hash_table_t *hash);
-static bytecode_t *asm_DefunCallFunction(bytecode_t *opcode,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
-static bytecode_t *asm_DefunOp(bytecode_t *opcode,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
-static bytecode_t *asm_DefunIf(bytecode_t *opcode,cons_t *cons, hash_table_t *argument,hash_table_t *hash);
+#define Bytecode_next(list) \
+	do { \
+		(list)->next = Bytecode_New(); \
+		(list) = (list)->next; \
+	} while(0);
+
+static bytecode_t *asm_LParen           (bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
+static bytecode_t *asm_Setq             (bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
+static bytecode_t *asm_If               (bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
+static bytecode_t *asm_Defun            (bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
+static bytecode_t *asm_Op               (bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
+static bytecode_t *asm_CallFunction     (bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
+static bytecode_t *assemble             (bytecode_t *opcode,cons_t *cons,hash_table_t *hash);
+static bytecode_t *asm_DefunCallFunction(bytecode_t *opcode,cons_t *cons,hash_table_t *argument,hash_table_t *hash);
+static bytecode_t *asm_DefunOp          (bytecode_t *opcode,cons_t *cons,hash_table_t *argument,hash_table_t *hash);
+static bytecode_t *asm_DefunIf          (bytecode_t *opcode,cons_t *cons,hash_table_t *argument,hash_table_t *hash);
 
 const void **tables;
 
@@ -137,67 +143,76 @@ void Bytecode_free(bytecode_t *p)
 
 void compile(cons_t *ast,bytecode_t *root,hash_table_t *hash)
 {
-	cons_t *chain = ast;
-	bytecode_t *p = root;
-	value_t st[1];
-	tables = vm_exec(root,st,0,hash,1);
-	while(chain->cdr != NULL){
-		switch(chain->type){
+	cons_t *p = ast;
+	bytecode_t *list = root;
+	tables = vm_exec(root,0,hash,1);
+	while(p->cdr != NULL) {
+		switch(p->type) {
 		case TY_LParen:
-			p = assemble(p,chain->car,hash);
+			list = assemble(list,p->car,hash);
 			break;
 		case TY_Int:
-			setInt(p,chain->ivalue);
+			setInt(list,p->ivalue);
+			Bytecode_next(list);
 			break;
 		case TY_Double:
-			setDouble(p,chain->fvalue);
+			setDouble(list,p->fvalue);
+			Bytecode_next(list);
 			break;
 		case TY_Boolean:
-			setDouble(p,chain->ivalue);
+			setDouble(list,p->ivalue);
+			Bytecode_next(list);
+			break;
+		case TY_Str:
+			list->data = String_init();
+			setStr(list,p->string.s,p->string.len);
+			Bytecode_next(list);
 			break;
 		case TY_CStr:
-			p->data = String_init();
-			setCStr(p,chain->string.s,chain->string.len);
+			list->data = String_init();
+			setCStr(list,p->string.s,p->string.len);
+			Bytecode_next(list);
 			break;
 		default:
 			printf("some error occured in compile().\n");
 			break;
 		}
-		chain = chain->cdr;
+		p = p->cdr;
 	}
-	p->code = C_Ret;
-	p->iseq = tables[C_Ret];
+	list->code = C_Ret;
+	list->iseq = tables[C_Ret];
 }
 
-static bytecode_t *assemble(bytecode_t *p,cons_t *cons,hash_table_t *hash)
+static bytecode_t *assemble(bytecode_t *opcode,cons_t *cons,hash_table_t *hash)
 {
+	bytecode_t *list = opcode;
 	switch(cons->type) {
 	case TY_RParen:
 		break;
 	case TY_Op:
-		p = asm_Op(p,cons,hash);
+		list = asm_Op(list,cons,hash);
 		break;
 	case TY_EOL:
-		p->code = C_Ret;
-		p->iseq = tables[C_Ret];
+		list->code = C_Ret;
+		list->iseq = tables[C_Ret];
 		break;
 	case TY_Str:
-		p = asm_CallFunction(p,cons,hash);
+		list = asm_CallFunction(list,cons,hash);
 		break;
 	case TY_Setq:
-		p = asm_Setq(p,cons,hash);
+		list = asm_Setq(list,cons,hash);
 		break;
 	case TY_Defun:
-		p = asm_Defun(p,cons,hash);
+		list = asm_Defun(list,cons,hash);
 		break;
 	case TY_If:
-		p = asm_If(p,cons,hash);
+		list = asm_If(list,cons,hash);
 		break;
 	default:
 		printf("some error occured in assemble().\n");
 		break;
 	}
-	return p;
+	return list;
 }
 
 static bytecode_t *asm_LParen(bytecode_t *opcode,cons_t *cons,hash_table_t *hash)
