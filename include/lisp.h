@@ -59,7 +59,7 @@ typedef enum OpCode {
 	C_OpCDiv,  C_OpCMod,   C_OpCLt,
 	C_OpCGt,   C_OpCEq, C_OpCEqLt, C_OpCEqGt, C_Print,
 	C_Call,   C_TJump,   C_Nop, 
-	C_Args ,C_Ret
+	C_Args ,C_Ret, C_UnOpPlus, C_UnOpMinus, C_UnOpMul, C_UnOpDiv, C_UnOpMod, C_UnOpT
 } OpCode;
 
 typedef struct bytecode_t {
@@ -143,16 +143,16 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 
 //boxing
 
-#define NaN       (0xFFF0000000000000)
-#define Mask      (0x00000000FFFFFFFF)
-#define TYPE      (0x000F000000000000) // for typecheck
+#define NaN       (uint64_t)(0xFFF0000000000000)
+#define Mask      (uint64_t)(0x00000000FFFFFFFF)
+#define TYPE      (uint64_t)(0x000F000000000000) // for typecheck
 
-#define IntTag    (0x0001000000000000) //Type int
-#define True      (0xFFF2000000000001) //Type bool
-#define False     (0xFFF2000000000000)
+#define IntTag    (uint64_t)(0x0001000000000000) //Type int
+#define True      (uint64_t)(0xFFF2000000000001) //Type bool
+#define False     (uint64_t)(0xFFF2000000000000)
 
-#define ListTag   (0x0003000000000000) //Type List
-#define StringTag (0x0004000000000000) //Type String
+#define ListTag   (uint64_t)(0x0003000000000000) //Type List
+#define StringTag (uint64_t)(0x0004000000000000) //Type String
 
 #define Int_init(b) (value_t)(((b) & Mask) | NaN | IntTag)
 

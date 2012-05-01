@@ -49,13 +49,13 @@ void HashTable_insert(hash_table_t *self, char *key, size_t len,entryType flag,v
 	if(self->bins[hash_number] != NULL) {
 		hash_entry_t *point = self->bins[hash_number];
 		while(point->next != NULL) {
-			if(strcmp(point->key,key) == 0) {
+			if(strcmp(point->key,key) == 0 && point->type == flag) {
 				point->v = p;
 				return;
 			}
 			point = point->next;
 		}
-		if(strcmp(point->key,key) == 0) {
+		if(strcmp(point->key,key) == 0 && point->type == flag) {
 			point->v = p;
 		}else {
 			point->next = (hash_entry_t *)calloc(1,sizeof(hash_entry_t));
@@ -97,10 +97,8 @@ value_t HashTable_lookup(hash_table_t *self, char *key, size_t len,entryType fla
 	unsigned int hash_number = getHashNumber(key, len);
 	hash_entry_t *stet = self->bins[hash_number];
 	while(stet != NULL) {
-		if(strcmp(stet->key,key) == 0) {
-			break;
-		}
-			stet = stet->next;
+		if(strcmp(stet->key,key) == 0 && stet->type == flag) break;
+		stet = stet->next;
 	}
 	if(stet == NULL) {
 		return HashTable_lookup(self->next,key,len,flag);
@@ -111,14 +109,13 @@ value_t HashTable_lookup(hash_table_t *self, char *key, size_t len,entryType fla
 
 bytecode_t *HashTable_lookup_Function(hash_table_t *self,char *key, size_t len)
 {
-	return (bytecode_t *)(HashTable_lookup(self,key,len,entryFunction)).bytes;
+	return (HashTable_lookup(self,key,len,entryFunction)).o;
 }
 
 value_t HashTable_lookup_Value(hash_table_t *self,char *key, size_t len)
 {
 	return HashTable_lookup(self,key,len,entryValue);
 }
-
 
 hash_table_t *HashTable_createLocal(hash_table_t *self)
 {

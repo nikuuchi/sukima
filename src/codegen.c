@@ -56,6 +56,33 @@ static void setOp(bytecode_t *c,OpCode d)
 	c->code = d;
 	c->iseq = tables[d];
 }
+
+static void setUnOp(bytecode_t *c,OpCode d)
+{
+	OpCode code = d;
+	switch(d){
+	case C_OpPlus:
+		code = C_UnOpPlus;
+		break;
+	case C_OpMinus:
+		code = C_UnOpMinus;
+		break;
+	case C_OpMul:
+		code = C_UnOpMul;
+		break;
+	case C_OpDiv:
+		code = C_UnOpDiv;
+		break;
+	case C_OpMod:
+		code = C_UnOpMod;
+		break;
+	default:
+		code = C_UnOpT;
+	}
+	c->code = code;
+	c->iseq = tables[code];
+}
+
 static void setCOpi(bytecode_t *c,OpCode d,int i)
 {
 	if(d == C_OpCPlus && i == 1){
@@ -474,40 +501,45 @@ static bytecode_t *asm_Op(bytecode_t *opcode,cons_t *cons,hash_table_t *hash)
 		break;
 	}
 	p = p->cdr;
-	while(p->type != TY_RParen) {
-		switch(p->type) {
-		case TY_LParen:
-			list = asm_LParen(list,p,hash);
-			setOp(list,op);
-			break;
-		case TY_Int:
-			setCOpi(list,opc,p->ivalue);
-			break;
-		case TY_Double:
-			setCOpd(list,opc,p->fvalue);
-			break;
-		case TY_Boolean:
-			setBoolean(list,p->ivalue);
+	if(p->type != TY_RParen) {
+		while(p->type != TY_RParen) {
+			switch(p->type) {
+			case TY_LParen:
+				list = asm_LParen(list,p,hash);
+				setOp(list,op);
+				break;
+			case TY_Int:
+				setCOpi(list,opc,p->ivalue);
+				break;
+			case TY_Double:
+				setCOpd(list,opc,p->fvalue);
+				break;
+			case TY_Boolean:
+				setBoolean(list,p->ivalue);
+				list->next = Bytecode_New();
+				list = list->next;
+				setOp(list,op);
+				break;
+			case TY_Str:
+				setStr(list,p->string.s,p->string.len);
+				list->next = Bytecode_New();
+				list = list->next;
+				setOp(list,op);
+				break;
+			default:
+				printf("some error occured in asm_Op() 1.\n");
+				break;
+			}
 			list->next = Bytecode_New();
 			list = list->next;
-			setOp(list,op);
-			break;
-		case TY_Str:
-			setStr(list,p->string.s,p->string.len);
-			list->next = Bytecode_New();
-			list = list->next;
-			setOp(list,op);
-			break;
-		default:
-			printf("some error occured in asm_Op() 1.\n");
-			break;
+			++count;
+			p = p->cdr;
 		}
+	}else {
+		setUnOp(list,op);
 		list->next = Bytecode_New();
 		list = list->next;
-		++count;
-		p = p->cdr;
 	}
-
 	return list;
 }
 
@@ -725,6 +757,7 @@ static bytecode_t *asm_DefunOp(bytecode_t *opcode, cons_t *cons, hash_table_t *a
 		break;
 	}
 	p = p->cdr;
+	if(p->type != TY_RParen) {
 	while(p->type != TY_RParen) {
 		switch(p->type) {
 		case TY_LParen:
@@ -762,6 +795,12 @@ static bytecode_t *asm_DefunOp(bytecode_t *opcode, cons_t *cons, hash_table_t *a
 		++count;
 		p = p->cdr;
 	}
+	}else {
+		setUnOp(list,op);
+		list->next = Bytecode_New();
+		list = list->next;
+	}
+
 	return list;
 }
 

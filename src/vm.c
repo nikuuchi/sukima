@@ -327,7 +327,13 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 		&&Label_TJump,
 		&&Label_Nop,
 		&&Label_Args,
-		&&Label_Ret
+		&&Label_Ret,
+		&&Label_UnOpPlus,
+		&&Label_UnOpMinus,
+		&&Label_UnOpMul,
+		&&Label_UnOpDiv,
+		&&Label_UnOpMod,
+		&&Label_UnOpT
 	};
 	if(table_flag == 1){
 		return tables;
@@ -403,6 +409,35 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 //		printf("mod\n");
 		goto *p->iseq;
 	}
+  Label_UnOpPlus: {
+		p = p->next;
+		goto *p->iseq;
+	}
+  Label_UnOpMinus: {
+		value_t v1 = pop();
+		value_t ans = Minus[1][Type_Check(v1)](0,v1);
+		push(ans);
+		p = p->next;
+//		printf("-\n");
+		goto *p->iseq;
+	}
+  Label_UnOpMul: {
+		p = p->next;
+		goto *p->iseq;
+	}
+  Label_UnOpDiv: {
+		value_t v1 = pop();
+		value_t ans = Div[1][Type_Check(v1)](1,v1);
+		push(ans);
+		p = p->next;
+//		printf("/\n");
+		goto *p->iseq;
+	}
+  Label_UnOpMod: {
+		p = p->next;
+		printf("ERROR\n");
+		goto *p->iseq;
+	}
   Label_OpCPlus: {
 		value_t v = pop();
 		push(Plus[Type_Check(v)][Type_Check(p->data)](v,p->data));
@@ -473,6 +508,13 @@ const void **vm_exec(bytecode_t *root,value_t st[],int esp,hash_table_t *hash,in
 		value_t v2 = pop();
 		value_t ans = Eq[Type_Check(v2)][Type_Check(v1)](v2,v1);
 		push(ans);
+		p = p->next;
+//		printf("=\n");
+		goto *p->iseq;
+	}
+  Label_UnOpT: {
+		value_t v2 = pop();
+		push(Boolean_init(1));
 		p = p->next;
 //		printf("=\n");
 		goto *p->iseq;
