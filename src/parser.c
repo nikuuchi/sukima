@@ -54,16 +54,10 @@ void parse(token_t *list, cons_t *node)
 		n = F_LParen(array,node,n);
 		break;
 	case TY_Int:
-		n = F_Int(array,node,n);
-		break;
 	case TY_Double:
-		n = F_Double(array,node,n);
-		break;
 	case TY_Boolean:
-		n = F_Boolean(array,node,n);
-		break;
 	case TY_CStr:
-		n = F_CStr(array,node,n);
+		n = F_Operand(array,node,n);
 		break;
 	default:
 		DEFAULT(array,n);
@@ -89,7 +83,7 @@ static int F_LParen(array_token_t *array, cons_t *node,int n)
 	case TY_Setq:
 	case TY_Defun:
 	case TY_If:
-		n = F_Op(array,node->car,n);
+		n = F_Method(array,node->car,n);
 		break;
 	case TY_EOL:
 		break;
@@ -108,19 +102,13 @@ static int F_LParen(array_token_t *array, cons_t *node,int n)
 		break;
 	case TY_Op:
 	case TY_Str:
-		n = F_Op(array,node->cdr,n);
+		n = F_Method(array,node->cdr,n);
 		break;
 	case TY_Int:
-		n = F_Int(array,node->cdr,n);
-		break;
 	case TY_Double:
-		n = F_Double(array,node->cdr,n);
-		break;
 	case TY_Boolean:
-		n = F_Boolean(array,node,n);
-		break;
 	case TY_CStr:
-		n = F_CStr(array,node->cdr,n);
+		n = F_Operand(array,node->cdr,n);
 		break;
 	case TY_EOL:
 		n = CASE_END(node->cdr,n);
@@ -131,7 +119,7 @@ static int F_LParen(array_token_t *array, cons_t *node,int n)
 	return n;
 }
 
-static int F_Op(array_token_t *array, cons_t *node,int n)
+static int F_Method(array_token_t *array, cons_t *node,int n)
 {
 	node->type = array[n].type;
 	String_Copy(node->string.s,array[n].str,array[n].size);
@@ -148,19 +136,13 @@ static int F_Op(array_token_t *array, cons_t *node,int n)
 		n = CASE_RParen(node,n);
 		break;
 	case TY_Int:
-		n = F_Int(array,node,n);
-		break;
 	case TY_Double:
-		n = F_Double(array,node,n);
-		break;
 	case TY_Boolean:
-		n = F_Boolean(array,node,n);
-		break;
 	case TY_CStr:
-		n = F_CStr(array,node,n);
+		n = F_Operand(array,node,n);
 		break;
 	case TY_Str:
-		n = F_Op(array,node,n);
+		n = F_Method(array,node,n);
 		break;
 	case TY_EOL:
 		n = CASE_END(node,n);
@@ -171,90 +153,29 @@ static int F_Op(array_token_t *array, cons_t *node,int n)
 	return n;
 }
 
-static int F_Int(array_token_t *array, cons_t *node,int n)
+static int F_Operand(array_token_t *array, cons_t *node,int n)
 {
-	node->type = TY_Int;
-	node->ivalue = atoi(array[n].str);
-	node->cdr = Cons_New();
-	++n;
-	node = node->cdr;
+	node->type = array[n].type;
 	switch(array[n].type) {
-	case TY_LParen:
-		n = F_LParen(array,node,n);
+	case TY_CStr:
+		String_Copy(node->string.s,array[n].str,array[n].size);
+		node->string.len = array[n].size;
 		break;
-	case TY_RParen:
-		n = CASE_RParen(node,n);
+	case TY_Boolean:
+		if(strcmp("T",array[n].str) == 0) {
+			node->ivalue = 1;
+		}else {
+			node->ivalue = 0;
+		}
+		break;
+	case TY_Double:
+		node->fvalue = atof(array[n].str);
 		break;
 	case TY_Int:
-		n = F_Int(array,node,n);
-		break;
-	case TY_Double:
-		n = F_Double(array,node,n);
-		break;
-	case TY_Boolean:
-		n = F_Boolean(array,node,n);
-		break;
-	case TY_CStr:
-		n = F_CStr(array,node,n);
-		break;
-	case TY_Str:
-		n = F_Op(array,node,n);
-		break;
-	case TY_EOL:
-		n = CASE_END(node,n);
+		node->ivalue = atoi(array[n].str);
 		break;
 	default:
 		DEFAULT(array,n);
-	}
-	return n;
-}
-
-static int F_Double(array_token_t *array, cons_t *node,int n)
-{
-	node->type = TY_Double;
-	node->fvalue = atof(array[n].str);
-	node->cdr = Cons_New();
-	++n;
-	node = node->cdr;
-
-	switch(array[n].type) {
-	case TY_LParen:
-		n = F_LParen(array,node,n);
-		break;
-	case TY_RParen:
-		n = CASE_RParen(node,n);
-		break;
-	case TY_Int:
-		n = F_Int(array,node,n);
-		break;
-	case TY_Double:
-		n = F_Double(array,node,n);
-		break;
-	case TY_Boolean:
-		n = F_Boolean(array,node,n);
-		break;
-	case TY_CStr:
-		n = F_CStr(array,node,n);
-		break;
-	case TY_Str:
-		n = F_Op(array,node,n);
-		break;
-	case TY_EOL:
-		n = CASE_END(node,n);
-		break;
-	default:
-		DEFAULT(array,n);
-	}
-	return n;
-}
-
-static int F_Boolean(array_token_t *array, cons_t *node,int n)
-{
-	node->type = TY_Boolean;
-	if(strcmp("T",array[n].str) == 0) {
-		node->ivalue = 1;
-	}else {
-		node->ivalue = 0;
 	}
 	node->cdr = Cons_New();
 	++n;
@@ -268,19 +189,13 @@ static int F_Boolean(array_token_t *array, cons_t *node,int n)
 		n = CASE_RParen(node,n);
 		break;
 	case TY_Int:
-		n = F_Int(array,node,n);
-		break;
 	case TY_Double:
-		n = F_Double(array,node,n);
-		break;
 	case TY_Boolean:
-		n = F_Boolean(array,node,n);
-		break;
 	case TY_CStr:
-		n = F_CStr(array,node,n);
+		n = F_Operand(array,node,n);
 		break;
 	case TY_Str:
-		n = F_Op(array,node,n);
+		n = F_Method(array,node,n);
 		break;
 	case TY_EOL:
 		n = CASE_END(node,n);
@@ -289,45 +204,5 @@ static int F_Boolean(array_token_t *array, cons_t *node,int n)
 		DEFAULT(array,n);
 	}
 	return n;
+
 }
-
-static int F_CStr(array_token_t *array, cons_t *node,int n)
-{
-	node->type = TY_CStr;
-	String_Copy(node->string.s,array[n].str,array[n].size);
-	node->string.len = array[n].size;
-	node->cdr = Cons_New();
-	++n;
-	node = node->cdr;
-
-	switch(array[n].type) {
-	case TY_LParen:
-		n = F_LParen(array,node,n);
-		break;
-	case TY_RParen:
-		n = CASE_RParen(node,n);
-		break;
-	case TY_Int:
-		n = F_Int(array,node,n);
-		break;
-	case TY_Double:
-		n = F_Double(array,node,n);
-		break;
-	case TY_Boolean:
-		n = F_Boolean(array,node,n);
-		break;
-	case TY_CStr:
-		n = F_CStr(array,node,n);
-		break;
-	case TY_Str:
-		n = F_Op(array,node,n);
-		break;
-	case TY_EOL:
-		n = CASE_END(node,n);
-		break;
-	default:
-		DEFAULT(array,n);
-	}
-	return n;
-}
-
