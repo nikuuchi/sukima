@@ -21,13 +21,14 @@ hash_table_t  *HashTable_init()
 
 void bins_free(hash_entry_t *t)
 {
-	if(t->next != NULL)
+	if(t->next != NULL) {
 		bins_free(t->next);
-	free(t->key);
-	if(t->type == entryValue) {
-	}else {
-		Bytecode_free((bytecode_t *)t->v.bytes);
 	}
+	free(t->key);
+	if(t->type == entryFunction) {
+		Bytecode_free((bytecode_t *)t->v.o);
+	}
+	free(t);
 }
 
 void HashTable_free(hash_table_t *self)
@@ -36,7 +37,6 @@ void HashTable_free(hash_table_t *self)
 	for(;i<BINS;++i) {
 		if(self->bins[i] != NULL) {
 			bins_free(self->bins[i]);
-			free(self->bins[i]);
 		}
 	}
 	free(self->bins);
