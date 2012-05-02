@@ -357,8 +357,8 @@ const void **vm_exec(bytecode_t *root,int esp,hash_table_t *hash,int table_flag)
 	}
   Label_Dec: {
 		value_t v = pop();
-		//push(Dec[Type_Check(v)](v));
-		push(Int_init(--v.i));
+		push(Dec[Type_Check(v)](v));
+		//push(Int_init(--v.i));
 		p = p->next;
 		goto *p->iseq;
 	}

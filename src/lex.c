@@ -104,6 +104,8 @@ token_t *lex(token_t *list,char * buf,int size)
 				}
 			break;
 			}
+		case ';':
+			return list;
 		case '0':
 		case '1':
 		case '2':
