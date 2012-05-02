@@ -176,17 +176,18 @@ do { \
 #define push(a) st[esp++] = (a)
 #define pop() (st[--esp])
 
-#define RETURN_(a) \
-	push((a)); \
-	return esp \
 
-typedef int RETURN_VALUE;
+//for excall
+
+#define METHOD(module,name,argc) {#name, sizeof(#name), (argc),SKM_##module##_##name }
+
+typedef value_t dynamic;
 
 typedef struct skm_method_data {
 	char *name;
 	size_t len;
-	RETURN_VALUE(* ex_method)(value_t *st,int esp);
+	int argc;
+	dynamic(* ex_method)(value_t *args);
 
 } skm_method_data;
 
-#define METHOD(name,module) {#name, sizeof(#name), SKM_##module##_##name }
