@@ -114,7 +114,10 @@ void Bytecode_free(bytecode_t *p)
 	if(p->code != C_Nop) {
 		if(p->code == C_TJump) {
 			Bytecode_free(p->data.o);
-		}else if(p->code == C_SetHash || p->code == C_LoadValue || (p->code == C_Put && Type_Check(p->data) == 4)) {
+		}else if(p->code == C_SetHash ||
+				 p->code == C_LoadValue ||
+				 p->code == C_ExCall ||
+				 (p->code == C_Put && Type_Check(p->data) == 4)) {
 			free(String_Ptr(p->data)->s);
 			free(String_Ptr(p->data));
 		}
@@ -349,10 +352,18 @@ static bytecode_t *asm_CallFunction(bytecode_t *opcode,cons_t *cons,hash_table_t
 	if(strcmp(cons->string.s,"print") == 0) {
 		list->code = C_Print;
 		list->iseq = tables[C_Print];
-	}else{
-		list->code = C_Call;
+	}else {
 		list->data.o = HashTable_lookup_Function(hash, cons->string.s,cons->string.len);
-		list->iseq = tables[C_Call];
+		if(list->data.o != NULL) {
+			list->code = C_Call;
+			list->iseq = tables[C_Call];
+		}else {
+			list->code = C_ExCall;
+			list->data = String_init();
+			String_Copy(String_Ptr(list->data)->s,cons->string.s,cons->string.len);
+			String_Ptr(list->data)->len = cons->string.len;
+			list->iseq = tables[C_ExCall];
+		}
 	}
 
 	Bytecode_next(list);

@@ -1,8 +1,5 @@
 #include "lisp.h"
 
-#define push(a) st[esp++] = (a)
-#define pop() (st[--esp])
-
 static void PrintInt(value_t v)
 {
 	printf("%d\n",v.i);
@@ -321,6 +318,7 @@ const void **vm_exec(bytecode_t *root,int esp,hash_table_t *hash,int table_flag)
 		&&Label_OpCEqGt,
 		&&Label_Print,
 		&&Label_Call,
+		&&Label_ExCall,
 		&&Label_TJump,
 		&&Label_Nop,
 		&&Label_Args,
@@ -596,6 +594,11 @@ const void **vm_exec(bytecode_t *root,int esp,hash_table_t *hash,int table_flag)
 		p = p->next;
 		goto *p->iseq;
 	}
+  Label_ExCall: {
+		esp = excall(String_Ptr(p->data)->s,String_Ptr(p->data)->len,st,esp);
+		p = p->next;
+		goto *p->iseq;
+	}
   Label_TJump: {
 		value_t t = pop();
 		p = (t.bytes != False)? (bytecode_t *)p->data.o : p->next;
@@ -614,7 +617,6 @@ const void **vm_exec(bytecode_t *root,int esp,hash_table_t *hash,int table_flag)
 //		printf("Args\n");
 		goto *p->iseq;
 	}
- 
 	return NULL;
 }
 

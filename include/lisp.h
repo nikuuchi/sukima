@@ -58,7 +58,7 @@ typedef enum OpCode {
 	C_OpCMinus, C_OpCMul, 
 	C_OpCDiv,  C_OpCMod,   C_OpCLt,
 	C_OpCGt,   C_OpCEq, C_OpCEqLt, C_OpCEqGt, C_Print,
-	C_Call,   C_TJump,   C_Nop, 
+	C_Call, C_ExCall ,   C_TJump,   C_Nop, 
 	C_Args ,C_Ret, C_UnOpPlus, C_UnOpMinus, C_UnOpMul, C_UnOpDiv, C_UnOpMod, C_UnOpT
 } OpCode;
 
@@ -102,8 +102,8 @@ extern void parse(token_t *list, cons_t *node);
 
 extern const void **vm_exec(bytecode_t *root,int esp,hash_table_t *hash, int table_flag);
 
-//eval.c
-extern int eval(cons_t *p);
+//excall.c
+extern int excall(char *name,size_t name_len,value_t *st,int esp);
 
 //cons.c
 #define Cons_New() (cons_t *)calloc(1,sizeof(cons_t))
@@ -155,6 +155,7 @@ extern hash_table_t *HashTable_freeLocal(hash_table_t *self);
 #define StringTag (uint64_t)(0x0004000000000000) //Type String
 
 #define Int_init(b) (value_t)(((b) & Mask) | NaN | IntTag)
+#define Double_init(b) (value_t)((b))
 
 #define Boolean_init(b) (value_t)(False | (b))
 
@@ -171,3 +172,21 @@ do { \
 	(p)[(size)] = '\0'; \
 }while(0);
 
+//stack operation
+#define push(a) st[esp++] = (a)
+#define pop() (st[--esp])
+
+#define RETURN_(a) \
+	push((a)); \
+	return esp \
+
+typedef int RETURN_VALUE;
+
+typedef struct skm_method_data {
+	char *name;
+	size_t len;
+	RETURN_VALUE(* ex_method)(value_t *st,int esp);
+
+} skm_method_data;
+
+#define METHOD(name,module) {#name, sizeof(#name), SKM_##module##_##name }

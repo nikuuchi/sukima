@@ -25,6 +25,7 @@ ADD_EXECUTABLE(sukima
 	src/parser.c
 	src/codegen.c
 	src/vm.c
+	src/excall.c
 )
 
 target_link_libraries(sukima ${ExtraLibs})
