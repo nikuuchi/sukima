@@ -121,9 +121,10 @@ void Bytecode_free(bytecode_t *p)
 			free(String_Ptr(p->data)->s);
 			free(String_Ptr(p->data));
 		}
+		if(p->next != NULL) {
+			Bytecode_free(p->next);
+		}
 	}
-	if(p->next != NULL)
-		Bytecode_free(p->next);
 	free(p);
 }
 
@@ -445,10 +446,11 @@ static bytecode_t *asm_Op(bytecode_t *opcode, cons_t *cons, hash_table_t *argume
 		break;
 	case TY_Str:{
 		value_t v;
-		if(arguments != NULL)
+		if(arguments != NULL) {
 			v = HashTable_lookup_Value(arguments,p->string.s,p->string.len);
-		else
+		}else {
 			v.o = NULL;
+		}
 		if(v.o != NULL) {
 			list->code = C_Args;
 			list->data = v;

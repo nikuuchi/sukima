@@ -3,4 +3,4 @@
     (+ 0 1)
     (+ (fib (- n 1)) (fib (- n 2))))
 )
-(print (fib 44))
+(print (fib 27))
