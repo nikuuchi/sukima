@@ -104,8 +104,6 @@ token_t *lex(token_t *list,char * buf,int size)
 				}
 			break;
 			}
-		case ';':
-			return list;
 		case '0':
 		case '1':
 		case '2':
@@ -145,6 +143,8 @@ token_t *lex(token_t *list,char * buf,int size)
 			list->next = token_New();
 			list = list->next;
 			break;
+		case ';':
+			return list;
 		default:
 			next = 1;
 			while( isalpha(buf[index+next]) || isdigit(buf[index+next]) ) { ++next; }
