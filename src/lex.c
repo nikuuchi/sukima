@@ -1,4 +1,4 @@
-#include "lisp.h"
+#include "sukima.h"
 
 token_t *token_New()
 {
@@ -89,19 +89,15 @@ token_t *lex(token_t *list,char * buf,int size)
 		case '=':
 			token_init(list,&buf[index],1,TY_Op);
 			++index;
-			if(index < size){
-				list->next = token_New();
-				list = list->next;
-			}
+			list->next = token_New();
+			list = list->next;
 			break;
 		case '-':
 			if(buf[index+1] == ' '){
 				token_init(list,&buf[index],1,TY_Op);
 				++index;
-				if(index < size){
-					list->next = token_New();
-					list = list->next;
-				}
+				list->next = token_New();
+				list = list->next;
 			break;
 			}
 		case '0':

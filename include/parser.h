@@ -1,4 +1,4 @@
-#include "lisp.h"
+#include "sukima.h"
 
 typedef token_t array_token_t;
 

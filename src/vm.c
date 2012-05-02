@@ -1,4 +1,4 @@
-#include "lisp.h"
+#include "sukima.h"
 
 static void PrintInt(value_t v)
 {

@@ -1,4 +1,4 @@
-#include "lisp.h"
+#include "sukima.h"
 
 
 #define Bytecode_next(list) \

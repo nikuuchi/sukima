@@ -181,13 +181,13 @@ do { \
 
 #define METHOD(module,name,argc) {#name, sizeof(#name), (argc),SKM_##module##_##name }
 
-typedef value_t dynamic;
+typedef value_t skmObject;
 
 typedef struct skm_method_data {
 	char *name;
 	size_t len;
 	int argc;
-	dynamic(* ex_method)(value_t *args);
+	skmObject(* ex_method)(skmObject *args);
 
 } skm_method_data;
 

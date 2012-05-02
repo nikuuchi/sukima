@@ -1,4 +1,4 @@
-#include "lisp.h"
+#include "sukima.h"
 
 unsigned int getHashNumber(char * s, size_t len)
 {

@@ -1,4 +1,4 @@
-#include "lisp.h"
+#include "sukima.h"
 
 #define token_t_new() (token_t *)calloc(1,sizeof(token_t));
 

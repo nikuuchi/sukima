@@ -1,4 +1,4 @@
-#include "lisp.h"
+#include "sukima.h"
 
 void freeCons_t(cons_t * p)
 {

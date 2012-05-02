@@ -162,6 +162,7 @@ void compile(cons_t *ast,bytecode_t *root,hash_table_t *hash)
 			break;
 		default:
 			printf("some error occured in compile().\n");
+			exit(1);
 			break;
 		}
 		p = p->cdr;
@@ -511,7 +512,6 @@ static bytecode_t *asm_Op(bytecode_t *opcode, cons_t *cons, hash_table_t *argume
 				list->data = v;
 				list->iseq = tables[C_Args];
 			}else {
-				list->code = C_LoadValue;
 				list->data = String_init();
 				setStr(list,p->string.s,p->string.len);
 			}
@@ -561,7 +561,6 @@ static bytecode_t *asm_If(bytecode_t *opcode,cons_t *cons, hash_table_t *argumen
 			list->data = v;
 			list->iseq = tables[C_Args];
 		}else {
-			list->code = C_LoadValue;
 			list->data = String_init();
 			setStr(list,cons->cdr->string.s,cons->cdr->string.len);
 		}
@@ -613,7 +612,6 @@ static bytecode_t *asm_If(bytecode_t *opcode,cons_t *cons, hash_table_t *argumen
 			t_jump->data = v;
 			t_jump->iseq = tables[C_Args];
 		}else {
-			t_jump->code = C_LoadValue;
 			t_jump->data = String_init();
 			setStr(t_jump,cons->cdr->cdr->string.s,cons->cdr->cdr->string.len);
 		}
@@ -657,7 +655,6 @@ static bytecode_t *asm_If(bytecode_t *opcode,cons_t *cons, hash_table_t *argumen
 			list->data = v;
 			list->iseq = tables[C_Args];
 		}else {
-			list->code = C_LoadValue;
 			list->data = String_init();
 			setStr(list,cons->cdr->cdr->cdr->string.s,cons->cdr->cdr->cdr->string.len);
 		}
